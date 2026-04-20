@@ -241,7 +241,7 @@ Steam 플랫폼 기준 "Co-op" 태그 게임의 연간 출시 수와 매출은 �
 
 ### 10.1 Work Breakdown Structure
 
-![WBS](imgs/drd-WBS.png)
+![WBS](imgs/drd-wbs.png)
 
 ### 10.2 Gantt Chart
 
