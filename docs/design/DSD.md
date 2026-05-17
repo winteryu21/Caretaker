@@ -801,3 +801,182 @@ sequenceDiagram
 | `ShowConnectionWarning` | timeout/reconnect state | 네트워크 상태 표시 | warning modal | Client local |
 
 ---
+
+### 3.8 Phase 3 스플릿뷰 시스템
+
+**책임**
+
+- Phase 3에서 상하 5:5 스플릿뷰를 활성화한다.
+- 상대 화면 영상을 네트워크로 송수신하지 않고, 양쪽 시간대 화면을 각 클라이언트가 로컬에서 렌더링한다.
+- 각 클라이언트는 자기 캐릭터를 추적하는 메인 카메라 제어권을 유지하고, 상대 시간대는 읽기 전용 보조 뷰로 렌더링한다.
+- 양쪽 시간대 화면을 같은 UI에 표시하되, 입력은 자기 캐릭터에만 적용한다.
+- Phase 1~2의 정보 격리 규칙에 대한 예외를 명시적으로 GameFlow에서만 열 수 있게 한다.
+- 상대 상태 복제는 Phase 3 전환 요청 직후가 아니라 양쪽 클라이언트가 준비 완료를 보고한 뒤 Host가 시작 이벤트를 발행하는 시점에만 허용한다.
+
+**기술 설명**
+
+Phase 3 스플릿뷰는 영상 스트리밍 기능이 아니다. 각 클라이언트는 Phase 3에 필요한 Past/Future 탈출 경로, 플레이어 아바타, 장애물, 인과 상태를 로컬에 로드하고, 네트워크로 수신한 상태 데이터만 사용해 자기 화면을 구성한다. 즉 네트워크는 픽셀 프레임을 전송하지 않고, 위치/상태/이벤트만 동기화한다.
+
+스플릿뷰 렌더링은 `메인 카메라 + 읽기 전용 보조 뷰` 구조를 사용한다. 자기 시간대는 기존 메인 카메라가 계속 추적하고, 상대 시간대는 보조 카메라가 `RenderTexture`에 렌더링한 뒤 UI 영역에 표시한다. 보조 뷰는 Presentation 전용 출력이며 입력 권한, 카메라 흔들림, 줌, 타겟 전환 같은 게임 카메라 제어권을 갖지 않는다.
+
+| 구분 | 방식 | 네트워크 부하 |
+| :--- | :--- | :--- |
+| 잘못된 접근 | 상대 카메라 영상을 캡처해 실시간 송출/수신 | 매우 큼. 해상도와 FPS에 비례 |
+| 채택 접근 | 자기 메인 카메라를 유지하고, 상대 시간대는 상태 데이터 기반 RenderTexture 보조 뷰로 로컬 렌더링 | 작음. 위치, 상태, 이벤트만 전송 |
+
+Phase 3 전환 시 각 클라이언트는 탈출 경로, 카메라, 보조 뷰 준비를 마친 뒤 준비 완료를 Host에 보고한다. `GameFlowManager`는 양쪽 준비가 확인된 뒤 `Phase3Started` 이벤트를 발행한다. 각 클라이언트의 `SplitViewManager`는 이 이벤트를 받아 자기 시간대 메인 카메라의 UI 표시 영역을 조정하고, 상대 시간대 보조 카메라를 활성화해 `RenderTexture`에 출력한다. UI는 메인 카메라 출력과 보조 뷰 출력을 상하 5:5 영역에 배치한다.
+
+| 출력 | 렌더링 대상 | 표시 방식 | 제어권 |
+| :--- | :--- | :--- | :--- |
+| 자기 시간대 메인 뷰 | 로컬 플레이어의 시간대 경로, 자기 캐릭터, 해당 시간대 오브젝트 | 기존 메인 카메라 출력을 스플릿뷰 UI 영역에 배치 | 로컬 플레이어 카메라 제어권 보유 |
+| 상대 시간대 보조 뷰 | 상대 시간대 경로, 상대 캐릭터, 상대 시간대 오브젝트 | 보조 카메라가 `RenderTexture`로 렌더링 후 UI에 표시 | 읽기 전용. 입력/게임 카메라 제어권 없음 |
+
+**동기화 데이터**
+
+| 데이터 | 동기화 방식 | 설명 |
+| :--- | :--- | :--- |
+| 플레이어 위치/상태 | `NetworkTransform` 또는 상태 이벤트 | 상대 플레이어 아바타를 로컬에서 표시하기 위한 최소 상태 |
+| Phase 3 준비/시작/종료 | Client 준비 보고 + Host 권위 상태 이벤트 | 양쪽 클라이언트가 같은 진행 상태에서 스플릿뷰와 상대 최소 상태 복제를 활성화 |
+| 장애물/인과 상태 | 이벤트 기반 RPC | 과거 행동으로 미래 경로가 열리거나 막히는 결과 반영 |
+| 실패/성공 판정 | Host 권위 이벤트 | 한쪽 실패 시 공동 실패 처리 |
+| 카메라 영상 | 동기화하지 않음 | 각 클라이언트가 로컬에서 직접 렌더링 |
+
+**입력 소유권**
+
+스플릿뷰에서는 양쪽 시간대가 모두 보이지만, 입력 시스템은 로컬 플레이어가 소유한 `PlayerController`에만 입력 이벤트를 전달한다. 상대 플레이어 캐릭터는 네트워크 상태를 따라 움직이는 원격 아바타로 보조 뷰에 렌더링되며, 로컬 입력을 받지 않는다. 따라서 화면에 두 캐릭터가 보이더라도 조작 권한은 기존 Past/Future 역할 고정 규칙을 따른다.
+
+```mermaid
+sequenceDiagram
+    participant Input as Local Input
+    participant Owned as Owned PlayerController
+    participant Sync as NetworkSyncManager
+    participant Remote as Remote Player Avatar
+    participant MainView as Main Camera View
+    participant RemoteView as RemoteTimelineView
+
+    Input->>Owned: Move / Jump / Interact
+    Owned->>Sync: 위치/상태 전송
+    Sync->>Remote: 상대 위치/상태 수신
+    MainView->>Owned: 자기 캐릭터 렌더링
+    RemoteView->>Remote: 상대 시간대 보조 뷰 렌더링
+```
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `SplitViewManager` | Unity Component | 카메라 rect, viewport, UI anchor 변경 |
+| `TimelineCameraRig` | Unity Component | 자기 시간대 메인 카메라 추적 대상 |
+| `RemoteTimelineView` | Unity Component | 상대 시간대 보조 카메라와 RenderTexture 출력 관리 |
+| `SplitViewState` | Runtime State | 활성 여부, 분할 방향, 각 카메라 대상 |
+| `PhasePresentationSO` | Data Asset | Phase별 카메라/연출 설정 |
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `EnableSplitView` | phase id, local target, remote target | 메인 뷰 UI 영역 조정, 상대 보조 뷰 RenderTexture 활성화 | split active | Host event, Client local render |
+| `DisableSplitView` | reason | 보조 뷰 비활성화, 메인 카메라 단일 화면 복귀 | split inactive | Host event |
+| `RouteInputToOwner` | input action, local player id | 로컬 소유 캐릭터만 조작 | player command | Owner Client |
+
+**리스크**
+
+- DRD의 "0프레임 딜레이"는 네트워크 물리 동기화의 문자 그대로의 보장이 아니라 같은 Host tick 결과를 같은 프레임에 렌더링하는 목표로 해석한다. 구현 검증 시 동일 이벤트의 표시 프레임 차이를 측정한다.
+
+### 3.9 게임 진행 / 체크포인트 시스템
+
+**책임**
+
+- Phase 전환, Major Interaction 완료 판정, 공동 실패, 체크포인트 저장/복귀를 관리한다.
+- 실패와 연결 끊김 이후 복원 가능한 최소 상태를 정의한다.
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `GameFlowManager` | Network Boundary / Unity Component | 게임 상태 전이와 RPC 전파 |
+| `PhaseService` | Domain Service | Phase 완료 조건과 다음 Phase 계산 |
+| `CheckpointService` | Domain Service | 스냅샷 생성/복원 |
+| `CheckpointDefinitionSO` | Data Asset | 체크포인트 ID, 스폰, 초기 룸, 복원 정책 |
+| `GameSessionState` | Runtime State | 현재 Phase, 체크포인트, 공동 실패 상태 |
+| `CheckpointSnapshot` | Runtime State | 플레이어, 인벤토리, 인과, 룸, AI 상태 스냅샷 |
+
+**상태 흐름**
+
+```mermaid
+stateDiagram-v2
+    [*] --> Lobby
+    Lobby --> PlayingPhase1 : both ready
+    PlayingPhase1 --> PlayingPhase2 : phase1 major complete
+    PlayingPhase2 --> PlayingPhase3 : phase2 major complete
+    PlayingPhase3 --> Result : escape resolved
+    PlayingPhase1 --> Rollback : player caught / fatal state
+    PlayingPhase2 --> Rollback : player caught / fatal state
+    PlayingPhase3 --> Rollback : player caught / escape fail
+    Rollback --> PlayingPhase1 : restore checkpoint in phase1
+    Rollback --> PlayingPhase2 : restore checkpoint in phase2
+    Rollback --> PlayingPhase3 : restore checkpoint in phase3
+```
+
+**체크포인트 복귀 흐름**
+
+```mermaid
+sequenceDiagram
+    participant Enemy as EnemySystem
+    participant Flow as GameFlowManager
+    participant CP as CheckpointService
+    participant Room as RoomManager
+    participant Cause as CausalityManager
+    participant Net as NetworkSyncManager
+
+    Enemy->>Flow: PlayerCaught(playerId)
+    Flow->>CP: LoadLatestSnapshot()
+    CP-->>Flow: CheckpointSnapshot
+    Flow->>Room: RestoreRoomsAndSpawns(snapshot)
+    Flow->>Cause: ResetCausalityToCheckpoint(snapshot)
+    Flow->>Net: CheckpointRestoreClientRpc(checkpointId, snapshotVersion)
+```
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `NotifyMajorComplete` | phase id, major id | 완료 목록 갱신, Phase 완료 조건 검사 | phase progress | Host |
+| `CreateCheckpoint` | checkpoint id | 현재 RuntimeState 스냅샷 생성 | `CheckpointSnapshot` | Host |
+| `RollbackToCheckpoint` | failure reason | 플레이어/룸/인과/AI/인벤토리 복원 | restored state | Host |
+| `TransitionPhase` | target phase | 데이터 로드, 카메라/UI/스플릿뷰 이벤트 발행 | phase started | Host |
+| `HandleSessionTimeout` | disconnected client id | 일시 정지 또는 종료 정책 적용 | recovery UI | Host |
+
+### 3.10 UI / HUD 시스템
+
+**책임**
+
+- 정보 격리 규칙을 UI에도 적용한다.
+- 상호작용 프롬프트, 무전기 상태, 인벤토리, 개인 미니맵, 단기 목표를 표시한다.
+- 실제 인과 변경 발생 시 양쪽 플레이어에게 공통 `CausalityIndicator`를 추상 피드백으로 표시한다.
+- Phase 진행 상태는 내부 진행 관리 정보로만 사용하며 UI에 직접 표시하지 않는다.
+- UI는 권위 판정을 하지 않고 로컬 표시와 입력 보조만 담당한다.
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `HudPresenter` | Unity Component | HUD 상태를 ViewModel로 렌더링 |
+| `InteractionPromptPresenter` | Unity Component | 근접/E키/클릭 프롬프트 표시 |
+| `InventoryPresenter` | Unity Component | 개인 인벤토리와 선택 아이템 표시 |
+| `MinimapPresenter` | Unity Component | 방문한 개인 룸만 표시 |
+| `ObjectivePresenter` | Unity Component | 현재 단기 목표와 체크포인트 알림 표시 |
+| `CausalityIndicatorPresenter` | Unity Component | 인과 변경 발생을 점멸/회전/파동 등 추상 UI로 표시 |
+| `HudViewModelBuilder` | Domain Service | RuntimeState를 표시 가능한 ViewModel로 변환 |
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `BuildHudViewModel` | local player state, allowed replicated state | 정보 격리 필터 적용 | HUD view model | Client local |
+| `ShowInteractionPrompt` | nearby interactable, selected item | 가능한 행동 라벨 결정 | prompt state | Client local |
+| `ShowCausalityPulse` | pulse event | 구체 상태 정보 없이 공통 인과 아이콘 애니메이션 표시 | pulse animation | Client local |
+| `ShowCheckpointNotice` | checkpoint event | 알림 표시 | toast / banner | Client local |
+| `ShowConnectionWarning` | timeout/reconnect state | 네트워크 상태 표시 | warning modal | Client local |
+
+---
