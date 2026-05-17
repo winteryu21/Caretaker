@@ -1,9 +1,5 @@
 # Caretaker DSD — Part 1: 요약문 / 서론 / 시스템 설계
 
-> 본 파일은 DSD를 팀원별로 분할한 파트입니다. 최종적으로 `DSD.md`에 병합됩니다.
-
----
-
 # Caretaker — Design Specification Document
 
 | 버전 | 내용 | 작업자 |
@@ -332,3 +328,160 @@ sequenceDiagram
 | M2 | 보안 정보 접근 | Future의 취약점/상태 정보가 Past 보안 조작 조건을 결정한다. | 완료 시 보안 경로 또는 카드키 관련 진행 상태를 갱신한다. | [`../interaction-spec.md`](../interaction-spec.md) |
 | M3 | 청사진 식별 | Past의 후보 정보와 Future의 실험 결과 정보가 함께 올바른 청사진 판정에 필요하다. | 완료 시 Phase 2 진행 상태를 갱신한다. | [`../interaction-spec.md`](../interaction-spec.md) |
 | M4 | 실린더 회수 | Past 설정/타이머 조작이 Future 저장소/실린더 상태를 변경한다. | 완료 시 Phase 3 진입 조건을 충족한다. | [`../interaction-spec.md`](../interaction-spec.md) |
+
+# Caretaker DSD — Part 3: 네트워크 / 플레이어 / 룸·카메라
+
+### 3.2 네트워크 동기화 시스템
+
+**책임**
+
+- 2인 Host-Client 세션 생성, 참가, 준비 상태, 역할 배정을 관리한다.
+- Host Authority가 필요한 게임 판정과 Client 로컬 표현을 분리한다.
+- 상태 동기화는 이벤트 기반으로 처리하고, 지속 값은 필요한 경우에만 `NetworkVariable`로 유지한다.
+- Phase 1~2의 정보 격리를 보장하기 위해 상대 상태의 복제 범위를 제한한다.
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `NetworkSessionController` | Network Boundary | Host/Join, Timeout, 연결 종료 처리 |
+| `SessionRoleManager` | Domain Service / Runtime State | NetworkRole과 TimelineRole 매핑 |
+| `NetworkSyncManager` | Network Boundary | 공통 RPC 래퍼, 이벤트 순서 번호, 재전송 대상 관리 |
+| `ReplicatedStateRegistry` | Runtime State | 동기화 가능한 상태 ID와 최신 버전 관리 |
+
+**동기화 정책**
+
+| 데이터 | 방식 | 방향 | 빈도 | 근거 |
+| :--- | :--- | :--- | :--- | :--- |
+| 플레이어 위치 | NetworkTransform 또는 압축 위치 이벤트 | Owner → Host, Phase별 허용 대상 | 고빈도 | 3 페이즈 분할 화면에 필요 |
+| 인과 결과 | ClientRpc 이벤트 | Host → Phase별 허용 대상 | 발생 시 | 1프레임 이내 결과 전파 요구 |
+| Phase/Checkpoint | NetworkVariable + ClientRpc | Host → All | 변경 시 | 재접속/복구 기준 상태 |
+| 무전기 송신권 | NetworkVariable | Host → All | 변경 시 | half-duplex 충돌 방지 |
+| 방 방문 기록 | Client 로컬 + Host 검증 이벤트 | Host → Owner | 변경 시 | 정보 격리 유지 |
+| AI 경보 상태 | ClientRpc 이벤트 + 상태 버전 | Host → Affected Clients | 변경 시 | 현재/인접 방에만 영향 |
+
+**Phase별 공개 범위**
+
+| 상태 / 데이터 | Phase 1~2 공개 범위 | Phase 3 공개 범위 | 근거 |
+| :--- | :--- | :--- | :--- |
+| 플레이어 위치 / 상태 | Host와 Owner만 보유한다. 상대 Client에는 복제하지 않는다. | `Phase3Ready`가 양쪽에서 보고되고 Host가 `Phase3Started`를 발행한 뒤, 스플릿뷰 렌더링에 필요한 최소 상태만 양쪽에 복제한다. | 정보 격리 / 스플릿뷰 |
+| 현재 룸 | Host와 Owner만 보유한다. | 필요 시 보조 뷰 렌더링 범위로 제한해 복제한다. | 상대 위치 추론 방지 |
+| 방문 룸 / 미니맵 | Owner에게만 전송한다. | 원칙적으로 Owner 전용으로 유지한다. | 개인 미니맵 |
+| 인벤토리 | Host와 Owner만 보유한다. | 원칙적으로 Owner 전용으로 유지한다. | 개인 인벤토리 |
+| 인과 결과 상세 | 영향을 받는 시간대 Owner에게만 전송한다. Actor에게는 로컬 피드백만 제공한다. | 스플릿뷰 렌더링에 필요한 인과/장애물 상태만 양쪽에 허용한다. | 인과 체감 / 정보 격리 |
+| 인과 Pulse UI | 양쪽에 전송하되 구체 상태 정보는 포함하지 않는다. | 양쪽에 전송하되 구체 상태 정보는 포함하지 않는다. | 공통 추상 피드백 |
+| 경보 상태 | 영향을 받는 룸 또는 Owner 중심으로 전송한다. | 탈출 시퀀스 표현에 필요한 범위로 전송한다. | 압박 표현 |
+| Phase / Checkpoint | 양쪽에 전송한다. | 양쪽에 전송한다. | 공동 진행 |
+| 무전기 송신권 | 양쪽에 전송한다. | 양쪽에 전송한다. | half-duplex 규칙 |
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `CreateSession` | host player profile | 세션 초기화, Host 역할 등록 | lobby state | Host |
+| `JoinSession` | join code / address | Client 연결, 10초 timeout 감시 | connected / rejected | Host |
+| `AssignTimelineRoles` | player ids | Past/Future 고정 배정 | role map | Host |
+| `PublishGameEvent` | event type, payload, sequence | 순서 검증 후 대상 전파 | acknowledged event | Host |
+| `HandleDisconnect` | client id | 일시 정지, 재접속 창 또는 세션 종료 | recovery state | Host |
+
+**동작 흐름**
+
+```mermaid
+sequenceDiagram
+    participant H as Host
+    participant C as Client
+    participant R as SessionRoleManager
+    participant G as GameFlowManager
+
+    H->>R: CreateSession()
+    C->>H: JoinRequest
+    H->>R: RegisterClient(clientId)
+    H->>R: Assign Past/Future independent of Host/Client
+    H->>C: LobbyStateClientRpc(roleMap)
+    H->>G: StartGame when BothReady
+    G->>C: Phase1StartedClientRpc(initialState)
+```
+
+### 3.3 플레이어 제어 및 상호작용 시스템
+
+**책임**
+
+- 2D 이동, 점프, 웅크리기, 마우스 클릭 기반 조사/아이템 사용, E키 조작물 상호작용을 처리한다.
+- 플레이어 입력을 `InteractionRequest`로 정규화하고, 실제 판정은 Host 또는 도메인 서비스로 전달한다.
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `PlayerInputReader` | Unity Component | Input System 액션을 명령으로 변환 |
+| `PlayerMotor2D` | Unity Component | Rigidbody2D 이동, 점프, 웅크리기 적용 |
+| `InteractionProbe` | Unity Component | 마우스 클릭 대상, E키 반경 후보 탐색 |
+| `InteractionService` | Domain Service | 조사, 아이템 사용, 조작물 상호작용 규칙 판정 |
+| `InteractableObject` | Unity Component | 조사 텍스트, 필요 아이템, 조작 가능 여부 제공 |
+
+**상호작용 모드**
+
+| 모드 | 입력 | 대상 | 결과 |
+| :--- | :--- | :--- | :--- |
+| 조사 | 마우스 클릭, 아이템 미선택 | 조사 가능 오브젝트 | 정보 UI 표시, 상태 변화 없음 |
+| 아이템 사용 | 마우스 클릭, 아이템 선택 | 아이템 적용 가능 오브젝트 | Host 검증 후 상태 변화 |
+| 즉시 조작 | E키 | 반경 1 unit 내 문/레버 등 | Host 검증 후 조작 이벤트 |
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `Move` | input vector | 속도 제한, 지면 상태 반영 | Rigidbody2D velocity | Owner Client, Host reconciliation |
+| `Jump` | button down | 지면 판정과 점프 높이 적용 | jump impulse | Owner Client |
+| `BuildInteractionRequest` | pointer target, selected item, actor state | 조사/사용/E키 모드 판별 | `InteractionRequest` | Owner Client |
+| `ValidateInteraction` | request | 거리 1 unit, 역할, 아이템, 대상 상태 검증 | accepted / rejected | Host |
+
+**테스트 기준**
+
+- `InteractionService`는 씬 없이 거리, 역할, 아이템 조건을 단위 테스트할 수 있어야 한다.
+- `PlayerMotor2D`는 Unity PlayMode 테스트에서 속도, 점프 높이, Collider 크기를 확인한다.
+
+### 3.4 룸 / 카메라 / 미니맵 시스템
+
+**책임**
+
+- 방 단위 전환, 현재 방 기록, 인접 방 조회, 룸 단위 활성화/비활성화를 관리한다.
+- Phase 1~2의 개인 카메라와 개인 미니맵을 유지한다.
+- 경보 전파와 체크포인트 복원에 필요한 룸 그래프를 제공한다.
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `RoomVolume` | Unity Component | 룸 진입/이탈 Trigger Collider |
+| `RoomGraphSO` | Data Asset | 룸 ID, 인접 룸, 시간대별 대응 룸 정의 |
+| `RoomService` | Domain Service | 현재 룸, 방문 룸, 인접 룸 계산 |
+| `RoomManager` | Unity Component | 룸 활성화, 전환 이벤트, 스폰 위치 제공 |
+| `CameraDirector` | Unity Component | 현재 룸 기준 카메라 구역 전환 |
+| `MinimapSystem` | Unity Component | 플레이어별 방문 룸만 표시 |
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `EnterRoom` | player id, room id | 현재 룸 갱신, 방문 기록 추가 | `RoomChanged`, `RoomVisited` | Host 기록, Owner 표시 |
+| `GetAdjacentRooms` | room id | 룸 그래프 조회 | room id list | Pure |
+| `ActivateRoomSet` | current room, adjacent rooms | 렌더러/AI/오브젝트 활성 범위 조정 | activation plan | Client local |
+| `ResolveSpawnPoint` | checkpoint id, timeline role | 사전 정의 스폰 조회 | spawn transform id | Host |
+
+**동작 흐름**
+
+```mermaid
+sequenceDiagram
+    participant P as Player
+    participant V as RoomVolume
+    participant R as RoomManager
+    participant C as CameraDirector
+    participant M as MinimapSystem
+
+    P->>V: enter trigger
+    V->>R: ReportRoomEnter(playerId, roomId)
+    R->>R: update current and visited rooms
+    R->>C: FocusRoom(roomId)
+    R->>M: RevealVisitedRoom(owner, roomId)
+```
