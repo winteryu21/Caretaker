@@ -207,3 +207,128 @@ stateDiagram-v2
 | Room-Scoped Pressure | Phase 1~2의 직접 추적은 방 단위로 제한하고, 경보는 인접 방까지 전파한다. |
 
 ---
+
+## 3. 세부 설계
+
+> 각 시스템은 Unity 씬 오브젝트에 과도하게 의존하지 않도록 `표현 컴포넌트`, `도메인 서비스`, `데이터 에셋`, `네트워크 경계`를 분리한다.
+
+### 3.0 공통 계층 구조
+
+```mermaid
+classDiagram
+    class UnityComponent {
+      MonoBehaviour lifecycle
+      scene references
+      input and visual binding
+    }
+    class DomainService {
+      pure C# rules
+      deterministic validation
+      no scene dependency
+    }
+    class DataAsset {
+      ScriptableObject config
+      stable ids
+      designer editable values
+    }
+    class RuntimeState {
+      serializable state
+      checkpoint snapshot
+      network payload
+    }
+    class NetworkBoundary {
+      ServerRpc / ClientRpc
+      NetworkVariable
+      host authority guard
+    }
+
+    UnityComponent --> DomainService : command
+    DomainService --> RuntimeState : read/write
+    DomainService --> DataAsset : read rules
+    UnityComponent --> NetworkBoundary : request/sync
+    NetworkBoundary --> DomainService : host-side execute
+```
+
+| 계층 | 책임 | 금지 사항 |
+| :--- | :--- | :--- |
+| Unity Component | 입력, 충돌 콜백, 카메라, UI, 애니메이션 연결 | 핵심 판정 규칙을 직접 보유하지 않는다. |
+| Domain Service | 인과 조건, 경보 전파, 체크포인트 복원 등 결정적 규칙 | `GameObject`, `Transform`, 씬 싱글턴에 직접 의존하지 않는다. |
+| Data Asset | 규칙과 파라미터 정의 | 런타임 진행 상태를 저장하지 않는다. |
+| Runtime State | 현재 방, 역할, 인벤토리, 인과 결과 등 저장 가능한 상태 | 에디터 전용 참조나 씬 인스턴스 참조를 포함하지 않는다. |
+| Network Boundary | 권위 판정 위치와 동기화 방향 명시 | Client가 권위 상태를 임의로 확정하지 않는다. |
+
+### 3.1 시간 인과 시스템
+
+**책임**
+
+- Past 플레이어의 트리거 활성화 요청을 검증한다.
+- `CausalRuleSO`에 정의된 조건을 평가해 Future 리시버 상태를 변경한다.
+- Major/Minor Interaction 완료 상태를 기록하고 GameFlow에 진행 가능 여부를 알린다.
+- Host에서 판정하고 양쪽 클라이언트에는 결과 상태만 전파한다.
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `CausalTrigger` | Unity Component | Past 월드의 클릭/사용 대상. Trigger ID와 상호작용 타입을 가진다. |
+| `CausalReceiver` | Unity Component | Future 월드의 변경 대상. Receiver ID와 상태 적용 어댑터를 가진다. |
+| `CausalityService` | Domain Service | 조건 검증, 규칙 실행, 완료 상태 계산을 담당한다. |
+| `CausalityManager` | Unity Component / Network Boundary | Host RPC 진입점과 ClientRpc 결과 적용을 담당한다. |
+| `CausalRuleSO` | Data Asset | Trigger, 조건, Receiver 결과, Major/Minor 구분을 정의한다. |
+| `CausalityState` | Runtime State | 활성화된 Rule ID, Receiver 상태, 완료한 Major Interaction 목록을 저장한다. |
+
+```mermaid
+sequenceDiagram
+    participant Past as Past Player
+    participant Trigger as CausalTrigger
+    participant Net as CausalityManager
+    participant Rule as CausalityService
+    participant Future as Future Receiver
+    participant Flow as GameFlowManager
+
+    Past->>Trigger: Click / Use Item
+    Trigger->>Net: SubmitTriggerServerRpc(trigger request)
+    Net->>Rule: Validate distance, role, phase, conditions
+    Rule-->>Net: CausalResult(receiverId, newState, majorProgress)
+    Net->>Future: ApplyCausalResultToReceiverClientRpc(result)
+    Net-->>Past: SendActorFeedbackClientRpc(local feedback)
+    Net-->>Past: CausalityPulseClientRpc
+    Net-->>Future: CausalityPulseClientRpc
+    Net->>Flow: NotifyMajorProgress(result)
+```
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `SubmitTrigger` | trigger request | 거리, 역할, 페이즈, 필요 아이템 검증 | `CausalResult` 또는 거부 사유 | Host |
+| `ApplyReceiverState` | `receiverId`, `stateKey`, `value` | 리시버 어댑터에 상태 적용 | 문 열림, 전원 공급, 장애물 제거 등 | Host 결정, Receiver Owner 표현 |
+| `SendActorFeedback` | actor, request result | 요청자에게 로컬 작동 피드백만 제공 | 장치 작동, 조건 불충족 등 | Host 결정, Actor Owner 표현 |
+| `PublishCausalityPulse` | causal change event | 실제 인과 변경 발생 시 양쪽 HUD에 추상 Pulse 표시 | 인과 변경 아이콘 점멸/회전/파동 | Host |
+| `QueryMajorProgress` | `phaseId` | Major Interaction 완료 여부 계산 | `bool`, 완료 목록 | Host |
+| `ResetCausalityToCheckpoint` | `CheckpointState` | 인과 상태를 스냅샷으로 복원 | 복원 이벤트 | Host |
+
+**정보 공개 계약**
+
+- Phase 1~2에서 Future 월드의 구체적 변경 결과는 영향을 받는 시간대 Owner에게만 전송한다.
+- Actor에게는 자기 행동이 접수되었거나 로컬 장치가 작동했다는 수준의 피드백만 제공하며, 상대 룸, 리시버 ID, 상태값 등은 노출하지 않는다.
+- 실제 `CausalChange`가 발생한 경우 양쪽 HUD의 공통 `CausalityIndicator`가 점멸, 회전, 파동 등으로 인과 변경 발생만 표시한다.
+- `CausalityIndicator`는 Major/Minor 여부, Rule ID, Receiver ID, Room ID, 상태값을 표시하지 않는다.
+- 거리 부족, 역할 불일치, 아이템 조건 미충족 등은 인과 변경 실패가 아니라 상호작용 요청 거부로 처리하며, 공통 인과 UI는 반응하지 않는다.
+
+**실패/예외**
+
+| 상황 | 처리 |
+| :--- | :--- |
+| Client가 Future 역할로 Past Trigger 요청 | Host가 거부하고 로컬 프롬프트만 실패 표시 |
+| Rule ID 또는 Receiver ID 누락 | 개발 빌드에서는 에러 로그, 릴리스 빌드에서는 요청 무시 |
+| 동일 Rule 중복 실행 | `CausalityState`의 실행 기록으로 idempotent 처리 |
+
+**프로토타입 Major Interaction 계약**
+
+| Major ID | 시스템 목적 | 인과 / 정보 계약 | 진행 계약 | 상세 문서 |
+| :--- | :--- | :--- | :--- | :--- |
+| M1 | 전력 복구 | Past 조작은 Future 전력/장치 상태를 변경하고, Future 관찰 정보는 Past 조작 조건을 결정한다. | 완료 시 `CP-M1` 기준 체크포인트와 Phase 1 진행을 갱신한다. | [`../interaction-spec.md`](../interaction-spec.md) |
+| M2 | 보안 정보 접근 | Future의 취약점/상태 정보가 Past 보안 조작 조건을 결정한다. | 완료 시 보안 경로 또는 카드키 관련 진행 상태를 갱신한다. | [`../interaction-spec.md`](../interaction-spec.md) |
+| M3 | 청사진 식별 | Past의 후보 정보와 Future의 실험 결과 정보가 함께 올바른 청사진 판정에 필요하다. | 완료 시 Phase 2 진행 상태를 갱신한다. | [`../interaction-spec.md`](../interaction-spec.md) |
+| M4 | 실린더 회수 | Past 설정/타이머 조작이 Future 저장소/실린더 상태를 변경한다. | 완료 시 Phase 3 진입 조건을 충족한다. | [`../interaction-spec.md`](../interaction-spec.md) |
