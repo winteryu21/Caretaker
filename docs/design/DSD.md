@@ -207,3 +207,145 @@ stateDiagram-v2
 | Room-Scoped Pressure | Phase 1~2의 직접 추적은 방 단위로 제한하고, 경보는 인접 방까지 전파한다. |
 
 ---
+
+
+# Caretaker DSD — Part 4: AI / 통신 / 인벤토리
+
+---
+
+### 3.5 AI / 경보 시스템
+
+**책임**
+
+- 적의 기본/경계/추적 상태를 관리한다.
+- 플레이어 감지, 은신 회피, 추적 해제 지연을 판정한다.
+- 발각 시 현재 방과 인접 방에 경보를 전파하고, 포획 시 공동 실패를 발생시킨다.
+
+**상태 전이**
+
+```mermaid
+stateDiagram-v2
+    [*] --> Patrol
+    Patrol --> Alert : room alert received
+    Patrol --> Chase : player detected
+    Alert --> Chase : player detected
+    Chase --> Search : lost sight
+    Search --> Patrol : 10s elapsed and no alert
+    Search --> Chase : reacquired target
+    Chase --> [*] : player caught
+```
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `EnemyController` | Unity Component | Nav/이동/애니메이션 연결 |
+| `EnemyPerception2D` | Unity Component | 10 unit, 45도 시야와 장애물 Raycast |
+| `EnemyStateMachine` | Domain Service | Patrol/Alert/Chase/Search 전이 판정 |
+| `AlertService` | Domain Service | 현재 방과 인접 방 경보 대상 계산 |
+| `EnemyTuningSO` | Data Asset | 감지 거리, FOV, 추적 속도, 해제 지연 |
+| `AlertState` | Runtime State | 방별 경보 상태와 만료 시간 |
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `EvaluateSight` | enemy pose, player pose, crouch/hidden state | FOV, 거리, 차폐 검사 | detected / not detected | Host |
+| `RaiseAlert` | source room id | 현재 방과 인접 방 계산 | `AlertRoomsChanged` | Host |
+| `TickEnemyState` | enemy state, perception, time | 상태 전이와 목표 선택 | new enemy state | Host |
+| `ReportPlayerCaught` | enemy id, player id | 공동 실패 요청 | checkpoint rollback | Host |
+
+**경보 전파 흐름**
+
+```mermaid
+sequenceDiagram
+    participant E as EnemyPerception2D
+    participant AI as EnemyStateMachine
+    participant Alert as AlertService
+    participant Room as RoomService
+    participant Net as NetworkSyncManager
+    participant Flow as GameFlowManager
+
+    E->>AI: PlayerDetected(playerId, roomId)
+    AI->>Alert: RaiseAlert(sourceRoomId)
+    Alert->>Room: GetAdjacentRooms(sourceRoomId)
+    Room-->>Alert: current + adjacent rooms
+    Alert->>Net: AlertRoomsClientRpc(alertRoomIds)
+    AI->>Flow: ReportPlayerCaught when capture confirmed
+```
+
+**설계 메모**
+
+- 룸 전환을 넘어 직접 추적하지 않는 규칙은 `EnemyStateMachine`이 아닌 `RoomService`와의 계약으로 둔다.
+- AI 이동 구현은 프로토타입에서 단순 waypoint와 line-of-sight를 우선하고, NavMesh 계열 도입은 TBD로 남긴다.
+
+### 3.6 무전기 통신 시스템
+
+**책임**
+
+- Push-to-Talk 입력과 half-duplex 송신권을 관리한다.
+- 한 명만 송신할 수 있도록 Host가 송신권을 부여/회수한다.
+- 음성 스트림과 통신 상태 UI를 분리한다.
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `RadioInputController` | Unity Component | PTT 키 입력 감지 |
+| `RadioService` | Domain Service | 송신권 요청, 충돌, timeout 규칙 |
+| `RadioNetworkBridge` | Network Boundary | 송신권 RPC, 상태 동기화 |
+| `VoiceTransport` | Infrastructure | 실제 음성 프레임 송수신 |
+| `RadioHudPresenter` | Unity Component | 송신/수신/점유 상태 표시 |
+
+**동작 흐름**
+
+```mermaid
+sequenceDiagram
+    participant A as Player A
+    participant H as Host RadioService
+    participant B as Player B
+    participant V as VoiceTransport
+
+    A->>H: RequestTalkServerRpc(playerA)
+    H-->>A: TalkGrantedClientRpc
+    H-->>B: RadioLockedClientRpc(playerA)
+    A->>V: Send voice frames while key held
+    A->>H: ReleaseTalkServerRpc
+    H-->>A: TalkReleasedClientRpc
+    H-->>B: RadioIdleClientRpc
+```
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `RequestTalk` | player id | 송신권 공석 여부 확인 | granted / denied | Host |
+| `ReleaseTalk` | player id | 현재 소유자 확인 후 해제 | idle state | Host |
+| `TransmitVoiceFrame` | encoded audio frame | 송신권 보유자만 전달 | remote audio playback | Current talker |
+| `UpdateRadioHud` | radio state | 아이콘/게이지/점유자 표시 | UI state | Client local |
+
+### 3.7 인벤토리 시스템
+
+**책임**
+
+- 플레이어별 개인 가방과 키 아이템 상태를 관리한다.
+- 직접 아이템 공유를 금지하고, 아이템 사용은 대상 오브젝트와의 상호작용으로만 발생한다.
+- 체크포인트 복원을 위해 소지/소모 상태를 직렬화한다.
+
+**구성 요소**
+
+| 요소 | 계층 | 설명 |
+| :--- | :--- | :--- |
+| `InventoryService` | Domain Service | 획득, 선택, 사용, 소모 규칙 |
+| `InventoryController` | Unity Component | 아이템 줍기 콜백과 UI 연결 |
+| `ItemDefinitionSO` | Data Asset | 아이템 ID, 표시명, 사용 가능 태그 |
+| `InventoryState` | Runtime State | 플레이어별 아이템 목록, 선택 아이템 |
+
+**인터페이스**
+
+| Name | Input | Process | Output | Authority |
+| :--- | :--- | :--- | :--- | :--- |
+| `AcquireItem` | player id, item id | 중복/소지 제한 확인 | inventory changed | Host |
+| `SelectItem` | player id, item id | 소지 여부 확인 | selected item changed | Owner Client |
+| `UseItemOnTarget` | player id, item id, target id | 대상 태그와 필요 조건 검증 | interaction request | Host |
+| `RestoreInventory` | checkpoint inventory state | 소지품 복원 | inventory changed | Host |
