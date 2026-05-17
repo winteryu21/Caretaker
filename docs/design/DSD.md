@@ -207,3 +207,131 @@ stateDiagram-v2
 | Room-Scoped Pressure | Phase 1~2의 직접 추적은 방 단위로 제한하고, 경보는 인접 방까지 전파한다. |
 
 ---
+
+
+## 4. 데이터 설계
+
+### 4.1 데이터 분류
+
+| 분류 | 저장 위치 | 예시 | 설계 기준 |
+| :--- | :--- | :--- | :--- |
+| 정적 규칙 데이터 | ScriptableObject | 인과 규칙, 룸 그래프, 적 파라미터, 아이템 정의 | 에디터에서 검수 가능하고 Git diff가 가능한 작은 단위로 분리 |
+| 런타임 상태 | Serializable C# struct/class | 현재 Phase, 인과 완료, 인벤토리, AI 상태 | 체크포인트와 네트워크 payload로 재사용 가능 |
+| 네트워크 메시지 | RPC payload / NetworkVariable | 상호작용 요청, 인과 결과, 경보, 송신권 | stable ID 기반, 씬 참조 금지 |
+| 체크포인트 데이터 | Runtime snapshot | 플레이어 위치, 룸, 아이템, 인과, AI | 실패 복구 시 동일 결과 재현 |
+
+### 4.2 ScriptableObject 스키마
+
+| SO | 주요 필드 | 사용 시스템 |
+| :--- | :--- | :--- |
+| `CausalRuleSO` | `ruleId`, `triggerId`, `requiredRole`, `requiredItemId`, `conditions`, `receiverEffects`, `interactionWeight` | 시간 인과 |
+| `RoomGraphSO` | `roomId`, `timeline`, `adjacentRoomIds`, `pairedTimelineRoomId`, `spawnPointIds` | 룸, AI, 체크포인트 |
+| `EnemyTuningSO` | `enemyType`, `sightDistance`, `fovDegrees`, `chaseSpeed`, `loseSightSeconds`, `alertDuration` | AI / 경보 |
+| `ItemDefinitionSO` | `itemId`, `displayName`, `category`, `usableTargetTags`, `consumeOnUse` | 인벤토리 / 상호작용 |
+| `CheckpointDefinitionSO` | `checkpointId`, `phaseId`, `pastSpawnId`, `futureSpawnId`, `restorePolicy` | 게임 진행 |
+| `PhaseDefinitionSO` | `phaseId`, `requiredMajorIds`, `presentationMode`, `checkpointIds` | 게임 진행 / 스플릿뷰 |
+
+### 4.3 런타임 상태 스키마
+
+| 상태 | 필드 | 설명 |
+| :--- | :--- | :--- |
+| `PlayerRuntimeState` | `playerId`, `timelineRole`, `currentRoomId`, `position`, `isCrouching`, `isCaught` | 플레이어 복원과 UI 표시 기준 |
+| `InventoryState` | `playerId`, `ownedItemIds`, `selectedItemId`, `consumedItemIds` | 개인 가방 상태 |
+| `CausalityState` | `appliedRuleIds`, `receiverStates`, `completedMajorIds` | 인과 결과와 진행 조건 |
+| `RoomVisitState` | `playerId`, `visitedRoomIds`, `currentRoomId` | 개인 미니맵과 체크포인트 |
+| `AlertState` | `roomId`, `alertLevel`, `expiresAtTick` | 경보 전파와 AI 상태 |
+| `GameSessionState` | `phaseId`, `checkpointId`, `sessionStatus`, `roleMap` | 세션 복구 기준 |
+
+### 4.4 네트워크 메시지
+
+네트워크 메시지는 구현 필드명을 고정하지 않고, 메시지별 목적, 공개 범위, 포함 가능한 정보 범주와 금지 정보를 계약으로 정의한다. 실제 C# payload 타입과 필드명은 구현 단계에서 정하되, 아래 계약을 위반하지 않아야 한다.
+
+| 메시지 | 목적 | 방향 | 포함 정보 범주 | 포함 금지 정보 | 권위 / 검증 | 공개 범위 |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `InteractionRequestServerRpc` | 플레이어가 대상 상호작용 의도를 Host에 요청 | Owner → Host | 대상 식별자, 상호작용 모드, 선택 아이템 참조, 요청 순서 | actor 확정값, timeline role 확정값, 위치/거리 판정값, 현재 룸 확정값 | Host가 송신자 기준으로 역할, 위치, 거리, 아이템, 대상 상태를 검증 | Host only |
+| `CausalResultToReceiverClientRpc` | 승인된 인과 변경을 영향을 받는 시간대에 적용 | Host → Receiver Owner | 변경 대상 식별자, 변경 상태 범주, 적용 순서/시점 | 상대 플레이어 위치, 상대 룸 기록, 불필요한 Actor 정보 | Host 결정 결과만 적용 | Phase 1~2는 Receiver Owner 중심, Phase 3는 스플릿뷰 필요 범위 허용 |
+| `CausalFeedbackToActorClientRpc` | 요청자에게 자기 행동의 접수/작동 피드백 제공 | Host → Actor Owner | 로컬 피드백 종류, 요청 처리 결과, 표시 순서/시점 | Future의 구체 룸, 리시버 ID, 상태값, Major/Minor 여부 | Host 검증 결과 | Actor Owner only |
+| `CausalityPulseClientRpc` | 양쪽 HUD에 인과 변경 발생을 추상 표시 | Host → All | 표시 순서, 표시 시점, Pulse 종류 | Rule ID, Receiver ID, Room ID, 상태 키/값, Major/Minor 여부 | 실제 `CausalChange` 발생 시에만 발행 | All |
+| `RoomChangedClientRpc` | 개인 룸 상태와 방문 기록 갱신 | Host → Owner | 소유 플레이어의 현재 룸, 방문 룸 범주, 표시 순서 | 상대 플레이어의 룸, 상대 방문 기록, 상대 위치 | Host가 RoomVolume 진입과 룸 그래프 기준으로 확정 | Owner only |
+| `AlertRoomsClientRpc` | 경보 상태를 영향 범위에 전파 | Host → Affected Clients | 경보 대상 룸 범주, 경보 수준, 만료 기준 | 영향 범위 밖 룸 상태, 상대 위치/방문 기록 | Host가 감지와 인접 룸 규칙 기준으로 확정 | Affected only |
+| `Phase3ReadyServerRpc` | 클라이언트의 Phase 3 렌더링 준비 완료 보고 | Owner → Host | 준비 완료 상태, 로컬 준비 대상 범주 | 상대 상태 요청, 상대 위치/룸 정보 | Host가 양쪽 준비 완료를 집계 | Host only |
+| `Phase3StartedClientRpc` | Phase 3 스플릿뷰와 최소 상대 상태 복제 개방 | Host → All | Phase 3 시작 시점, 표시 모드, 복제 개방 범위 | Phase 1~2의 상대 룸 히스토리, 상대 인벤토리, 상대 단서 | Host만 발행 | All |
+| `RadioLockNetworkVariable` | half-duplex 송신권 상태 공유 | Host → All | 현재 송신권 상태, 송신자 식별 범주, 갱신 시점 | 음성 내용 메타데이터, 불필요한 위치/룸 정보 | Host만 쓰기 | All |
+| `CheckpointRestoreClientRpc` | 공동 실패 후 체크포인트 복원 시작 | Host → All | 체크포인트 식별자, 스냅샷 버전, 복원 시작 시점 | 상대 개인 정보 상세, 불필요한 룸 히스토리 | Host가 최신 스냅샷 기준으로 발행 | All |
+
+### 4.5 ID 규칙
+
+| 대상 | 형식 | 예시 |
+| :--- | :--- | :--- |
+| Phase | `PHASE_{number}` | `PHASE_01` |
+| Room | `{timeline}_{area}_{index}` | `PAST_LAB_A01` |
+| Causal Rule | `CR_{phase}_{verb}_{target}` | `CR_P1_POWER_DOOR` |
+| Item | `ITEM_{category}_{name}` | `ITEM_KEY_LAB_A` |
+| Checkpoint | `CP_{phase}_{index}` | `CP_P2_02` |
+
+ID는 네트워크 payload와 체크포인트 스냅샷에 들어가므로 변경 비용이 크다. 표시명 변경은 별도 localization/display 필드로 처리한다.
+
+---
+
+## 5. 요구사항 추적 매트릭스
+
+### 5.1 기능 요구사항 추적
+
+| DRD ID | 요구사항 | DSD 설계 항목 | 검증 관점 |
+| :--- | :--- | :--- | :--- |
+| FR-01 | Host-Client 접속 | §3.2 | 2인 세션 생성/참가/시작 |
+| FR-02 | Timeout 처리 | §3.2, §3.9 | 10초 무응답 후 상태 전환 |
+| FR-03 | 재접속 시도 | §3.2, §3.9 | `GameSessionState` 기준 복구 |
+| FR-04 | 정보 격리 | §2.4, §3.2, §3.4, §3.10 | 복제 필터링과 표시 필터링으로 상대 정보 직접 접근 방지 |
+| FR-05 | 무전기 통신 | §3.6 | half-duplex 송신권 충돌 방지 |
+| FR-06 | 인과 전파 | §3.1, §4.4 | Host 판정 후 Receiver 결과, Actor 피드백, 공통 Pulse 분리 |
+| FR-07 | 상호작용 반경 | §3.1, §3.3 | 1 unit 거리 검증 |
+| FR-08 | 데이터 드리븐 인과 | §3.1, §4.2 | `CausalRuleSO` 추가로 규칙 확장 |
+| FR-09 | 이동/점프 | §3.3 | 속도 5, 점프 높이 2 |
+| FR-10 | 2D Collider 충돌 | §3.3 | 1x2 Collider PlayMode 확인 |
+| FR-11 | AI 감지/추격 | §3.5 | 10 unit, 45도 FOV 판정 |
+| FR-12 | AI 감시 복귀 | §3.5 | 10초 해제 지연 |
+| FR-13 | 은신 회피 | §3.5 | crouch/hidden state 감지 필터 |
+| FR-14 | Phase 3 분할 화면 | §3.8 | 5:5 viewport 구성 |
+| FR-15 | 분할 화면 동기화 | §3.2, §3.8 | 양쪽 `Phase3Ready` 이후 동일 Host tick 결과 표시 |
+| FR-16 | 3페이즈 구성 | §2.3, §3.9 | Phase1→2→3 전이 |
+| FR-17 | 체크포인트 자동 저장 | §3.9, §4.3 | 실패 후 스냅샷 복원 |
+
+### 5.2 비기능 요구사항 추적
+
+| DRD ID | 요구사항 | DSD 설계 항목 | 검증 관점 |
+| :--- | :--- | :--- | :--- |
+| NFR-01 | 60 FPS | §2.4, §3.4, §4.1 | 룸 단위 활성화, 이벤트 기반 동기화 |
+| NFR-02 | 16:9 최적화 | §3.8, §3.10 | 1920x1080, 1280x720 HUD 검증 |
+| NFR-03 | Ping 100ms | §3.2 | RTT 측정과 이벤트 지연 확인 |
+| NFR-04 | Timeout 10초 | §3.2, §3.9 | 연결 중단 시 타임아웃 측정 |
+| NFR-05 | 크래시율 < 1% | §3.9, §4.3 | 체크포인트 복구와 예외 상태 처리 |
+
+### 5.3 리스크 / TBD
+
+| 항목 | 리스크 | 기본 설계 | 검증 필요 |
+| :--- | :--- | :--- | :--- |
+| 음성 전송 | Netcode만으로 음성 품질/지연을 보장하기 어려울 수 있음 | `VoiceTransport`를 별도 인프라 경계로 분리 | Unity Vivox, Steam Voice, 외부 라이브러리 비교 |
+| Phase 3 동기화 | "0프레임 딜레이"의 구현 가능성 | Host tick 기준 이벤트 표시 동기화 | 실제 2PC에서 표시 프레임 차이 측정 |
+| AI 이동 | 2D 사이드뷰에서 NavMesh 적용성이 불확실 | waypoint 기반 추적 우선 | 장애물/층간 이동 프로토타입 |
+| 재접속 | 프로토타입 일정에서 완전 재접속 구현이 부담 | `GameSessionState`와 체크포인트 복원 경계 설계 | Must/Should 범위 재확인 |
+| ID 관리 | 수동 ID 중복 가능성 | stable ID 규칙과 에디터 검증 도구 예정 | SO ID 중복 검사 구현 |
+
+### 5.4 핵심 설계 계약 검증
+
+| 계약 | 검증 관점 |
+| :--- | :--- |
+| Phase 1~2 정보 격리 | 상대 위치, 현재 룸, 방문 기록, 아바타 상태, 단서 상태가 비소유 Client에 복제되지 않는지 확인 |
+| Phase 3 복제 개방 | 양쪽 `Phase3Ready` 이후 Host의 `Phase3Started` 시점에만 상대 최소 상태가 복제되는지 확인 |
+| 인과 결과 상세 | Phase 1~2에서 Future 결과 상세가 Past에게 전달되지 않고, Actor에는 로컬 피드백만 전달되는지 확인 |
+| 인과 Pulse UI | 실제 `CausalChange` 발생 시 양쪽 HUD가 Rule/Receiver/Room/상태값 없이 같은 추상 피드백만 표시하는지 확인 |
+| Host Authority | 클라이언트가 보낸 역할, 거리, 룸, 상태 주장을 신뢰하지 않고 Host 보유 상태로 검증하는지 확인 |
+| 개인 미니맵 / 인벤토리 | 방문 룸과 소지품 정보가 Owner와 Host 범위를 벗어나 노출되지 않는지 확인 |
+| 체크포인트 복원 | 공동 실패 후 플레이어, 인과, 룸, AI, 인벤토리 상태가 스냅샷 기준으로 일관되게 복원되는지 확인 |
+
+---
+
+## 6. 참고 자료
+
+1. Unity Technologies. Unity 6 Documentation.
+2. Unity Technologies. Netcode for GameObjects Documentation.
