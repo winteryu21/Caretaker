@@ -208,11 +208,6 @@ stateDiagram-v2
 
 ---
 
-
-# Caretaker DSD — Part 4: AI / 통신 / 인벤토리
-
----
-
 ### 3.5 AI / 경보 시스템
 
 **책임**
