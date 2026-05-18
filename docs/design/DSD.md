@@ -85,7 +85,7 @@ Caretaker는 과거와 미래에 분리된 두 플레이어가 제한된 정보�
 
 | 문서 | 경로 |
 | :--- | :--- |
-| DRD | [`../DRD.md`](../DRD.md) |
+| DRD | [`DRD.md`](DRD.md) |
 | 레벨 디자인 가이드 | [`../meetings/260504-level-design-guide.md`](../meetings/260504-level-design-guide.md) |
 
 ### 1.4 설계 제한사항
@@ -320,12 +320,12 @@ sequenceDiagram
 
 **프로토타입 Major Interaction 계약**
 
-| Major ID | 시스템 목적 | 인과 / 정보 계약 | 진행 계약 | 상세 문서 |
-| :--- | :--- | :--- | :--- | :--- |
-| M1 | 전력 복구 | Past 조작은 Future 전력/장치 상태를 변경하고, Future 관찰 정보는 Past 조작 조건을 결정한다. | 완료 시 `CP-M1` 기준 체크포인트와 Phase 1 진행을 갱신한다. | [`../interaction-spec.md`](../interaction-spec.md) |
-| M2 | 보안 정보 접근 | Future의 취약점/상태 정보가 Past 보안 조작 조건을 결정한다. | 완료 시 보안 경로 또는 카드키 관련 진행 상태를 갱신한다. | [`../interaction-spec.md`](../interaction-spec.md) |
-| M3 | 청사진 식별 | Past의 후보 정보와 Future의 실험 결과 정보가 함께 올바른 청사진 판정에 필요하다. | 완료 시 Phase 2 진행 상태를 갱신한다. | [`../interaction-spec.md`](../interaction-spec.md) |
-| M4 | 실린더 회수 | Past 설정/타이머 조작이 Future 저장소/실린더 상태를 변경한다. | 완료 시 Phase 3 진입 조건을 충족한다. | [`../interaction-spec.md`](../interaction-spec.md) |
+| Major ID | 시스템 목적 | 인과 / 정보 계약 | 진행 계약 |
+| :--- | :--- | :--- | :--- |
+| M1 | 전력 복구 | Past 조작은 Future 전력/장치 상태를 변경하고, Future 관찰 정보는 Past 조작 조건을 결정한다. | 완료 시 `CP-M1` 기준 체크포인트와 Phase 1 진행을 갱신한다. |
+| M2 | 보안 정보 접근 | Future의 취약점/상태 정보가 Past 보안 조작 조건을 결정한다. | 완료 시 보안 경로 또는 카드키 관련 진행 상태를 갱신한다. |
+| M3 | 청사진 식별 | Past의 후보 정보와 Future의 실험 결과 정보가 함께 올바른 청사진 판정에 필요하다. | 완료 시 Phase 2 진행 상태를 갱신한다. |
+| M4 | 실린더 회수 | Past 설정/타이머 조작이 Future 저장소/실린더 상태를 변경한다. | 완료 시 Phase 3 진입 조건을 충족한다. |
 
 ### 3.2 네트워크 동기화 시스템
 
