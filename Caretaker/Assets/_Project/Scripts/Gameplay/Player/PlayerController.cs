@@ -30,7 +30,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        _motor2D.TickMotor(_inputReader.MoveInput, _inputReader.IsCrouchPressed);
+        _motor2D.TickMotor(_inputReader.MoveInput, _inputReader.IsCrouchPressed, _inputReader.IsSprintPressed);
     }
 
     private void OnDisable()

@@ -11,6 +11,7 @@ public class PlayerMotor2D : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] private float _moveSpeed = 5f;
+    [SerializeField] private float _sprintSpeedMultiplier = 1.5f;
     [SerializeField] private float _jumpHeight = 2f;
 
     [Header("Crouch")]
@@ -57,7 +58,7 @@ public class PlayerMotor2D : MonoBehaviour
     /// <summary>
     /// 현재 물리 틱에 대한 이동, 웅크리기, 점프 상태를 적용합니다.
     /// </summary>
-    public void TickMotor(Vector2 moveInput, bool wantsToCrouch)
+    public void TickMotor(Vector2 moveInput, bool wantsToCrouch, bool wantsToSprint)
     {
         IsGrounded = CheckGrounded();
 
@@ -68,7 +69,7 @@ public class PlayerMotor2D : MonoBehaviour
         }
 
         ApplyCrouchState(shouldCrouch);
-        ApplyHorizontalMovement(moveInput, shouldCrouch);
+        ApplyHorizontalMovement(moveInput, shouldCrouch, wantsToSprint);
 
         if (ApplyJump())
         {
@@ -76,9 +77,18 @@ public class PlayerMotor2D : MonoBehaviour
         }
     }
 
-    private void ApplyHorizontalMovement(Vector2 moveInput, bool isCrouching)
+    private void ApplyHorizontalMovement(Vector2 moveInput, bool isCrouching, bool wantsToSprint)
     {
-        float moveSpeed = isCrouching ? _moveSpeed * CROUCH_SPEED_MULTIPLIER : _moveSpeed;
+        float moveSpeed = _moveSpeed;
+        if (isCrouching)
+        {
+            moveSpeed *= CROUCH_SPEED_MULTIPLIER;
+        }
+        else if (wantsToSprint)
+        {
+            moveSpeed *= _sprintSpeedMultiplier;
+        }
+
         Vector2 velocity = _rigidbody2D.linearVelocity;
         velocity.x = moveInput.x * moveSpeed;
         _rigidbody2D.linearVelocity = velocity;

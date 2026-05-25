@@ -19,6 +19,7 @@ public class PlayerInputReader : MonoBehaviour
     private InputAction _interactAction;
     private InputAction _jumpAction;
     private InputAction _moveAction;
+    private InputAction _sprintAction;
     private PlayerInput _playerInput;
     private string _selectedItemId;
 
@@ -42,12 +43,18 @@ public class PlayerInputReader : MonoBehaviour
     /// </summary>
     public bool IsCrouchPressed => _crouchAction.IsPressed();
 
+    /// <summary>
+    /// 달리기 입력이 현재 눌려 있는지 반환합니다.
+    /// </summary>
+    public bool IsSprintPressed => _sprintAction.IsPressed();
+
     private void Awake()
     {
         _playerInput = GetComponent<PlayerInput>();
         _moveAction = _playerInput.actions["Move"];
         _jumpAction = _playerInput.actions["Jump"];
         _crouchAction = _playerInput.actions["Crouch"];
+        _sprintAction = _playerInput.actions["Sprint"];
         _clickAction = _playerInput.actions["Attack"];
         _interactAction = _playerInput.actions["Interact"];
     }
