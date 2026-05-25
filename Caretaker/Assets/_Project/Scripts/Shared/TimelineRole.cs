@@ -7,7 +7,8 @@ namespace Caretaker.Shared
     /// <remarks>DSD §1.2 — 시간대 역할</remarks>
     public enum TimelineRole
     {
-        Past,
-        Future
+        None = 0,
+        Past = 1,
+        Future = 2
     }
 }
