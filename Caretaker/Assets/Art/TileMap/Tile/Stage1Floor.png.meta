@@ -1,0 +1,1261 @@
+fileFormatVersion: 2
+guid: 6baed3330de6d6e4383e733e4ef9ca71
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8362790411052381333
+    second: Stage1Floor_0
+  - first:
+      213: 7437828743971901888
+    second: Stage1Floor_1
+  - first:
+      213: -4263409126024732101
+    second: Stage1Floor_2
+  - first:
+      213: -6125880586112399925
+    second: Stage1Floor_3
+  - first:
+      213: -6287765802783216267
+    second: Stage1Floor_4
+  - first:
+      213: 5690350359861719523
+    second: Stage1Floor_5
+  - first:
+      213: -176474314104689897
+    second: Stage1Floor_6
+  - first:
+      213: -1215506620394100193
+    second: Stage1Floor_7
+  - first:
+      213: 8213891059275174700
+    second: Stage1Floor_8
+  - first:
+      213: 1634186971392772818
+    second: Stage1Floor_9
+  - first:
+      213: 6759281670493944252
+    second: Stage1Floor_10
+  - first:
+      213: 2585275725644194744
+    second: Stage1Floor_11
+  - first:
+      213: -4638368164179563171
+    second: Stage1Floor_12
+  - first:
+      213: 3683855881123410047
+    second: Stage1Floor_13
+  - first:
+      213: -7946505805214245604
+    second: Stage1Floor_14
+  - first:
+      213: -4605081279105402231
+    second: Stage1Floor_15
+  - first:
+      213: -5239616474607623044
+    second: Stage1Floor_16
+  - first:
+      213: -8973771509696345299
+    second: Stage1Floor_17
+  - first:
+      213: -5108340496288849258
+    second: Stage1Floor_18
+  - first:
+      213: 8188767690296206373
+    second: Stage1Floor_19
+  - first:
+      213: 6041662955341527009
+    second: Stage1Floor_20
+  - first:
+      213: -1567966043624439196
+    second: Stage1Floor_21
+  - first:
+      213: 9103891017202807842
+    second: Stage1Floor_22
+  - first:
+      213: -3437494574150735010
+    second: Stage1Floor_23
+  - first:
+      213: 5641119501301632351
+    second: Stage1Floor_24
+  - first:
+      213: -2692304566380020943
+    second: Stage1Floor_25
+  - first:
+      213: -5479826054419142754
+    second: Stage1Floor_26
+  - first:
+      213: 8915434006860052234
+    second: Stage1Floor_27
+  - first:
+      213: 916213637132702330
+    second: Stage1Floor_28
+  - first:
+      213: 970602728620032311
+    second: Stage1Floor_29
+  - first:
+      213: 7961029766428207245
+    second: Stage1Floor_30
+  - first:
+      213: -3640182556881854233
+    second: Stage1Floor_31
+  - first:
+      213: 2147165836768186682
+    second: Stage1Floor_32
+  - first:
+      213: -4611669222127216997
+    second: Stage1Floor_33
+  - first:
+      213: -2016270691256390115
+    second: Stage1Floor_34
+  - first:
+      213: -1956339390348684273
+    second: Stage1Floor_35
+  - first:
+      213: -8806451567633748270
+    second: Stage1Floor_36
+  - first:
+      213: 3918042170862610647
+    second: Stage1Floor_37
+  - first:
+      213: -8629073458064030692
+    second: Stage1Floor_38
+  - first:
+      213: 4958471847149726329
+    second: Stage1Floor_39
+  - first:
+      213: -7130323533566070898
+    second: Stage1Floor_40
+  - first:
+      213: -5230253378462259379
+    second: Stage1Floor_41
+  - first:
+      213: -4818947926981471664
+    second: Stage1Floor_42
+  - first:
+      213: 6807932372644894005
+    second: Stage1Floor_43
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Stage1Floor_0
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 271
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 594f1d522999e0470800000000000000
+      internalID: 8362790411052381333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_1
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 271
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c192a8d5d9783760800000000000000
+      internalID: 7437828743971901888
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_2
+      rect:
+        serializedVersion: 2
+        x: 238
+        y: 271
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3223270df355d4c0800000000000000
+      internalID: -4263409126024732101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_3
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 271
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc50f4030108cfaa0800000000000000
+      internalID: -6125880586112399925
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_4
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 271
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57de14ef05e5db8a0800000000000000
+      internalID: -6287765802783216267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_5
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 271
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e1f217e08f28fe40800000000000000
+      internalID: 5690350359861719523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_6
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 271
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71b2fcbdb890d8df0800000000000000
+      internalID: -176474314104689897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_7
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 271
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1a26453b27a12fe0800000000000000
+      internalID: -1215506620394100193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_8
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 223
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c239adb366a9df170800000000000000
+      internalID: 8213891059275174700
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_9
+      rect:
+        serializedVersion: 2
+        x: 190
+        y: 223
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2da0076646ccda610800000000000000
+      internalID: 1634186971392772818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_10
+      rect:
+        serializedVersion: 2
+        x: 239
+        y: 223
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb9b99afddacdcd50800000000000000
+      internalID: 6759281670493944252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_11
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 223
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b36679339eb0e320800000000000000
+      internalID: 2585275725644194744
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_12
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 223
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d5da894dab431afb0800000000000000
+      internalID: -4638368164179563171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_13
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 223
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f70381ee76faf1330800000000000000
+      internalID: 3683855881123410047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_14
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 223
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1d10a2921758b190800000000000000
+      internalID: -7946505805214245604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_15
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 223
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98afe15b9f67710c0800000000000000
+      internalID: -4605081279105402231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_16
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 223
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c746ab7b3942947b0800000000000000
+      internalID: -5239616474607623044
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_17
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 175
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2b47056b52c67380800000000000000
+      internalID: -8973771509696345299
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_18
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 175
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 692e5fe32678b19b0800000000000000
+      internalID: -5108340496288849258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_19
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 175
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5242d4014d854a170800000000000000
+      internalID: 8188767690296206373
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_20
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 175
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e7b4c1a27c48d350800000000000000
+      internalID: 6041662955341527009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_21
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 175
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46204e5d0377d3ae0800000000000000
+      internalID: -1567966043624439196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_22
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 175
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2243e3a45a4875e70800000000000000
+      internalID: 9103891017202807842
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_23
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 175
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5ba96eb5e09b40d0800000000000000
+      internalID: -3437494574150735010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_24
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 175
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5dcc9a6c48494e40800000000000000
+      internalID: 5641119501301632351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_25
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 127
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13bb1c5e24303aad0800000000000000
+      internalID: -2692304566380020943
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_26
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 127
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e97aa63ac3fb3f3b0800000000000000
+      internalID: -5479826054419142754
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_27
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 127
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a07b4554efbf9bb70800000000000000
+      internalID: 8915434006860052234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_28
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 127
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a72d9abd27b07bc00800000000000000
+      internalID: 916213637132702330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_29
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 127
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7310c690a06487d00800000000000000
+      internalID: 970602728620032311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_30
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 127
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d88a34aa4624b7e60800000000000000
+      internalID: 7961029766428207245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_31
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 127
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e0eb7340497b7dc0800000000000000
+      internalID: -3640182556881854233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_32
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 79
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a311c6ec3f34ccd10800000000000000
+      internalID: 2147165836768186682
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_33
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 79
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b965181b64f0000c0800000000000000
+      internalID: -4611669222127216997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_34
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 79
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1ea1ac2d74c404e0800000000000000
+      internalID: -2016270691256390115
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_35
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 79
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f04992a80bfa9d4e0800000000000000
+      internalID: -1956339390348684273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_36
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 79
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2de228335f239c580800000000000000
+      internalID: -8806451567633748270
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_37
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 79
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d82441889eaf5630800000000000000
+      internalID: 3918042170862610647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_38
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 31
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c14875f986f5f3880800000000000000
+      internalID: -8629073458064030692
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_39
+      rect:
+        serializedVersion: 2
+        x: 335
+        y: 31
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97a6226bfd700d440800000000000000
+      internalID: 4958471847149726329
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_40
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 31
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8faf2836800c0d90800000000000000
+      internalID: -7130323533566070898
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_41
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 31
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d47687b63486a67b0800000000000000
+      internalID: -5230253378462259379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_42
+      rect:
+        serializedVersion: 2
+        x: 479
+        y: 31
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0521a2d6468af1db0800000000000000
+      internalID: -4818947926981471664
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Stage1Floor_43
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 31
+        width: 34
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53591664c62aa7e50800000000000000
+      internalID: 6807932372644894005
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Stage1Floor_0: 8362790411052381333
+      Stage1Floor_1: 7437828743971901888
+      Stage1Floor_10: 6759281670493944252
+      Stage1Floor_11: 2585275725644194744
+      Stage1Floor_12: -4638368164179563171
+      Stage1Floor_13: 3683855881123410047
+      Stage1Floor_14: -7946505805214245604
+      Stage1Floor_15: -4605081279105402231
+      Stage1Floor_16: -5239616474607623044
+      Stage1Floor_17: -8973771509696345299
+      Stage1Floor_18: -5108340496288849258
+      Stage1Floor_19: 8188767690296206373
+      Stage1Floor_2: -4263409126024732101
+      Stage1Floor_20: 6041662955341527009
+      Stage1Floor_21: -1567966043624439196
+      Stage1Floor_22: 9103891017202807842
+      Stage1Floor_23: -3437494574150735010
+      Stage1Floor_24: 5641119501301632351
+      Stage1Floor_25: -2692304566380020943
+      Stage1Floor_26: -5479826054419142754
+      Stage1Floor_27: 8915434006860052234
+      Stage1Floor_28: 916213637132702330
+      Stage1Floor_29: 970602728620032311
+      Stage1Floor_3: -6125880586112399925
+      Stage1Floor_30: 7961029766428207245
+      Stage1Floor_31: -3640182556881854233
+      Stage1Floor_32: 2147165836768186682
+      Stage1Floor_33: -4611669222127216997
+      Stage1Floor_34: -2016270691256390115
+      Stage1Floor_35: -1956339390348684273
+      Stage1Floor_36: -8806451567633748270
+      Stage1Floor_37: 3918042170862610647
+      Stage1Floor_38: -8629073458064030692
+      Stage1Floor_39: 4958471847149726329
+      Stage1Floor_4: -6287765802783216267
+      Stage1Floor_40: -7130323533566070898
+      Stage1Floor_41: -5230253378462259379
+      Stage1Floor_42: -4818947926981471664
+      Stage1Floor_43: 6807932372644894005
+      Stage1Floor_5: 5690350359861719523
+      Stage1Floor_6: -176474314104689897
+      Stage1Floor_7: -1215506620394100193
+      Stage1Floor_8: 8213891059275174700
+      Stage1Floor_9: 1634186971392772818
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
