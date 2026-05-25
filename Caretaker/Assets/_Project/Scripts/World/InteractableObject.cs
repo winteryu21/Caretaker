@@ -8,10 +8,6 @@ namespace Caretaker.World
     /// 모든 상호작용 가능 오브젝트의 공통 설정과 하이라이트 토글을 제공하는 베이스 컴포넌트입니다.
     /// Team B는 씬 오브젝트에 이 컴포넌트를 붙이고 Inspector에서 유형과 ID를 설정할 수 있습니다.
     /// </summary>
-    /// <remarks>
-    /// DSD §3.4 상호작용 오브젝트 데이터 제공 컴포넌트.
-    /// game-design §7 오브젝트 ID와 매핑됩니다.
-    /// </remarks>
     [DisallowMultipleComponent]
     public class InteractableObject : MonoBehaviour
     {
@@ -21,6 +17,7 @@ namespace Caretaker.World
 
         [Header("Interaction")]
         [SerializeField] private string _requiredItemId;
+        [SerializeField] private string _grantedItemId;
         [SerializeField] [TextArea] private string _examineText;
 
         [Header("Highlight")]
@@ -45,6 +42,11 @@ namespace Caretaker.World
         public string RequiredItemId => _requiredItemId;
 
         /// <summary>
+        /// 획득 성공 시 인벤토리에 추가할 아이템 ID입니다.
+        /// </summary>
+        public string GrantedItemId => _grantedItemId;
+
+        /// <summary>
         /// 조사 시 표시할 텍스트입니다.
         /// </summary>
         public string ExamineText => _examineText;
@@ -63,21 +65,25 @@ namespace Caretaker.World
         {
             _objectId = _objectId?.Trim();
             _requiredItemId = _requiredItemId?.Trim();
+            _grantedItemId = _grantedItemId?.Trim();
         }
 
         /// <summary>
         /// 현재 요청된 상호작용 유형을 이 오브젝트가 처리할 수 있는지 반환합니다.
         /// </summary>
-        /// <param name="interactionType">확인할 상호작용 유형입니다.</param>
         public bool SupportsInteraction(InteractionType interactionType)
         {
+            if (interactionType == InteractionType.Examine && _interactionType == InteractionType.Acquire)
+            {
+                return true;
+            }
+
             return _interactionType == interactionType;
         }
 
         /// <summary>
         /// Inspector에 연결된 아웃라인 컴포넌트를 켜거나 꺼서 하이라이트를 토글합니다.
         /// </summary>
-        /// <param name="isHighlighted">켜짐 여부입니다.</param>
         public void SetHighlight(bool isHighlighted)
         {
             _isHighlighted = isHighlighted;
