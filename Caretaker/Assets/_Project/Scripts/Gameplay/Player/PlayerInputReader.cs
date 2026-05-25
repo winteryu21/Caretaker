@@ -29,6 +29,7 @@ namespace Caretaker.Gameplay
         private InputAction _interactAction;
         private InputAction _jumpAction;
         private InputAction _moveAction;
+        private InputAction _sprintAction;
         private PlayerInput _playerInput;
         private string _selectedItemId;
 
@@ -52,12 +53,15 @@ namespace Caretaker.Gameplay
         /// </summary>
         public bool IsCrouchPressed => _crouchAction.IsPressed();
 
+        public bool IsSprintPressed => _sprintAction.IsPressed();
+
         private void Awake()
         {
             _playerInput = GetComponent<PlayerInput>();
             _moveAction = _playerInput.actions["Move"];
             _jumpAction = _playerInput.actions["Jump"];
             _crouchAction = _playerInput.actions["Crouch"];
+            _sprintAction = _playerInput.actions["Sprint"];
             _clickAction = _playerInput.actions["Attack"];
             _interactAction = _playerInput.actions["Interact"];
         }
