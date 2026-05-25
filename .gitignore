@@ -152,3 +152,19 @@ npm-debug.log*
 .env.local
 secrets.json
 config.local.*
+
+# -----------------------
+# Nested Unity project root
+# Keep only Assets/, Packages/, ProjectSettings/ tracked under Caretaker/
+# -----------------------
+/Caretaker/[Bb]uild/
+/Caretaker/[Ll]ibrary/
+/Caretaker/[Ll]ogs/
+/Caretaker/[Oo]bj/
+/Caretaker/[Tt]emp/
+/Caretaker/[Uu]ser[Ss]ettings/
+/Caretaker/.vs/
+/Caretaker/.vsconfig
+/Caretaker/*.csproj
+/Caretaker/*.sln
+/Caretaker/*.slnx
