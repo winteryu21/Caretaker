@@ -57,10 +57,10 @@ docs/gdd-level-design-section
 [Conventional Commits](https://www.conventionalcommits.org/) 기반:
 
 ```
-{type}({scope}): CARE-{N} {한국어 또는 영어 설명}
+{type}({scope}): DEV-{N} {한국어 또는 영어 설명}
 ```
 
-> 이슈 번호(`CARE-{N}`)는 Linear 이슈가 있는 경우 필수. 이슈 없는 소규모 작업(타이포, 포맷팅)은 생략 가능.
+> 이슈 번호(`DEV-{N}`)는 Linear 이슈가 있는 경우 필수. 이슈 없는 소규모 작업(타이포, 포맷팅)은 생략 가능.
 
 ### 타입
 | 타입 | 설명 |
@@ -92,10 +92,10 @@ docs/gdd-level-design-section
 
 ### 예시
 ```
-feat(player): CARE-42 플레이어 이동 컨트롤러 구현
-fix(network): CARE-61 충돌 감지 오류 수정
-art(character): CARE-38 플레이어 캐릭터 리깅 에셋 추가
-docs(drd): CARE-19 Check-Off List 작성
+feat(player): DEV-42 플레이어 이동 컨트롤러 구현
+fix(network): DEV-61 충돌 감지 오류 수정
+art(character): DEV-38 플레이어 캐릭터 리깅 에셋 추가
+docs(drd): DEV-19 Check-Off List 작성
 chore: .editorconfig 수정
 ```
 
@@ -133,8 +133,8 @@ chore: .editorconfig 수정
 1. 작업 시작 전 반드시 **Linear 이슈 생성**
 2. Linear에서 브랜치 생성하거나 직접 분기
 3. **아래 중 하나 선택 가능**
-    - **PR 제목**에 이슈 ID 포함: `CARE-42 플레이어 이동 구현`
-    - **PR 본문** 첫 줄에 Magic Word 작성: `Closes CARE-42`
+    - **PR 제목**에 이슈 ID 포함: `DEV-42 플레이어 이동 구현`
+    - **PR 본문** 첫 줄에 Magic Word 작성: `Closes DEV-42`
 
 ### Magic Word
 
@@ -154,8 +154,8 @@ PR이 열리는 시점에 이슈를 **In Progress**로, 머지 시 **Done**으�
 | `Implements` | implements, implemented, implementing | 기능 구현 완료 |
 
 ```
-Closes CARE-42
-Fixes CARE-61
+Closes DEV-42
+Fixes DEV-61
 ```
 
 #### Non-closing Magic Words — 이슈 **연결만** (Done 이동 없음)
@@ -170,26 +170,26 @@ PR이 이슈 작업의 일부이거나, 아직 완료가 아닌 경우 사용합
 | `Toward` | toward, towards | 이슈 해결에 기여하지만 완료는 아닐 때 |
 
 ```
-Part of CARE-42
-Ref CARE-55
+Part of DEV-42
+Ref DEV-55
 ```
 
 #### 여러 이슈 동시 연결
 
 ```
-Closes CARE-42, CARE-43 and CARE-56
+Closes DEV-42, DEV-43 and DEV-56
 ```
 
 #### 연결 무시 (브랜치명에 이슈 ID가 있어도 연결 차단)
 
 ```
-skip CARE-42
-ignore CARE-42
+skip DEV-42
+ignore DEV-42
 ```
 
 **예시 PR 본문:**
 ```
-Closes CARE-42
+Closes DEV-42
 
 플레이어 기본 이동 및 점프 구현.
 - Rigidbody2D 기반 이동
