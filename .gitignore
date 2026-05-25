@@ -55,6 +55,7 @@ ShaderVariants/
 # Visual Studio / Rider / Consulo
 # -----------------------
 .vs/
+.vscode/
 .idea/
 .consulo/
 ExportedObj/
