@@ -1,4 +1,4 @@
-# Sprint 1 — Linear 이슈 일괄 등록용
+# Sprint 1,2,3 — Linear 이슈 일괄 등록용
 
 > 이 문서는 Codex Linear MCP 에이전트가 이슈를 일괄 등록할 때 참조하는 구조화된 데이터다.
 > 각 이슈는 아래 필드를 포함한다.
@@ -6,8 +6,8 @@
 ## 등록 규칙
 
 - **Team:** Caretaker
-- **Project:** Sprint 1
-- **Milestone:** `W1` (5/22~28), `W2` (5/29~6/4), `W3` (6/5~10)
+- **Project:** `Sprint 1` (5/22~28), `Sprint 2` (5/29~6/4), `Sprint 3` (6/5~10)
+- **Milestone:** `System` (Team A), `Design` (Team B)
 - **Priority 매핑:**
   - 🔴 Urgent → `Urgent`
   - 🟠 High → `High`
@@ -33,7 +33,7 @@
 
 ### game-flow 기반 퍼즐 상세 설계 (M1~M4)
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** Design
 - **Priority:** Urgent
 - **Label:** Design, E0-Design
 - **Description:**
@@ -49,7 +49,7 @@
 
 ### Phase 3 C동 탈출 시퀀스 상세 설계
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** Design
 - **Priority:** Urgent
 - **Label:** Design, E0-Design
 - **Description:**
@@ -65,7 +65,7 @@
 
 ### CausalRule 전체 목록 최종 확정
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** Design
 - **Priority:** Urgent
 - **Label:** Design, E0-Design
 - **Description:**
@@ -85,7 +85,7 @@
 
 ### 프로젝트 폴더 구조 정리
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** Urgent
 - **Label:** Team A, E1-Player
 - **Description:**
@@ -100,7 +100,7 @@
 
 ### PlayerMotor2D 구현
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** Urgent
 - **Label:** Team A, E1-Player
 - **Description:**
@@ -115,7 +115,7 @@
 
 ### InteractableObject 베이스 클래스
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E1-Player
 - **Description:**
@@ -131,7 +131,7 @@
 
 ### InteractionProbe + InteractionService
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E1-Player
 - **Description:**
@@ -145,8 +145,8 @@
 - 수용 기준: hover 시 하이라이트, 각 입력에 대응하는 상호작용이 정상 발동
 
 ### InventorySystem
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E1-Player
 - **Description:**
@@ -160,8 +160,8 @@
 - 수용 기준: 아이템 획득 → 인벤토리 표시, 선택 → 오브젝트에 사용 → 소모 아이템 제거
 
 ### 아이템-환경 조합 로직
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E1-Player
 - **Description:**
@@ -179,8 +179,8 @@
 ## E2: Causality
 
 ### CausalityService 도메인 로직
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** Urgent
 - **Label:** Team A, E2-Causality
 - **Description:**
@@ -194,8 +194,8 @@
 - 수용 기준: 단위 테스트에서 규칙 조건 충족/미충족 시 올바른 결과 반환
 
 ### CausalityManager + 트리거/리시버 MonoBehaviour
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** Urgent
 - **Label:** Team A, E2-Causality
 - **Description:**
@@ -209,8 +209,8 @@
 - 수용 기준: 트리거 활성화 → 서비스 호출 → 리시버 상태 변경이 Inspector에서 확인 가능
 
 ### CausalRuleSO — Phase 1 규칙 작성
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E2-Causality
 - **Description:**
@@ -225,8 +225,8 @@
 - 수용 기준: 4개 SO 에셋 생성, Inspector에서 모든 필드 입력 완료
 
 ### CausalRuleSO — Phase 2 규칙 작성
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E2-Causality
 - **Description:**
@@ -242,8 +242,8 @@
 - 수용 기준: 5개 SO 에셋 생성, Inspector에서 모든 필드 입력 완료
 
 ### CausalRuleSO — Phase 3 규칙 작성
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E2-Causality
 - **Description:**
@@ -263,7 +263,7 @@
 
 ### RoomVolume + RoomManager
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** Urgent
 - **Label:** Team A, E3-Room
 - **Description:**
@@ -278,7 +278,7 @@
 
 ### RoomGraphSO 데이터 작성
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E3-Room
 - **Description:**
@@ -294,7 +294,7 @@
 
 ### CameraDirector 룸 추적
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** Urgent
 - **Label:** Team A, E3-Room
 - **Description:**
@@ -309,7 +309,7 @@
 
 ### 씬 구조 및 Additive 로딩
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E3-Room
 - **Description:**
@@ -324,8 +324,8 @@
 - 수용 기준: Host 생성 → 양쪽 플레이어가 각자 시간대 씬에 접속, Phase 전환 시 씬 전환 정상 작동
 
 ### 과거/미래 월드 분리 렌더링
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E3-Room
 - **Description:**
@@ -344,7 +344,7 @@
 
 ### EnemyController + Waypoint 순찰
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E4-AI
 - **Description:**
@@ -358,8 +358,8 @@
 - 수용 기준: 적 캐릭터가 지정된 Waypoint를 순회하며 순찰
 
 ### EnemyPerception2D + FSM
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E4-AI
 - **Description:**
@@ -373,8 +373,8 @@
 - 수용 기준: 시야 내 플레이어 감지 → 추격 → 시야 이탈 → 탐색 → 복귀
 
 ### AlertService (경보 전파)
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** Medium
 - **Label:** Team A, E4-AI
 - **Description:**
@@ -388,8 +388,8 @@
 - 수용 기준: 경보 발생 시 현재 룸 + 인접 룸의 적 AI가 Alert 상태로 전환
 
 ### Phase 3 로봇 추격 AI
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** System
 - **Priority:** Medium
 - **Label:** Team A, E4-AI
 - **Description:**
@@ -408,7 +408,7 @@
 
 ### game-flow 기반 룸별 퍼즐 동선 확정
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** Design
 - **Priority:** Urgent
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -423,7 +423,7 @@
 
 ### 오브젝트 배치 리스트 확정
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** Design
 - **Priority:** Urgent
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -439,7 +439,7 @@
 
 ### Phase 1 룸 화이트박싱
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** Design
 - **Priority:** Urgent
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -458,8 +458,8 @@
 - 수용 기준: 모든 룸이 씬에 존재, 플레이어가 룸 간 이동 가능
 
 ### Phase 2 룸 화이트박싱
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** Design
 - **Priority:** High
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -477,8 +477,8 @@
 - 수용 기준: 6개+ 룸이 씬에 존재, A동↔B동 구름다리 연결
 
 ### P1~P2 오브젝트 배치 + 컴포넌트 연결
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** Design
 - **Priority:** High
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -492,8 +492,8 @@
 - 수용 기준: 모든 P1~P2 오브젝트가 씬에 배치되고, Inspector에서 설정 완료
 
 ### 과거/미래 환경 차이 비주얼 적용
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** Design
 - **Priority:** High
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -507,8 +507,8 @@
 - 수용 기준: 과거/미래 레이어 전환 시 시각적 차이가 명확히 구분됨
 
 ### AI 순찰 경로 + 은신 포인트 배치
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** Design
 - **Priority:** High
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -522,8 +522,8 @@
 - 수용 기준: AI가 설정된 경로를 순찰, 플레이어가 은신 포인트에서 감지 회피 가능
 
 ### Phase 3 C동 탈출 루트 구축 + 장애물 배치
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** Design
 - **Priority:** Medium
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -538,8 +538,8 @@
 - 수용 기준: 3구간 레이아웃 완성, 장애물 배치, 인과 장치 연결
 
 ### 레벨 밸런스 조정
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** Design
 - **Priority:** Medium
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -553,8 +553,8 @@
 - 수용 기준: 2회 이상 플레이테스트 후 피드백 반영 완료
 
 ### 인과 시각 피드백 + 환경 디테일
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** Design
 - **Priority:** Medium
 - **Label:** Team B, E5-Level
 - **Description:**
@@ -572,7 +572,7 @@
 
 ### Netcode 세션 (Host/Join + 역할 배정)
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E6-Network
 - **Description:**
@@ -587,8 +587,8 @@
 - 수용 기준: 2인 접속 → 역할 배정 → 게임 씬 로드
 
 ### 플레이어 위치 동기화 + 정보 격리
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E6-Network
 - **Description:**
@@ -602,8 +602,8 @@
 - 수용 기준: 양 플레이어가 자기 시간대만 보면서 동시에 이동 가능
 
 ### 인과 상태 네트워크 전파
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** System
 - **Priority:** Urgent
 - **Label:** Team A, E6-Network
 - **Description:**
@@ -617,8 +617,8 @@
 - 수용 기준: 과거 트리거 → 미래 리시버 상태 변경이 네트워크 상에서 정확히 동기화
 
 ### RadioSystem (무전기 PTT 음성 소통)
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E6-Network
 - **Description:**
@@ -638,7 +638,7 @@
 
 ### SO 스키마 일괄 정의
 - **Project:** Sprint 1
-- **Milestone:** W1
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E7-Flow
 - **Description:**
@@ -653,8 +653,8 @@
 - 수용 기준: 4종 SO 클래스 생성, 빈 에셋 생성 확인, Inspector에서 필드 편집 가능
 
 ### GameFlowManager (P1→P2→P3 + 결과)
-- **Project:** Sprint 1
-- **Milestone:** W2
+- **Project:** Sprint 2
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E7-Flow
 - **Description:**
@@ -669,8 +669,8 @@
 - 수용 기준: Major 완료 시 자동 Phase 전환, 결과 화면 표시
 
 ### CheckpointService + 공동 실패
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** System
 - **Priority:** High
 - **Label:** Team A, E7-Flow
 - **Description:**
@@ -684,8 +684,8 @@
 - 수용 기준: AI 포획 → 체크포인트 복원이 양 플레이어에서 동시 작동
 
 ### SplitViewManager (Phase 3)
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** System
 - **Priority:** Medium
 - **Label:** Team A, E7-Flow
 - **Description:**
@@ -699,8 +699,8 @@
 - 수용 기준: Phase 3에서 양쪽 시간대가 동시에 표시됨
 
 ### HUD (인벤토리, 프롬프트, Objective)
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** System
 - **Priority:** Medium
 - **Label:** Team A, E7-Flow
 - **Description:**
@@ -715,8 +715,8 @@
 - 수용 기준: Objective 변경 시 HUD 갱신, 상호작용 프롬프트 정확히 표시
 
 ### 통합 플레이테스트 (2인 온라인)
-- **Project:** Sprint 1
-- **Milestone:** W3
+- **Project:** Sprint 3
+- **Milestone:** Design
 - **Priority:** Urgent
 - **Label:** Team A, Team B, E7-Flow
 - **Description:**
