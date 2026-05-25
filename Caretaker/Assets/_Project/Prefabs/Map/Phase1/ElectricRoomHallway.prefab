@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6628454700748012107}
   m_Layer: 0
-  m_Name: ElectricRoom_Hallway 1
+  m_Name: ElectricRoomHallway
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

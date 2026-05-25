@@ -3388,7 +3388,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8856590985506247804}
   m_Layer: 0
-  m_Name: Electric_Room
+  m_Name: ElectricRoom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

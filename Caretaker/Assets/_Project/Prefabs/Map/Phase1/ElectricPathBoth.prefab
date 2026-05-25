@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4417662010881676640}
   m_Layer: 0
-  m_Name: ElectricPath_Both
+  m_Name: ElectricPathBoth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
