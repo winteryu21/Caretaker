@@ -122,6 +122,11 @@ public class PlayerMotor2D : MonoBehaviour
 
     private void ApplyCrouchState(bool isCrouching)
     {
+        if (_isCrouching == isCrouching)
+        {
+            return;
+        }
+
         _isCrouching = isCrouching;
         _boxCollider.size = isCrouching ? _crouchingColliderSize : _standingColliderSize;
         _boxCollider.offset = isCrouching ? _crouchingColliderOffset : _standingColliderOffset;
