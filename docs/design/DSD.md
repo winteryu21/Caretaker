@@ -86,7 +86,7 @@ Caretaker는 과거와 미래에 분리된 두 플레이어가 제한된 정보�
 | 문서 | 경로 |
 | :--- | :--- |
 | DRD | [`DRD.md`](DRD.md) |
-| 레벨 디자인 가이드 | [`../meetings/260504-level-design-guide.md`](../meetings/260504-level-design-guide.md) |
+| 게임 설계서 | [`game-design.md`](game-design.md) |
 
 ### 1.4 설계 제한사항
 

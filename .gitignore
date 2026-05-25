@@ -152,8 +152,3 @@ npm-debug.log*
 .env.local
 secrets.json
 config.local.*
-
-# -----------------------
-# Project Context
-# -----------------------
-CONTEXT.md

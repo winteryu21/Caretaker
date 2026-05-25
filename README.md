@@ -1,6 +1,15 @@
 # Caretaker
 
-> **Unity 기반 졸업 프로젝트** — 컴퓨터공학과 6인 팀 | 2026
+| Contributor | 이름 | 학번 |
+|------|------|------|
+| winteryu21 | 유민서 | 22311884 |
+| DoKyeongKim22012139 | 김도경 | 22012139 |
+| gyu5577 | 김병규 | 22012140 |
+| somsoko | 백승헌 | 22112089 |
+| PLMQ2785 | 배원일 | 22313530 |
+| certa1014 | 권순표 | 22313552 |
+
+
 
 ---
 
@@ -38,7 +47,7 @@ git lfs pull
 ```
 
 ### 3. Unity에서 열기
-Unity Hub → **Open** → 레포 루트 폴더 선택
+Unity Hub → **Open** → 레포 안의 `Caretaker/` Unity 프로젝트 폴더 선택
 
 ### 4. Unity 에디터 설정 확인
 - Edit → Project Settings → Editor:
@@ -52,19 +61,38 @@ Unity Hub → **Open** → 레포 루트 폴더 선택
 ## 디렉터리 구조
 
 ```
-Caretaker/
+Caretaker/                  # Git 저장소 루트
+├── Caretaker/              # Unity 프로젝트 루트
+│   ├── Assets/
+│   │   ├── _Project/       # 팀이 직접 관리하는 게임 자산
+│   │   │   ├── Scenes/
+│   │   │   ├── Scripts/
+│   │   │   │   ├── Core/
+│   │   │   │   ├── World/
+│   │   │   │   ├── Gameplay/
+│   │   │   │   ├── Presentation/
+│   │   │   │   └── Shared/
+│   │   │   ├── Data/
+│   │   │   ├── Prefabs/
+│   │   │   ├── Art/
+│   │   │   ├── Audio/
+│   │   │   └── Tests/
+│   │   ├── Settings/      # Unity/URP 설정 자산
+│   │   └── ...            # Unity 기본 생성 자산
+│   ├── Packages/
+│   └── ProjectSettings/
 ├── docs/
-│   ├── design/       # GDD, DRD
-│   ├── technical/    # 아키텍처, 코딩 컨벤션
-│   ├── planning/     # 마일스톤
-│   └── meetings/     # 회의록
+│   ├── design/            # DRD, DSD, 게임 설계서
+│   ├── technical/         # 프로젝트 구조, 코딩 컨벤션
+│   ├── sprints/           # 스프린트 계획, 이슈, 회고
+│   └── archive/           # 아카이브된 원본 회의록
 ├── .gitignore
-├── .gitattributes    # Git LFS 설정
+├── .gitattributes         # Git LFS 설정
 ├── .editorconfig
-└── CONTRIBUTING.md   # 브랜치·커밋·PR 컨벤션
+└── CONTRIBUTING.md        # 브랜치·커밋·PR 컨벤션
 ```
 
-> Unity 프로젝트(`Assets/`, `ProjectSettings/`, `Packages/`)는 Unity Hub에서 프로젝트 생성 시 자동 생성됩니다.
+> Unity Hub에서는 저장소 루트가 아니라 `Caretaker/` Unity 프로젝트 폴더를 엽니다. 팀 제작 자산은 가능한 한 `Assets/_Project` 아래에 둡니다.
 
 ---
 
@@ -101,6 +129,9 @@ Caretaker/
 | 문서 | 링크 |
 |------|------|
 | Design Requirements Document | [`docs/design/DRD.md`](docs/design/DRD.md) |
+| Detailed System Design | [`docs/design/DSD.md`](docs/design/DSD.md) |
+| 게임 설계서 (흐름 + 퍼즐 명세) | [`docs/design/game-design.md`](docs/design/game-design.md) |
+| Unity 프로젝트 구조 | [`docs/technical/architecture.md`](docs/technical/architecture.md) |
 | 코딩 컨벤션 | [`docs/technical/coding-standards.md`](docs/technical/coding-standards.md) |
 | 기여 가이드 | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 
@@ -110,12 +141,12 @@ Caretaker/
 
 | 이름 | 주 담당 |
 |------|--------|
-| 유민서 | PM · 기획 |
-| 김도경 | 아트 · 비주얼 |
-| 김병규 | 레벨 디자인 · UI |
-| 백승헌 | 시간 인과 시스템 · AI |
-| 배원일 | 네트워크 · 인프라 |
-| 권순표 | 플레이어 제어 · QA |
+| 유민서 | PM |
+| 김도경 | 콘텐츠 팀 |
+| 김병규 | 콘텐츠 팀 |
+| 백승헌 | 시스템 팀 |
+| 배원일 | 시스템 팀 |
+| 권순표 | 콘텐츠 팀 |
 
 ---
 
