@@ -11,11 +11,10 @@ using Caretaker.Shared;
 namespace Caretaker.Gameplay
 {
     /// <summary>
-    /// Input System 액션을 이동값, 점프 이벤트, 상호작용 요청으로 변환하여 PlayerController에 전달한다.
-    /// PlayerInput 컴포넌트와 함께 사용된다.
+    /// Input System 액션을 이동/점프/상호작용 입력으로 해석합니다.
     /// </summary>
     /// <remarks>
-    /// DSD §3.3 — 플레이어 제어 및 상호작용 시스템
+    /// DSD §3.3 플레이어 제어 및 상호작용 시스템
     /// 계층: Unity Component
     /// </remarks>
     [RequireComponent(typeof(PlayerInput))]
@@ -31,28 +30,43 @@ namespace Caretaker.Gameplay
         private InputAction _moveAction;
         private InputAction _sprintAction;
         private PlayerInput _playerInput;
+        private bool _jumpPressedThisFrame;
         private string _selectedItemId;
+        private int _lastKeyboardHorizontalDirection;
+        private bool _wasKeyboardLeftPressed;
+        private bool _wasKeyboardRightPressed;
 
         /// <summary>
-        /// 플레이어가 점프 입력을 눌렀을 때 발생한다.
-        /// </summary>
-        public event Action OnJumpPressed;
-
-        /// <summary>
-        /// 플레이어가 상호작용을 요청했을 때 발생한다.
+        /// 플레이어가 상호작용을 요청했을 때 발생합니다.
         /// </summary>
         public event Action<InteractionRequest> OnInteractionRequested;
 
         /// <summary>
-        /// 현재 이동 입력값을 반환한다.
+        /// 현재 이동 입력값을 반환합니다.
         /// </summary>
-        public Vector2 MoveInput { get; private set; }
+        public Vector2 MoveInput
+        {
+            get
+            {
+                Vector2 moveInput = _moveAction.ReadValue<Vector2>();
+                moveInput.x = ResolveHorizontalInput(moveInput.x);
+                return moveInput;
+            }
+        }
 
         /// <summary>
-        /// 웅크리기 입력이 현재 눌려 있는지 반환한다.
+        /// 웅크리기 입력이 현재 유지 중인지 반환합니다.
         /// </summary>
         public bool IsCrouchPressed => _crouchAction.IsPressed();
 
+        /// <summary>
+        /// 점프 입력이 현재 유지 중인지 반환합니다.
+        /// </summary>
+        public bool IsJumpPressed => _jumpAction.IsPressed();
+
+        /// <summary>
+        /// 달리기 입력이 현재 유지 중인지 반환합니다.
+        /// </summary>
         public bool IsSprintPressed => _sprintAction.IsPressed();
 
         private void Awake()
@@ -73,11 +87,6 @@ namespace Caretaker.Gameplay
             _interactAction.performed += HandleInteractPerformed;
         }
 
-        private void Update()
-        {
-            MoveInput = _moveAction.ReadValue<Vector2>();
-        }
-
         private void OnDisable()
         {
             _jumpAction.performed -= HandleJumpPerformed;
@@ -96,17 +105,26 @@ namespace Caretaker.Gameplay
         }
 
         /// <summary>
-        /// 현재 선택된 인벤토리 아이템 ID를 설정한다.
+        /// 현재 선택된 인벤토리 아이템 ID를 설정합니다.
         /// </summary>
-        /// <param name="selectedItemId">선택된 아이템 ID. 선택된 아이템이 없으면 null.</param>
         public void SetSelectedItem(string selectedItemId)
         {
             _selectedItemId = selectedItemId;
         }
 
+        /// <summary>
+        /// 현재 틱에서 소비할 점프 눌림 입력을 반환합니다.
+        /// </summary>
+        public bool ConsumeJumpPressed()
+        {
+            bool jumpPressed = _jumpPressedThisFrame;
+            _jumpPressedThisFrame = false;
+            return jumpPressed;
+        }
+
         private void HandleJumpPerformed(InputAction.CallbackContext context)
         {
-            OnJumpPressed?.Invoke();
+            _jumpPressedThisFrame = true;
         }
 
         private void HandleClickPerformed(InputAction.CallbackContext context)
@@ -122,6 +140,48 @@ namespace Caretaker.Gameplay
         {
             var request = new InteractionRequest(InteractionType.Operate, Vector2.zero, null);
             OnInteractionRequested?.Invoke(request);
+        }
+
+        private float ResolveHorizontalInput(float actionHorizontalInput)
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null)
+            {
+                return actionHorizontalInput;
+            }
+
+            bool isLeftPressed = keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed;
+            bool isRightPressed = keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed;
+
+            if (isLeftPressed && !_wasKeyboardLeftPressed)
+            {
+                _lastKeyboardHorizontalDirection = -1;
+            }
+
+            if (isRightPressed && !_wasKeyboardRightPressed)
+            {
+                _lastKeyboardHorizontalDirection = 1;
+            }
+
+            _wasKeyboardLeftPressed = isLeftPressed;
+            _wasKeyboardRightPressed = isRightPressed;
+
+            if (isLeftPressed && isRightPressed)
+            {
+                return _lastKeyboardHorizontalDirection;
+            }
+
+            if (isLeftPressed)
+            {
+                return -1f;
+            }
+
+            if (isRightPressed)
+            {
+                return 1f;
+            }
+
+            return actionHorizontalInput;
         }
     }
 }
