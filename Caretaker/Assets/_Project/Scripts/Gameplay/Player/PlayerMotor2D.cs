@@ -100,6 +100,8 @@ public class PlayerMotor2D : MonoBehaviour
         ApplyJumpGravity(isJumpHeld);
     }
 
+    // ======== 내부 로직 =======
+    // 점프 관련
     private void BufferJumpInput(bool jumpPressed)
     {
         if (jumpPressed)
@@ -135,29 +137,6 @@ public class PlayerMotor2D : MonoBehaviour
         }
 
         _jumpBufferRemaining = Mathf.Max(0f, _jumpBufferRemaining - deltaTime);
-    }
-
-    private bool ResolveCrouchState(bool crouchHeld)
-    {
-        bool shouldCrouch = crouchHeld && IsGrounded;
-        if (!shouldCrouch && _isCrouching && !CanStandUp())
-        {
-            shouldCrouch = true;
-        }
-
-        return shouldCrouch;
-    }
-
-    private void ApplyHorizontalMovement(Vector2 moveInput, bool isCrouching, bool wantsToSprint)
-    {
-        Vector2 velocity = _rigidbody2D.linearVelocity;
-        float moveSpeed = GetHorizontalMoveSpeed(isCrouching, wantsToSprint, Mathf.Abs(velocity.x));
-        float targetSpeed = moveInput.x * moveSpeed;
-        // 즉시 속도를 바꾸지 않고 목표 속도로 수렴시켜 가벼운 관성을 남깁니다.
-        float acceleration = GetHorizontalAcceleration(velocity.x, targetSpeed);
-
-        velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, acceleration * Time.fixedDeltaTime);
-        _rigidbody2D.linearVelocity = velocity;
     }
 
     private bool TryApplyJump()
@@ -266,6 +245,28 @@ public class PlayerMotor2D : MonoBehaviour
         return gravityMultiplier;
     }
 
+     private void ResetAirborneState()
+    {
+        _jumpAirTime = 0f;
+        _isJumpGravityActive = false;
+        _isJumpGroundedLockActive = false;
+        _jumpCutAvailable = false;
+        _jumpCutConsumed = false;
+    }
+
+    // 이동 관련
+    private void ApplyHorizontalMovement(Vector2 moveInput, bool isCrouching, bool wantsToSprint)
+    {
+        Vector2 velocity = _rigidbody2D.linearVelocity;
+        float moveSpeed = GetHorizontalMoveSpeed(isCrouching, wantsToSprint, Mathf.Abs(velocity.x));
+        float targetSpeed = moveInput.x * moveSpeed;
+        // 즉시 속도를 바꾸지 않고 목표 속도로 수렴시켜 가벼운 관성을 남깁니다.
+        float acceleration = GetHorizontalAcceleration(velocity.x, targetSpeed);
+
+        velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, acceleration * Time.fixedDeltaTime);
+        _rigidbody2D.linearVelocity = velocity;
+    }
+
     private float GetHorizontalMoveSpeed(bool isCrouching, bool wantsToSprint, float currentSpeed)
     {
         float moveSpeed = _moveSpeed;
@@ -302,6 +303,18 @@ public class PlayerMotor2D : MonoBehaviour
         return IsGrounded ? _groundAcceleration : _airAcceleration;
     }
 
+    // 웅크리기 관련
+    private bool ResolveCrouchState(bool crouchHeld)
+    {
+        bool shouldCrouch = crouchHeld && IsGrounded;
+        if (!shouldCrouch && _isCrouching && !CanStandUp())
+        {
+            shouldCrouch = true;
+        }
+
+        return shouldCrouch;
+    }
+
     private void ApplyCrouchState(bool isCrouching)
     {
         if (_isCrouching == isCrouching)
@@ -314,15 +327,7 @@ public class PlayerMotor2D : MonoBehaviour
         _boxCollider.offset = isCrouching ? _crouchingColliderOffset : _standingColliderOffset;
     }
 
-    private void ResetAirborneState()
-    {
-        _jumpAirTime = 0f;
-        _isJumpGravityActive = false;
-        _isJumpGroundedLockActive = false;
-        _jumpCutAvailable = false;
-        _jumpCutConsumed = false;
-    }
-
+    // 충돌/지면 체크 관련
     private void CacheColliderState()
     {
         _standingColliderSize = _boxCollider.size;

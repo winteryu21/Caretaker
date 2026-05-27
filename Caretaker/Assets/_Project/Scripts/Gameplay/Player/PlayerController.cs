@@ -31,6 +31,7 @@ namespace Caretaker.Gameplay
             _inputReader.OnInteractionRequested += HandleInteractionRequested;
         }
 
+        // 플레이어의 이동과 점프, 웅크리기, 달리기 입력을 모터2D에 전달합니다.
         private void FixedUpdate()
         {
             _motor2D.TickMotor(
@@ -46,6 +47,7 @@ namespace Caretaker.Gameplay
             _inputReader.OnInteractionRequested -= HandleInteractionRequested;
         }
 
+        // 플레이어의 상호작용 키 입력을 이벤트로 전달합니다.
         private void HandleInteractionRequested(InteractionRequest request)
         {
             OnInteractionRequested?.Invoke(request);

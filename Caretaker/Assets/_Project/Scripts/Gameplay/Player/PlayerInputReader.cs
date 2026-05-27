@@ -142,6 +142,7 @@ namespace Caretaker.Gameplay
             OnInteractionRequested?.Invoke(request);
         }
 
+        // 키보드의 좌우 입력이 동시에 눌렸을 때, 마지막으로 눌린 방향을 우선시하도록 합니다.
         private float ResolveHorizontalInput(float actionHorizontalInput)
         {
             Keyboard keyboard = Keyboard.current;
