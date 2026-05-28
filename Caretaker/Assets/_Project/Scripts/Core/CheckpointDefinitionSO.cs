@@ -8,7 +8,7 @@ namespace Caretaker.Core
     /// 체크포인트 ID, 스폰 위치, 복원 정책을 정의하는 데이터 에셋.
     /// </summary>
     /// <remarks>DSD §4.2 — ScriptableObject 스키마</remarks>
-    [CreateAssetMenu(fileName = "SO_Checkpoint", menuName = "Caretaker/Flow/CheckpointDefinition")]
+    [CreateAssetMenu(fileName = "SO_Checkpoint", menuName = "Caretaker SO/Flow/CheckpointDefinition")]
     public class CheckpointDefinitionSO : ScriptableObject
     {
         [SerializeField] private string _checkpointId;
