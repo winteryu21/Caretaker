@@ -699,7 +699,7 @@ MonoBehaviour:
   _connectionTimeoutSeconds: 10
   _useConnectionApproval: 1
   _autoStartGameWhenBothReady: 1
-  _gameSceneName: Game
+  _gameSceneName: Persistent
 --- !u!1 &501860004
 GameObject:
   m_ObjectHideFlags: 0

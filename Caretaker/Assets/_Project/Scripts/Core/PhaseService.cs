@@ -20,7 +20,18 @@ namespace Caretaker.Core
         /// <returns>Phase 완료 여부.</returns>
         public bool IsPhaseComplete(PhaseId phaseId, string[] completedMajorIds)
         {
-            throw new System.NotImplementedException();
+            if (completedMajorIds == null)
+            {
+                return false;
+            }
+
+            return phaseId switch
+            {
+                PhaseId.Phase1 => Contains(completedMajorIds, "M1") && Contains(completedMajorIds, "M2"),
+                PhaseId.Phase2 => Contains(completedMajorIds, "M3") && Contains(completedMajorIds, "M4"),
+                PhaseId.Phase3 => false,
+                _ => false
+            };
         }
 
         /// <summary>
@@ -30,7 +41,26 @@ namespace Caretaker.Core
         /// <returns>다음 Phase.</returns>
         public PhaseId GetNextPhase(PhaseId currentPhase)
         {
-            throw new System.NotImplementedException();
+            return currentPhase switch
+            {
+                PhaseId.Phase1 => PhaseId.Phase2,
+                PhaseId.Phase2 => PhaseId.Phase3,
+                PhaseId.Phase3 => PhaseId.Phase3,
+                _ => currentPhase
+            };
+        }
+
+        private static bool Contains(string[] values, string expectedValue)
+        {
+            foreach (string value in values)
+            {
+                if (value == expectedValue)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

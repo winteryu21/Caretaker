@@ -22,7 +22,7 @@ namespace Caretaker.Core
 
         [Header("Game Start")]
         [SerializeField] private bool _autoStartGameWhenBothReady = true;
-        [SerializeField] private string _gameSceneName = "Game";
+        [SerializeField] private string _gameSceneName = "Persistent";
 
         private bool _callbacksRegistered;
         private bool _gameStartRequested;

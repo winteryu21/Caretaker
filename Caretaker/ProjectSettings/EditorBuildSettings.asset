@@ -14,5 +14,26 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Game.unity
     guid: a0c8e62d1aeeec14db0986bf0432b0fa
+  - enabled: 1
+    path: Assets/_Project/Scenes/Persistent.unity
+    guid: 18775b04ac0942ff9251d24c77a7d6dc
+  - enabled: 1
+    path: Assets/_Project/Scenes/Phase1_Past.unity
+    guid: 79af3ea551284991bf2055cfef3d4b8d
+  - enabled: 1
+    path: Assets/_Project/Scenes/Phase1_Future.unity
+    guid: 5a3e69f281814e78815ed88e0d9bb709
+  - enabled: 1
+    path: Assets/_Project/Scenes/Phase2_Past.unity
+    guid: 10bd2dde8ae24c11b1f7d087bc01f84a
+  - enabled: 1
+    path: Assets/_Project/Scenes/Phase2_Future.unity
+    guid: d18e53308ec1430396e6cc348d2d562f
+  - enabled: 1
+    path: Assets/_Project/Scenes/Phase3_Past.unity
+    guid: eeaba1ce67a244c39beacdbcaed43ba2
+  - enabled: 1
+    path: Assets/_Project/Scenes/Phase3_Future.unity
+    guid: 50ade2a08f6145a9bdb415cf81c9c1c2
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

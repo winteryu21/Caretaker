@@ -20,6 +20,8 @@ namespace Caretaker.Core
         public event Action<PlayerSessionData> OnPlayerRoleChanged;
         public event Action<TimelineRole> OnLocalRoleAssigned;
         public event Action<NetworkSessionStatus> OnSessionStatusReceived;
+        public event Action<ulong> OnPhaseAdvanceReadySubmitted;
+        public event Action<PhaseId> OnPhaseTransitionReceived;
 
         public IReadOnlyDictionary<ulong, PlayerSessionData> Players => _players;
         public TimelineRole LocalTimelineRole { get; private set; } = TimelineRole.None;
@@ -119,16 +121,55 @@ namespace Caretaker.Core
             SubmitTimelineRoleRpc(requestedRole);
         }
 
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        /// <summary>
+        /// 기능검증용 Phase 전환 준비 입력을 Host에 제출한다.
+        /// </summary>
+        public void SubmitLocalPhaseAdvanceReady()
+        {
+            if (NetworkManager == null || !NetworkManager.IsListening)
+            {
+                return;
+            }
+
+            if (IsServer)
+            {
+                NotifyPhaseAdvanceReady(NetworkManager.LocalClientId);
+                return;
+            }
+
+            SubmitPhaseAdvanceReadyRpc();
+        }
+
+        /// <summary>
+        /// Host가 결정한 Phase 전환을 모든 클라이언트에 전파한다.
+        /// </summary>
+        /// <param name="targetPhase">전환 대상 Phase.</param>
+        public void BroadcastPhaseTransition(PhaseId targetPhase)
+        {
+            if (!IsServer || !IsSpawned)
+            {
+                return;
+            }
+
+            ReceivePhaseTransitionClientRpc(targetPhase);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void SubmitReadyRpc(bool isReady, RpcParams rpcParams = default)
         {
             SetReady(rpcParams.Receive.SenderClientId, isReady);
         }
 
-        [Rpc(SendTo.Server, RequireOwnership = false)]
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
         private void SubmitTimelineRoleRpc(TimelineRole requestedRole, RpcParams rpcParams = default)
         {
             SetTimelineRole(rpcParams.Receive.SenderClientId, requestedRole);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+        private void SubmitPhaseAdvanceReadyRpc(RpcParams rpcParams = default)
+        {
+            NotifyPhaseAdvanceReady(rpcParams.Receive.SenderClientId);
         }
 
         private void SetReady(ulong clientId, bool isReady)
@@ -263,6 +304,22 @@ namespace Caretaker.Core
         {
             LastReceivedStatus = status;
             OnSessionStatusReceived?.Invoke(status);
+        }
+
+        private void NotifyPhaseAdvanceReady(ulong clientId)
+        {
+            if (!IsServer)
+            {
+                return;
+            }
+
+            OnPhaseAdvanceReadySubmitted?.Invoke(clientId);
+        }
+
+        [ClientRpc]
+        private void ReceivePhaseTransitionClientRpc(PhaseId targetPhase)
+        {
+            OnPhaseTransitionReceived?.Invoke(targetPhase);
         }
     }
 }
