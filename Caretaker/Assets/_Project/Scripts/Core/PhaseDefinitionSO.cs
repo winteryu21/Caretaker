@@ -8,7 +8,7 @@ namespace Caretaker.Core
     /// Phase별 필요 Major ID 목록, 표시 모드, 체크포인트를 정의하는 데이터 에셋.
     /// </summary>
     /// <remarks>DSD §4.2 — ScriptableObject 스키마</remarks>
-    [CreateAssetMenu(fileName = "SO_Phase", menuName = "Caretaker/Flow/PhaseDefinition")]
+    [CreateAssetMenu(fileName = "SO_Phase", menuName = "Caretaker SO/Flow/PhaseDefinition")]
     public class PhaseDefinitionSO : ScriptableObject
     {
         [SerializeField] private PhaseId _phaseId;

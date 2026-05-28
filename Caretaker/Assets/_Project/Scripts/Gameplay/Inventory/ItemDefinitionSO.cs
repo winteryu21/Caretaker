@@ -6,11 +6,12 @@ namespace Caretaker.Gameplay
     /// 아이템 ID, 표시명, 사용 가능 태그, 소모 여부를 정의하는 데이터 에셋.
     /// </summary>
     /// <remarks>DSD §4.2 — ScriptableObject 스키마</remarks>
-    [CreateAssetMenu(fileName = "SO_ItemDefinition", menuName = "Caretaker/Inventory/ItemDefinition")]
+    [CreateAssetMenu(fileName = "SO_ItemDefinition", menuName = "Caretaker SO/Inventory/ItemDefinition")]
     public class ItemDefinitionSO : ScriptableObject
     {
         [SerializeField] private string _itemId;
         [SerializeField] private string _displayName;
+        [SerializeField] private Sprite _icon;
         [SerializeField] private string _category;
         [SerializeField] private string[] _usableTargetTags;
         [SerializeField] private bool _consumeOnUse;
@@ -20,6 +21,9 @@ namespace Caretaker.Gameplay
 
         /// <summary>UI에 표시할 아이템 이름.</summary>
         public string DisplayName => _displayName;
+
+        /// <summary>UI에 표시할 아이템 아이콘.</summary>
+        public Sprite Icon => _icon;
 
         /// <summary>아이템 분류.</summary>
         public string Category => _category;
