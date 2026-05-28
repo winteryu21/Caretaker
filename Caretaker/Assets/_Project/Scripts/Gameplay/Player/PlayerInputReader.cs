@@ -11,10 +11,10 @@ using Caretaker.Shared;
 namespace Caretaker.Gameplay
 {
     /// <summary>
-    /// Input System 액션을 이동/점프/상호작용 입력으로 해석합니다.
+    /// Input System 액션을 이동, 점프, 상호작용 입력으로 해석합니다.
     /// </summary>
     /// <remarks>
-    /// DSD §3.3 플레이어 제어 및 상호작용 시스템
+    /// DSD §3.3 - 플레이어 제어 및 상호작용 시스템
     /// 계층: Unity Component
     /// </remarks>
     [RequireComponent(typeof(PlayerInput))]
@@ -28,10 +28,9 @@ namespace Caretaker.Gameplay
         private InputAction _interactAction;
         private InputAction _jumpAction;
         private InputAction _moveAction;
-        private InputAction _sprintAction;
         private PlayerInput _playerInput;
+        private InputAction _sprintAction;
         private bool _jumpPressedThisFrame;
-        private string _selectedItemId;
         private int _lastKeyboardHorizontalDirection;
         private bool _wasKeyboardLeftPressed;
         private bool _wasKeyboardRightPressed;
@@ -105,14 +104,6 @@ namespace Caretaker.Gameplay
         }
 
         /// <summary>
-        /// 현재 선택된 인벤토리 아이템 ID를 설정합니다.
-        /// </summary>
-        public void SetSelectedItem(string selectedItemId)
-        {
-            _selectedItemId = selectedItemId;
-        }
-
-        /// <summary>
         /// 현재 틱에서 소비할 점프 눌림 입력을 반환합니다.
         /// </summary>
         public bool ConsumeJumpPressed()
@@ -129,20 +120,20 @@ namespace Caretaker.Gameplay
 
         private void HandleClickPerformed(InputAction.CallbackContext context)
         {
-            InteractionType type = string.IsNullOrEmpty(_selectedItemId)
-                ? InteractionType.Examine
-                : InteractionType.UseItem;
-            var request = new InteractionRequest(type, Mouse.current.position.ReadValue(), _selectedItemId);
+            Vector2 pointerPosition = Mouse.current != null
+                ? Mouse.current.position.ReadValue()
+                : Vector2.zero;
+            var request = new InteractionRequest(InteractionType.Examine, pointerPosition);
             OnInteractionRequested?.Invoke(request);
         }
 
         private void HandleInteractPerformed(InputAction.CallbackContext context)
         {
-            var request = new InteractionRequest(InteractionType.Operate, Vector2.zero, null);
+            var request = new InteractionRequest(InteractionType.Operate, Vector2.zero);
             OnInteractionRequested?.Invoke(request);
         }
 
-        // 키보드의 좌우 입력이 동시에 눌렸을 때, 마지막으로 눌린 방향을 우선시하도록 합니다.
+        // 좌우 입력이 동시에 들어오면 가장 마지막으로 눌린 방향을 우선합니다.
         private float ResolveHorizontalInput(float actionHorizontalInput)
         {
             Keyboard keyboard = Keyboard.current;
