@@ -17,7 +17,7 @@ MonoBehaviour:
   _timeline: 2
   _adjacentRoomIds:
   - FUTURE_A_2F_HALL
-  - FUTURE_B_2F_ARCHIVE
+  - FUTURE_B_2F_HALL
   _pairedTimelineRoomId: PAST_A_TO_B_SKYBRIDGE
   _spawnPointIds:
   - SPAWN_FUTURE_A_TO_B_SKYBRIDGE

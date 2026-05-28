@@ -16,6 +16,7 @@ MonoBehaviour:
   _displayName: "A\uB3D9 2F 2\uCE35 \uBCF5\uB3C4"
   _timeline: 2
   _adjacentRoomIds:
+  - FUTURE_A_1F_SECURITY_HALL
   - FUTURE_A_2F_DIRECTOR_OFFICE
   - FUTURE_A_TO_B_SKYBRIDGE
   _pairedTimelineRoomId: PAST_A_2F_HALL

@@ -16,8 +16,7 @@ MonoBehaviour:
   _displayName: "B\uB3D9 2F \uC790\uB8CC\uC2E4"
   _timeline: 2
   _adjacentRoomIds:
-  - FUTURE_A_TO_B_SKYBRIDGE
-  - FUTURE_B_1F_LAB
+  - FUTURE_B_2F_HALL
   _pairedTimelineRoomId: PAST_B_2F_ARCHIVE
   _spawnPointIds:
   - SPAWN_FUTURE_B_2F_ARCHIVE
