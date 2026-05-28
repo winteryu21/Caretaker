@@ -116,6 +116,24 @@ game-design 기준 전체 후보는 13개다.
 - `ITEM_KEY_CARD`: 비소모
 - `ITEM_P3_TOOL`: TBD
 
+## Seed 생성 유틸
+
+`Caretaker/Assets/_Project/Scripts/Editor/SoSeedAssetGenerator.cs`에 초기 SO 에셋 생성 메뉴를 추가했다.
+
+Unity 메뉴:
+
+```text
+Caretaker SO > Seed > Create Missing Seed Data Assets
+```
+
+동작:
+
+- `Assets/_Project/Data/Causality`, `Inventory`, `Rooms`, `AI` 폴더가 없으면 생성한다.
+- 기존 에셋은 덮어쓰지 않고 건너뛴다.
+- `CausalRuleSO`는 확정된 Past→Future 물리 인과 seed만 만든다.
+- `CR_P3_TOOL_PLACE`는 `ITEM_P3_TOOL`/효과가 TBD라 아직 CausalRule seed에서 제외한다.
+- `ITEM_P3_TOOL`은 후속 설계 입력을 위해 placeholder ItemDefinition seed로 생성한다.
+
 ### RoomGraphSO 후보
 
 최소 입력 대상:

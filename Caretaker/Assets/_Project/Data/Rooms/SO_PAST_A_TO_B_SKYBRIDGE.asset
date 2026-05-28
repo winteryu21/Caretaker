@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44ed5f7c7b9f3b241bd83c82b97c4758, type: 3}
+  m_Name: SO_PAST_A_TO_B_SKYBRIDGE
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.RoomGraphSO
+  _roomId: PAST_A_TO_B_SKYBRIDGE
+  _displayName: "\uAD6C\uB984\uB2E4\uB9AC"
+  _timeline: 1
+  _adjacentRoomIds:
+  - PAST_A_2F_HALL
+  - PAST_B_2F_ARCHIVE
+  _pairedTimelineRoomId: FUTURE_A_TO_B_SKYBRIDGE
+  _spawnPointIds:
+  - SPAWN_PAST_A_TO_B_SKYBRIDGE
