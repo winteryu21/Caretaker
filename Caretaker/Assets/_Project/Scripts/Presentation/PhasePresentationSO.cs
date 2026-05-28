@@ -6,7 +6,7 @@ namespace Caretaker.Presentation
     /// Phase별 카메라 및 연출 설정을 정의하는 데이터 에셋.
     /// </summary>
     /// <remarks>DSD §4.2 — ScriptableObject 스키마</remarks>
-    [CreateAssetMenu(fileName = "SO_PhasePresentation", menuName = "Caretaker/Presentation/PhasePresentation")]
+    [CreateAssetMenu(fileName = "SO_PhasePresentation", menuName = "Caretaker SO/Presentation/PhasePresentation")]
     public class PhasePresentationSO : ScriptableObject
     {
         [SerializeField] private string _phaseId;

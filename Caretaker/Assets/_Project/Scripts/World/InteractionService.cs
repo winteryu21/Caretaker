@@ -1,27 +1,128 @@
+using UnityEngine;
+
+using Caretaker.Gameplay;
+using Caretaker.Shared;
+
 namespace Caretaker.World
 {
     /// <summary>
-    /// 조사, 아이템 사용, 조작물 상호작용 규칙을 판정한다.
-    /// MonoBehaviour에 의존하지 않는 순수 C# 클래스.
-    /// 씬 없이 거리, 역할, 아이템 조건을 단위 테스트할 수 있어야 한다.
+    /// 필드 상호작용의 판정과 최종 타입 결정을 담당합니다.
     /// </summary>
     /// <remarks>
-    /// DSD §3.3 — 플레이어 제어 및 상호작용 시스템
+    /// DSD §3.4 - 상호작용 시스템
     /// 계층: Domain Service
     /// </remarks>
-    public class InteractionService
+    public sealed class InteractionService
     {
         /// <summary>
-        /// 상호작용 요청을 검증한다.
-        /// 거리 1 unit, 역할, 아이템, 대상 상태를 확인한다.
+        /// 요청과 현재 후보 대상을 바탕으로 상호작용을 판정합니다.
         /// </summary>
-        /// <param name="distance">요청자와 대상 사이 거리.</param>
-        /// <param name="requiredItemId">대상이 요구하는 아이템 ID.</param>
-        /// <param name="selectedItemId">요청자가 선택한 아이템 ID.</param>
-        /// <returns>검증 통과 여부.</returns>
-        public bool ValidateInteraction(float distance, string requiredItemId, string selectedItemId)
+        /// <param name="request">플레이어 입력으로 생성된 상호작용 요청입니다.</param>
+        /// <param name="hoverTarget">현재 hover 대상입니다.</param>
+        /// <param name="proximityTarget">현재 근접 대상입니다.</param>
+        /// <param name="proximityInteractionType">현재 근접 대상에 대해 우선 적용될 상호작용 타입입니다.</param>
+        /// <param name="actorPosition">상호작용을 시도하는 플레이어 위치입니다.</param>
+        /// <param name="maxDistance">플레이어 근접 상호작용에 허용되는 최대 거리입니다.</param>
+        /// <param name="resolvedTarget">검증이 끝난 최종 상호작용 대상입니다.</param>
+        /// <param name="resolvedType">검증이 끝난 최종 상호작용 타입입니다.</param>
+        /// <returns>유효한 상호작용이 확정되었는지 여부입니다.</returns>
+        public bool TryProcessInteraction(
+            InteractionRequest request,
+            InteractableObject hoverTarget,
+            InteractableObject proximityTarget,
+            InteractionType proximityInteractionType,
+            Vector2 actorPosition,
+            float maxDistance,
+            out InteractableObject resolvedTarget,
+            out InteractionType resolvedType)
         {
-            throw new System.NotImplementedException();
+            switch (request.Type)
+            {
+                case InteractionType.Examine:
+                    return TryResolveInteraction(
+                        hoverTarget,
+                        InteractionType.Examine,
+                        actorPosition,
+                        float.PositiveInfinity,
+                        out resolvedTarget,
+                        out resolvedType);
+
+                case InteractionType.Operate:
+                    if (proximityInteractionType == InteractionType.None)
+                    {
+                        resolvedTarget = null;
+                        resolvedType = default;
+                        return false;
+                    }
+
+                    return TryResolveInteraction(
+                        proximityTarget,
+                        proximityInteractionType,
+                        actorPosition,
+                        maxDistance,
+                        out resolvedTarget,
+                        out resolvedType);
+
+                default:
+                    resolvedTarget = null;
+                    resolvedType = default;
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// 지정된 대상이 요청된 상호작용을 처리할 수 있는지 검증합니다.
+        /// </summary>
+        /// <param name="target">검증할 상호작용 대상입니다.</param>
+        /// <param name="interactionType">요청된 상호작용 타입입니다.</param>
+        /// <param name="distance">행동 주체와 대상 사이의 최근접 거리입니다.</param>
+        /// <param name="maxDistance">허용되는 최대 상호작용 거리입니다.</param>
+        /// <returns>상호작용 가능 여부입니다.</returns>
+        public bool ValidateInteraction(
+            InteractableObject target,
+            InteractionType interactionType,
+            float distance,
+            float maxDistance)
+        {
+            if (target == null)
+            {
+                return false;
+            }
+
+            if (distance < 0f || distance > maxDistance)
+            {
+                return false;
+            }
+
+            return target.IsInteractable(interactionType);
+        }
+
+        private bool TryResolveInteraction(
+            InteractableObject target,
+            InteractionType interactionType,
+            Vector2 actorPosition,
+            float maxDistance,
+            out InteractableObject resolvedTarget,
+            out InteractionType resolvedType)
+        {
+            if (target == null)
+            {
+                resolvedTarget = null;
+                resolvedType = default;
+                return false;
+            }
+
+            float distance = target.GetDistanceFrom(actorPosition);
+            if (!ValidateInteraction(target, interactionType, distance, maxDistance))
+            {
+                resolvedTarget = null;
+                resolvedType = default;
+                return false;
+            }
+
+            resolvedTarget = target;
+            resolvedType = interactionType;
+            return true;
         }
     }
 }

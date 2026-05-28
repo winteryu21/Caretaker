@@ -2,28 +2,36 @@ using System;
 
 using UnityEngine;
 
+using Caretaker.Shared;
+using Caretaker.World;
+
 namespace Caretaker.Gameplay
 {
     /// <summary>
-    /// 입력과 모터를 연결하고, 상호작용 요청을 게임플레이 계층으로 전달합니다.
+    /// 입력과 모터를 연결하고, 상호작용 요청을 상호작용 서비스에 전달합니다.
     /// </summary>
-    /// <remarks>DSD §3.3 플레이어 제어 시스템 조정자</remarks>
+    /// <remarks>DSD §3.3 - 플레이어 제어 시스템</remarks>
     [RequireComponent(typeof(PlayerInputReader))]
     [RequireComponent(typeof(PlayerMotor2D))]
+    [RequireComponent(typeof(InteractionProbe))]
     public class PlayerController : MonoBehaviour
     {
         private PlayerInputReader _inputReader;
+        private InteractionProbe _interactionProbe;
+        private InteractionService _interactionService;
         private PlayerMotor2D _motor2D;
 
         /// <summary>
-        /// 플레이어의 상호작용 요청을 게임플레이 계층으로 전달할 때 발생합니다.
+        /// 유효한 상호작용 대상과 타입이 확정되었을 때 발생합니다.
         /// </summary>
-        public event Action<InteractionRequest> OnInteractionRequested;
+        public event Action<InteractableObject, InteractionType> OnInteractionResolved;
 
         private void Awake()
         {
             _inputReader = GetComponent<PlayerInputReader>();
             _motor2D = GetComponent<PlayerMotor2D>();
+            _interactionProbe = GetComponent<InteractionProbe>();
+            _interactionService = new InteractionService();
         }
 
         private void OnEnable()
@@ -47,10 +55,23 @@ namespace Caretaker.Gameplay
             _inputReader.OnInteractionRequested -= HandleInteractionRequested;
         }
 
-        // 플레이어의 상호작용 키 입력을 이벤트로 전달합니다.
+        // 플레이어 입력 요청을 서비스에 전달해 실제 상호작용 여부를 판정합니다.
         private void HandleInteractionRequested(InteractionRequest request)
         {
-            OnInteractionRequested?.Invoke(request);
+            if (!_interactionService.TryProcessInteraction(
+                    request,
+                    _interactionProbe.HoverTarget,
+                    _interactionProbe.ProximityTarget,
+                    _interactionProbe.ProximityInteractionType,
+                    transform.position,
+                    _interactionProbe.InteractionRadius,
+                    out InteractableObject resolvedTarget,
+                    out InteractionType resolvedType))
+            {
+                return;
+            }
+
+            OnInteractionResolved?.Invoke(resolvedTarget, resolvedType);
         }
     }
 }
