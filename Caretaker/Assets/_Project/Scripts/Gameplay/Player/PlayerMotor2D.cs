@@ -68,12 +68,18 @@ public class PlayerMotor2D : MonoBehaviour
         _boxCollider = GetComponent<BoxCollider2D>();
         _rigidbody2D = GetComponent<Rigidbody2D>();
 
+        ConfigureRigidbodyConstraints();
         CacheColliderState();
         IsGrounded = PerformGroundCheck();
         if (IsGrounded)
         {
             _coyoteTimeRemaining = _coyoteTimeDuration;
         }
+    }
+
+    private void OnValidate()
+    {
+        ConfigureRigidbodyConstraints();
     }
 
     /// <summary>
@@ -372,5 +378,18 @@ public class PlayerMotor2D : MonoBehaviour
             _groundLayers);
 
         return blockingCollider == null || blockingCollider == _boxCollider;
+    }
+
+    private void ConfigureRigidbodyConstraints()
+    {
+        if (_rigidbody2D == null)
+        {
+            _rigidbody2D = GetComponent<Rigidbody2D>();
+        }
+
+        if (_rigidbody2D != null)
+        {
+            _rigidbody2D.constraints |= RigidbodyConstraints2D.FreezeRotation;
+        }
     }
 }

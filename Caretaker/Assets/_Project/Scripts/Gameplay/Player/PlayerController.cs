@@ -22,7 +22,7 @@ namespace Caretaker.Gameplay
         private PlayerMotor2D _motor2D;
 
         /// <summary>
-        /// 유효한 상호작용 대상과 타입이 확정되었을 때 발생합니다.
+        /// 유효한 상호작용 대상과 타입이 확정되고 실행되었을 때 발생합니다.
         /// </summary>
         public event Action<InteractableObject, InteractionType> OnInteractionResolved;
 
@@ -63,7 +63,7 @@ namespace Caretaker.Gameplay
                     _interactionProbe.HoverTarget,
                     _interactionProbe.ProximityTarget,
                     _interactionProbe.ProximityInteractionType,
-                    transform.position,
+                    this,
                     _interactionProbe.InteractionRadius,
                     out InteractableObject resolvedTarget,
                     out InteractionType resolvedType))

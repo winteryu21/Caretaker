@@ -1,5 +1,6 @@
 using UnityEngine;
 
+using Caretaker.Gameplay;
 using Caretaker.Shared;
 
 namespace Caretaker.World
@@ -9,6 +10,7 @@ namespace Caretaker.World
     /// Inspector에서 ID와 설명, 지원하는 상호작용 타입을 설정합니다.
     /// </summary>
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(CircleCollider2D))]
     public class InteractableObject : MonoBehaviour
     {
         [Header("Object Identity")]
@@ -60,6 +62,7 @@ namespace Caretaker.World
         private void Awake()
         {
             _cachedCollider2D = GetComponent<Collider2D>();
+            ConfigureInteractionCollider();
             SetHighlight(_highlightOnAwake);
         }
 
@@ -68,6 +71,7 @@ namespace Caretaker.World
             _objectId = _objectId?.Trim();
             _requiredItemId = _requiredItemId?.Trim();
             _grantedItemId = _grantedItemId?.Trim();
+            ConfigureInteractionCollider();
         }
 
         /// <summary>
@@ -102,7 +106,13 @@ namespace Caretaker.World
         /// </summary>
         public void SetHighlight(bool isHighlighted)
         {
+            if (_isHighlighted == isHighlighted)
+            {
+                return;
+            }
+
             _isHighlighted = isHighlighted;
+            Debug.Log($"Highlight {(isHighlighted ? "enabled" : "disabled")}: object={_objectId}", this);
 
             if (_outlineBehaviours == null)
             {
@@ -116,6 +126,66 @@ namespace Caretaker.World
                 {
                     outlineBehaviour.enabled = isHighlighted;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 요청된 상호작용 타입에 맞는 후속 조치를 실행합니다.
+        /// </summary>
+        /// <param name="interactionType">실행할 상호작용 타입입니다.</param>
+        /// <param name="actor">상호작용을 실행한 플레이어입니다.</param>
+        /// <returns>상호작용 후속 조치가 실행되었는지 여부입니다.</returns>
+        public bool RunInteraction(InteractionType interactionType, PlayerController actor)
+        {
+            if (!IsInteractable(interactionType))
+            {
+                return false;
+            }
+
+            switch (interactionType)
+            {
+                case InteractionType.Examine:
+                    RunExamine(actor);
+                    return true;
+
+                case InteractionType.Acquire:
+                    return RunAcquire(actor);
+
+                case InteractionType.Operate:
+                    return RunOperate(actor);
+
+                default:
+                    return false;
+            }
+        }
+
+        private void RunExamine(PlayerController actor)
+        {
+            Debug.Log($"Examine interaction: object={_objectId}, text={_examineText}", this);
+        }
+
+        private bool RunAcquire(PlayerController actor)
+        {
+            Debug.Log($"Acquire interaction: object={_objectId}, grantedItem={_grantedItemId}", this);
+            return true;
+        }
+
+        private bool RunOperate(PlayerController actor)
+        {
+            Debug.Log($"Operate interaction: object={_objectId}", this);
+            return true;
+        }
+
+        private void ConfigureInteractionCollider()
+        {
+            if (_cachedCollider2D == null)
+            {
+                _cachedCollider2D = GetComponent<Collider2D>();
+            }
+
+            if (_cachedCollider2D != null)
+            {
+                _cachedCollider2D.isTrigger = true;
             }
         }
     }
