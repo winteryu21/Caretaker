@@ -41,6 +41,11 @@ namespace Caretaker.Gameplay
         public event Action<InteractionRequest> OnInteractionRequested;
 
         /// <summary>
+        /// 플레이어가 인벤토리 슬롯을 선택했을 때 발생합니다. 슬롯 인덱스는 0부터 시작합니다.
+        /// </summary>
+        public event Action<int> OnInventorySlotSelected;
+
+        /// <summary>
         /// 현재 이동 입력값을 반환합니다.
         /// </summary>
         public Vector2 MoveInput
@@ -103,6 +108,12 @@ namespace Caretaker.Gameplay
 #endif
         }
 
+        private void Update()
+        {
+            HandleInventorySlotInput();
+            HandleUseItemInput();
+        }
+
         /// <summary>
         /// 현재 틱에서 소비할 점프 눌림 입력을 반환합니다.
         /// </summary>
@@ -131,6 +142,48 @@ namespace Caretaker.Gameplay
         {
             var request = new InteractionRequest(InteractionType.Operate, Vector2.zero);
             OnInteractionRequested?.Invoke(request);
+        }
+
+        private void HandleUseItemInput()
+        {
+            if (Mouse.current == null || !Mouse.current.rightButton.wasPressedThisFrame)
+            {
+                return;
+            }
+
+            Vector2 pointerPosition = Mouse.current.position.ReadValue();
+            var request = new InteractionRequest(InteractionType.UseItem, pointerPosition);
+            OnInteractionRequested?.Invoke(request);
+        }
+
+        private void HandleInventorySlotInput()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null)
+            {
+                return;
+            }
+
+            if (keyboard.digit1Key.wasPressedThisFrame || keyboard.numpad1Key.wasPressedThisFrame)
+            {
+                OnInventorySlotSelected?.Invoke(0);
+            }
+            else if (keyboard.digit2Key.wasPressedThisFrame || keyboard.numpad2Key.wasPressedThisFrame)
+            {
+                OnInventorySlotSelected?.Invoke(1);
+            }
+            else if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame)
+            {
+                OnInventorySlotSelected?.Invoke(2);
+            }
+            else if (keyboard.digit4Key.wasPressedThisFrame || keyboard.numpad4Key.wasPressedThisFrame)
+            {
+                OnInventorySlotSelected?.Invoke(3);
+            }
+            else if (keyboard.digit5Key.wasPressedThisFrame || keyboard.numpad5Key.wasPressedThisFrame)
+            {
+                OnInventorySlotSelected?.Invoke(4);
+            }
         }
 
         // 좌우 입력이 동시에 들어오면 가장 마지막으로 눌린 방향을 우선합니다.

@@ -14,7 +14,7 @@ namespace Caretaker.Gameplay
         [SerializeField] private Sprite _icon;
         [SerializeField] private string _category;
         [SerializeField] private string[] _usableTargetTags;
-        [SerializeField] private bool _consumeOnUse;
+        [SerializeField] private bool _consumable;
 
         /// <summary>아이템 고유 식별자. (예: ITEM_KEY_LAB_A)</summary>
         public string ItemId => _itemId;
@@ -32,6 +32,6 @@ namespace Caretaker.Gameplay
         public string[] UsableTargetTags => _usableTargetTags;
 
         /// <summary>사용 시 소모 여부.</summary>
-        public bool ConsumeOnUse => _consumeOnUse;
+        public bool Consumable => _consumable;
     }
 }
