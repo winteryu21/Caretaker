@@ -110,6 +110,7 @@ GameObject:
   - component: {fileID: 330467203190987209}
   - component: {fileID: 3466853005714153769}
   - component: {fileID: 8234208041341994182}
+  - component: {fileID: 699921817410106043}
   m_Layer: 0
   m_Name: NetworkPlayer
   m_TagString: Untagged
@@ -405,3 +406,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.NetworkPlayerOwnerGate
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!114 &699921817410106043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8695379886725363112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c5b4e702cf5f634485faa77237f08d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.InventoryController
+  _playerId: 0
+  _itemDefinitions:
+  - {fileID: 11400000, guid: 650627872de7eaa4cba81700d4b740d1, type: 2}
+  - {fileID: 11400000, guid: 2fee62df6a07c9d41b66bdb8cce0cc2f, type: 2}
+  - {fileID: 11400000, guid: 9f0f421aae82a234e9ea521c87ae092f, type: 2}
+  - {fileID: 11400000, guid: ae828904a9b5ce641b4af00425d53ec2, type: 2}
+  - {fileID: 11400000, guid: 0adf6fd21dd77634094a2533fa0ad13b, type: 2}
