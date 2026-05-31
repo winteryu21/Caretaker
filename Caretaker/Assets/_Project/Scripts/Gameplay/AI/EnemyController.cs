@@ -53,15 +53,14 @@ namespace Caretaker.Gameplay
 
         private void Awake()
         {
-            _collider2D = GetComponent<Collider2D>();
-            _rigidbody2D = GetComponent<Rigidbody2D>();
+            EnsureComponentReferences();
             CacheFacingSign();
             ConfigureRigidbody();
         }
 
         private void OnValidate()
         {
-            _collider2D = GetComponent<Collider2D>();
+            EnsureComponentReferences();
             CacheFacingSign();
         }
 
@@ -76,6 +75,12 @@ namespace Caretaker.Gameplay
         /// <param name="deltaTime">초 단위 시간 간격.</param>
         private void TickPatrol(float deltaTime)
         {
+            EnsureComponentReferences();
+            if (_rigidbody2D == null)
+            {
+                return;
+            }
+
             if (!CanPatrol() || deltaTime <= 0f)
             {
                 StopPatrolMovement();
@@ -85,11 +90,8 @@ namespace Caretaker.Gameplay
             if (_waitTimeRemaining > 0f)
             {
                 _waitTimeRemaining = Mathf.Max(0f, _waitTimeRemaining - deltaTime);
-                if (_waitTimeRemaining > 0f)
-                {
-                    StopPatrolMovement();
-                    return;
-                }
+                StopPatrolMovement();
+                return;
             }
 
             Transform targetWaypoint = GetValidCurrentWaypoint();
@@ -249,10 +251,31 @@ namespace Caretaker.Gameplay
             }
 
             Bounds bounds = _collider2D.bounds;
+            if (!HasGroundBelow(bounds))
+            {
+                return true;
+            }
+
             Vector2 origin = new(
                 bounds.center.x + direction * (bounds.extents.x + _groundProbeForwardDistance),
                 bounds.min.y + FACING_EPSILON);
 
+            int hitCount = Physics2D.RaycastNonAlloc(origin, Vector2.down, _groundHits, _groundProbeDownDistance, _groundLayers);
+            for (int i = 0; i < hitCount; i++)
+            {
+                Collider2D hitCollider = _groundHits[i].collider;
+                if (hitCollider != null && hitCollider != _collider2D)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HasGroundBelow(Bounds bounds)
+        {
+            Vector2 origin = new(bounds.center.x, bounds.min.y + FACING_EPSILON);
             int hitCount = Physics2D.RaycastNonAlloc(origin, Vector2.down, _groundHits, _groundProbeDownDistance, _groundLayers);
             for (int i = 0; i < hitCount; i++)
             {
@@ -320,6 +343,19 @@ namespace Caretaker.Gameplay
             if (Mathf.Abs(localScaleX) > FACING_EPSILON)
             {
                 _facingSign = Mathf.Sign(localScaleX);
+            }
+        }
+
+        private void EnsureComponentReferences()
+        {
+            if (_collider2D == null)
+            {
+                _collider2D = GetComponent<Collider2D>();
+            }
+
+            if (_rigidbody2D == null)
+            {
+                _rigidbody2D = GetComponent<Rigidbody2D>();
             }
         }
 
