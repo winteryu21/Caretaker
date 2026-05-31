@@ -193,7 +193,7 @@ namespace Caretaker.Editor
                     SetString(serializedObject, "_displayName", seed.DisplayName);
                     SetString(serializedObject, "_category", seed.Category);
                     SetStringArray(serializedObject, "_usableTargetTags", seed.UsableTargetTags);
-                    SetBool(serializedObject, "_consumeOnUse", seed.ConsumeOnUse);
+                    SetBool(serializedObject, "_consumable", seed.Consumable);
                     serializedObject.ApplyModifiedPropertiesWithoutUndo();
                 }, ref createdCount, ref skippedCount);
             }
@@ -397,20 +397,20 @@ namespace Caretaker.Editor
 
         private readonly struct ItemSeed
         {
-            public ItemSeed(string itemId, string displayName, string category, IReadOnlyList<string> usableTargetTags, bool consumeOnUse)
+            public ItemSeed(string itemId, string displayName, string category, IReadOnlyList<string> usableTargetTags, bool consumable)
             {
                 ItemId = itemId;
                 DisplayName = displayName;
                 Category = category;
                 UsableTargetTags = usableTargetTags;
-                ConsumeOnUse = consumeOnUse;
+                Consumable = consumable;
             }
 
             public string ItemId { get; }
             public string DisplayName { get; }
             public string Category { get; }
             public IReadOnlyList<string> UsableTargetTags { get; }
-            public bool ConsumeOnUse { get; }
+            public bool Consumable { get; }
         }
 
         private readonly struct RoomBaseSeed

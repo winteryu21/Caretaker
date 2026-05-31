@@ -18,4 +18,4 @@ MonoBehaviour:
   _category: Power
   _usableTargetTags:
   - AuxPowerDevice
-  _consumeOnUse: 1
+  _consumable: 1

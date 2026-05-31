@@ -28,6 +28,8 @@ namespace Caretaker.World
 
         private Collider2D _cachedCollider2D;
         private bool _isHighlighted;
+        private bool _isItemAcquired;
+        private bool _isRequiredItemSatisfied;
 
         /// <summary>
         /// game-design 문서상의 오브젝트 식별자입니다. 예: OBJ_P1_SIGN
@@ -45,9 +47,24 @@ namespace Caretaker.World
         public string RequiredItemId => _requiredItemId;
 
         /// <summary>
+        /// 아이템 요구 조건이 있는 오브젝트인지 반환합니다.
+        /// </summary>
+        public bool HasRequiredItem => !string.IsNullOrWhiteSpace(_requiredItemId);
+
+        /// <summary>
+        /// 필요한 아이템 조건이 런타임에서 충족되었는지 반환합니다.
+        /// </summary>
+        public bool IsRequiredItemSatisfied => _isRequiredItemSatisfied;
+
+        /// <summary>
         /// 습득 성공 시 인벤토리에 추가할 아이템 ID입니다.
         /// </summary>
         public string GrantedItemId => _grantedItemId;
+
+        /// <summary>
+        /// 이 오브젝트에서 아이템을 이미 획득했는지 반환합니다.
+        /// </summary>
+        public bool IsItemAcquired => _isItemAcquired;
 
         /// <summary>
         /// 조사 시 표시할 텍스트입니다.
@@ -127,6 +144,27 @@ namespace Caretaker.World
                     outlineBehaviour.enabled = isHighlighted;
                 }
             }
+        }
+
+        /// <summary>
+        /// 필요한 아이템 조건을 충족된 상태로 표시합니다.
+        /// </summary>
+        public void MarkRequiredItemSatisfied()
+        {
+            if (!HasRequiredItem)
+            {
+                return;
+            }
+
+            _isRequiredItemSatisfied = true;
+        }
+
+        /// <summary>
+        /// 이 오브젝트의 아이템이 획득된 상태로 표시합니다.
+        /// </summary>
+        public void MarkItemAcquired()
+        {
+            _isItemAcquired = true;
         }
 
         /// <summary>
