@@ -29,7 +29,7 @@ namespace Caretaker.Gameplay
         [SerializeField] private LayerMask _groundLayers = Physics2D.DefaultRaycastLayers; // 지상형 적이 낙하 방지에 사용할 바닥 레이어.
         [SerializeField] [Min(0f)] private float _groundProbeForwardDistance = 0.15f; // 발끝보다 앞쪽을 얼마나 더 확인할지 정한다.
         [SerializeField] [Min(0.01f)] private float _groundProbeDownDistance = 0.4f; // 앞쪽 발밑 바닥을 찾기 위해 아래로 검사할 거리.
-        [SerializeField] [Min(0.1f)] private float _waypointTimeoutSeconds = 1f; // 이 시간 동안 목표에 가까워지지 못하면 다음 Waypoint로 넘어간다.
+        [SerializeField] [Min(0.1f)] private float _stuckSkipSeconds = 1f; // 이 시간 동안 목표에 가까워지지 못하면 다음 Waypoint로 넘어간다.
 
         private readonly RaycastHit2D[] _groundHits = new RaycastHit2D[4];
 
@@ -63,7 +63,6 @@ namespace Caretaker.Gameplay
         {
             _collider2D = GetComponent<Collider2D>();
             CacheFacingSign();
-            ConfigureRigidbody();
         }
 
         private void FixedUpdate()
@@ -75,7 +74,7 @@ namespace Caretaker.Gameplay
         /// 주어진 시간 간격만큼 Waypoint 순찰 이동을 진행한다.
         /// </summary>
         /// <param name="deltaTime">초 단위 시간 간격.</param>
-        public void TickPatrol(float deltaTime)
+        private void TickPatrol(float deltaTime)
         {
             if (!CanPatrol() || deltaTime <= 0f)
             {
@@ -111,7 +110,7 @@ namespace Caretaker.Gameplay
             }
 
             UpdateWaypointProgressTimer(GetDistanceToTarget(toTarget), deltaTime);
-            if (_timeWithoutWaypointProgress >= _waypointTimeoutSeconds)
+            if (_timeWithoutWaypointProgress >= _stuckSkipSeconds)
             {
                 SkipCurrentWaypoint();
                 return;
@@ -160,7 +159,7 @@ namespace Caretaker.Gameplay
         {
             Transform skippedWaypoint = _patrolWaypoints[_currentPatrolWaypointIndex];
             Debug.Log(
-                $"{name} skipped unreachable waypoint {skippedWaypoint.name} after {_waypointTimeoutSeconds:0.##} seconds without progress.",
+                $"{name} skipped unreachable waypoint {skippedWaypoint.name} after {_stuckSkipSeconds:0.##} seconds without progress.",
                 this);
 
             AdvanceWaypointIndex();

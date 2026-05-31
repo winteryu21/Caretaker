@@ -23,8 +23,8 @@ namespace Caretaker.Tests.Editor
                 CreateWaypoint("WaypointA", Vector3.zero),
                 CreateWaypoint("WaypointB", Vector3.right));
 
-            controller.TickPatrol(0.1f);
-            controller.TickPatrol(0.25f);
+            TickPatrol(controller, 0.1f);
+            TickPatrol(controller, 0.25f);
 
             Assert.That(controller.CurrentPatrolWaypointIndex, Is.EqualTo(1));
             Assert.That(controller.GetComponent<Rigidbody2D>().linearVelocity.x, Is.EqualTo(2f).Within(0.001f));
@@ -42,9 +42,9 @@ namespace Caretaker.Tests.Editor
                 CreateWaypoint("WaypointA", Vector3.zero),
                 CreateWaypoint("WaypointB", new Vector3(2f, 0f, 0f)));
 
-            controller.TickPatrol(0.1f);
+            TickPatrol(controller, 0.1f);
             controller.GetComponent<Rigidbody2D>().position = new Vector2(2f, 0f);
-            controller.TickPatrol(0.1f);
+            TickPatrol(controller, 0.1f);
 
             Assert.That(controller.CurrentPatrolWaypointIndex, Is.EqualTo(0));
 
@@ -60,14 +60,14 @@ namespace Caretaker.Tests.Editor
                 CreateWaypoint("WaypointA", Vector3.zero),
                 CreateWaypoint("WaypointB", Vector3.right));
 
-            controller.TickPatrol(0.1f);
-            controller.TickPatrol(0.25f);
+            TickPatrol(controller, 0.1f);
+            TickPatrol(controller, 0.25f);
 
             Assert.That(controller.IsWaitingAtWaypoint, Is.True);
             Assert.That(controller.GetComponent<Rigidbody2D>().linearVelocity.x, Is.EqualTo(0f).Within(0.001f));
 
-            controller.TickPatrol(0.25f);
-            controller.TickPatrol(0.25f);
+            TickPatrol(controller, 0.25f);
+            TickPatrol(controller, 0.25f);
 
             Assert.That(controller.IsWaitingAtWaypoint, Is.False);
             Assert.That(controller.GetComponent<Rigidbody2D>().linearVelocity.x, Is.EqualTo(1f).Within(0.001f));
@@ -76,7 +76,7 @@ namespace Caretaker.Tests.Editor
         }
 
         [Test]
-        public void TickPatrol_SkipsWaypointAfterTimeout()
+        public void TickPatrol_SkipsWaypointAfterStuckTime()
         {
             EnemyController controller = CreateController(
                 Vector3.zero,
@@ -86,10 +86,10 @@ namespace Caretaker.Tests.Editor
                 CreateWaypoint("WaypointA", Vector3.zero),
                 CreateWaypoint("WaypointB", new Vector3(10f, 0f, 0f)));
 
-            controller.TickPatrol(0.1f);
-            controller.TickPatrol(0.25f);
-            controller.TickPatrol(0.25f);
-            controller.TickPatrol(0.25f);
+            TickPatrol(controller, 0.1f);
+            TickPatrol(controller, 0.25f);
+            TickPatrol(controller, 0.25f);
+            TickPatrol(controller, 0.25f);
 
             Assert.That(controller.CurrentPatrolWaypointIndex, Is.EqualTo(0));
 
@@ -112,8 +112,8 @@ namespace Caretaker.Tests.Editor
             ground.transform.position = Vector3.zero;
             InvokeOnValidate(controller);
 
-            controller.TickPatrol(0.1f);
-            controller.TickPatrol(0.1f);
+            TickPatrol(controller, 0.1f);
+            TickPatrol(controller, 0.1f);
 
             Assert.That(controller.GetComponent<Rigidbody2D>().linearVelocity.x, Is.EqualTo(0f).Within(0.001f));
 
@@ -127,7 +127,7 @@ namespace Caretaker.Tests.Editor
             GameObject gameObject = new("Enemy");
             EnemyController controller = gameObject.AddComponent<EnemyController>();
 
-            Assert.DoesNotThrow(() => controller.TickPatrol(1f));
+            Assert.DoesNotThrow(() => TickPatrol(controller, 1f));
             Assert.That(gameObject.GetComponent<Rigidbody2D>().position, Is.EqualTo(Vector2.zero));
 
             Object.DestroyImmediate(gameObject);
@@ -172,7 +172,7 @@ namespace Caretaker.Tests.Editor
             Vector3 position,
             EnemyTuningSO tuning,
             int movementModeIndex,
-            float waypointTimeoutSeconds,
+            float stuckSkipSeconds,
             params Transform[] waypoints)
         {
             GameObject gameObject = new("Enemy");
@@ -182,7 +182,7 @@ namespace Caretaker.Tests.Editor
             SerializedObject serializedObject = new(controller);
             serializedObject.FindProperty("_movementMode").enumValueIndex = movementModeIndex;
             serializedObject.FindProperty("_tuning").objectReferenceValue = tuning;
-            serializedObject.FindProperty("_waypointTimeoutSeconds").floatValue = waypointTimeoutSeconds;
+            serializedObject.FindProperty("_stuckSkipSeconds").floatValue = stuckSkipSeconds;
             SerializedProperty waypointProperty = serializedObject.FindProperty("_patrolWaypoints");
             waypointProperty.arraySize = waypoints.Length;
             for (int i = 0; i < waypoints.Length; i++)
@@ -193,6 +193,7 @@ namespace Caretaker.Tests.Editor
 
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
             InvokeOnValidate(controller);
+            InvokeConfigureRigidbody(controller);
 
             return controller;
         }
@@ -218,6 +219,18 @@ namespace Caretaker.Tests.Editor
         {
             MethodInfo methodInfo = typeof(EnemyController).GetMethod("OnValidate", INSTANCE_PRIVATE);
             methodInfo.Invoke(controller, null);
+        }
+
+        private static void InvokeConfigureRigidbody(EnemyController controller)
+        {
+            MethodInfo methodInfo = typeof(EnemyController).GetMethod("ConfigureRigidbody", INSTANCE_PRIVATE);
+            methodInfo.Invoke(controller, null);
+        }
+
+        private static void TickPatrol(EnemyController controller, float deltaTime)
+        {
+            MethodInfo methodInfo = typeof(EnemyController).GetMethod("TickPatrol", INSTANCE_PRIVATE);
+            methodInfo.Invoke(controller, new object[] { deltaTime });
         }
 
         private static void DestroyController(EnemyController controller)
