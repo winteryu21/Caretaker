@@ -191,8 +191,9 @@ namespace Caretaker.Gameplay
             return interactionType switch
             {
                 InteractionType.Acquire => 0,
-                InteractionType.Operate => 1,
-                InteractionType.Examine => 2,
+                InteractionType.UseItem => 1,
+                InteractionType.Operate => 2,
+                InteractionType.Examine => 3,
                 _ => int.MaxValue
             };
         }
@@ -208,9 +209,17 @@ namespace Caretaker.Gameplay
                 return false;
             }
 
-            if (interactableObject.IsInteractable(InteractionType.Acquire))
+            if (interactableObject.IsInteractable(InteractionType.Acquire) &&
+                !interactableObject.IsItemAcquired &&
+                (!interactableObject.HasRequiredItem || interactableObject.IsRequiredItemSatisfied))
             {
                 interactionType = InteractionType.Acquire;
+                return true;
+            }
+
+            if (interactableObject.HasRequiredItem && !interactableObject.IsRequiredItemSatisfied)
+            {
+                interactionType = InteractionType.UseItem;
                 return true;
             }
 

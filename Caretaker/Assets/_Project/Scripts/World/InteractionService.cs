@@ -55,7 +55,8 @@ namespace Caretaker.World
                         out resolvedType);
 
                 case InteractionType.Operate:
-                    if (proximityInteractionType == InteractionType.None)
+                    if (proximityInteractionType == InteractionType.None ||
+                        proximityInteractionType == InteractionType.UseItem)
                     {
                         resolvedTarget = null;
                         resolvedType = default;
