@@ -12,5 +12,7 @@ namespace Caretaker.Core
     {
         public string CheckpointId;
         public int SnapshotVersion;
+
+        // TODO [Checkpoint]: InteractableObject의 isRequiredItemSatisfied/isItemAcquired 상태를 objectId 기준으로 저장한다.
     }
 }

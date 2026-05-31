@@ -19,4 +19,4 @@ MonoBehaviour:
   _usableTargetTags:
   - BreakerPanel
   - AuxPowerDevice
-  _consumeOnUse: 1
+  _consumable: 1

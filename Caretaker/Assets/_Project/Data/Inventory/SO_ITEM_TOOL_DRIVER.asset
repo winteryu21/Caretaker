@@ -18,4 +18,4 @@ MonoBehaviour:
   _category: Tool
   _usableTargetTags:
   - VentScrew
-  _consumeOnUse: 0
+  _consumable: 0
