@@ -27,6 +27,7 @@ namespace Caretaker.Gameplay
         private readonly Collider2D[] _nearbyResults = new Collider2D[MAX_NEARBY_RESULTS];
         private readonly RaycastHit2D[] _raycastResults = new RaycastHit2D[MAX_RAYCAST_RESULTS];
 
+        private ContactFilter2D _interactableContactFilter;
         private InteractableObject _highlightedHoverTarget;
         private InteractableObject _highlightedProximityTarget;
         private InteractableObject _hoverTarget;
@@ -55,10 +56,17 @@ namespace Caretaker.Gameplay
 
         private void Awake()
         {
+            RefreshInteractableContactFilter();
+
             if (_worldCamera == null)
             {
                 _worldCamera = Camera.main;
             }
+        }
+
+        private void OnValidate()
+        {
+            RefreshInteractableContactFilter();
         }
 
         private void Update()
@@ -128,11 +136,11 @@ namespace Caretaker.Gameplay
             _proximityTarget = null;
             _proximityInteractionType = InteractionType.None;
 
-            int hitCount = Physics2D.OverlapCircleNonAlloc(
+            int hitCount = Physics2D.OverlapCircle(
                 transform.position,
                 _interactionRadius,
-                _nearbyResults,
-                _interactableLayers);
+                _interactableContactFilter,
+                _nearbyResults);
 
             float closestDistance = float.PositiveInfinity;
 
@@ -250,6 +258,12 @@ namespace Caretaker.Gameplay
                 currentTarget.SetHighlight(false);
                 currentTarget = null;
             }
+        }
+
+        private void RefreshInteractableContactFilter()
+        {
+            _interactableContactFilter.useTriggers = Physics2D.queriesHitTriggers;
+            _interactableContactFilter.SetLayerMask(_interactableLayers);
         }
     }
 }
