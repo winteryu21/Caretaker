@@ -18,4 +18,4 @@ MonoBehaviour:
   _category: TBD
   _usableTargetTags:
   - Phase3Obstacle
-  _consumeOnUse: 0
+  _consumable: 0

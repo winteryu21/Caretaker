@@ -14,11 +14,13 @@ namespace Caretaker.Gameplay
     [RequireComponent(typeof(PlayerInputReader))]
     [RequireComponent(typeof(PlayerMotor2D))]
     [RequireComponent(typeof(InteractionProbe))]
+    [RequireComponent(typeof(InventoryController))]
     public class PlayerController : MonoBehaviour
     {
         private PlayerInputReader _inputReader;
         private InteractionProbe _interactionProbe;
         private InteractionService _interactionService;
+        private InventoryController _inventoryController;
         private PlayerMotor2D _motor2D;
 
         /// <summary>
@@ -26,17 +28,24 @@ namespace Caretaker.Gameplay
         /// </summary>
         public event Action<InteractableObject, InteractionType> OnInteractionResolved;
 
+        /// <summary>
+        /// 인벤토리 슬롯 선택 입력이 확정되었을 때 발생합니다. 슬롯 인덱스는 0부터 시작합니다.
+        /// </summary>
+        public event Action<int> OnInventorySlotSelected;
+
         private void Awake()
         {
             _inputReader = GetComponent<PlayerInputReader>();
             _motor2D = GetComponent<PlayerMotor2D>();
             _interactionProbe = GetComponent<InteractionProbe>();
+            _inventoryController = GetComponent<InventoryController>();
             _interactionService = new InteractionService();
         }
 
         private void OnEnable()
         {
             _inputReader.OnInteractionRequested += HandleInteractionRequested;
+            _inputReader.OnInventorySlotSelected += HandleInventorySlotSelected;
         }
 
         // 플레이어의 이동과 점프, 웅크리기, 달리기 입력을 모터2D에 전달합니다.
@@ -53,11 +62,18 @@ namespace Caretaker.Gameplay
         private void OnDisable()
         {
             _inputReader.OnInteractionRequested -= HandleInteractionRequested;
+            _inputReader.OnInventorySlotSelected -= HandleInventorySlotSelected;
         }
 
         // 플레이어 입력 요청을 서비스에 전달해 실제 상호작용 여부를 판정합니다.
         private void HandleInteractionRequested(InteractionRequest request)
         {
+            if (request.Type == InteractionType.UseItem)
+            {
+                HandleUseItemRequested();
+                return;
+            }
+
             if (!_interactionService.TryProcessInteraction(
                     request,
                     _interactionProbe.HoverTarget,
@@ -72,6 +88,39 @@ namespace Caretaker.Gameplay
             }
 
             OnInteractionResolved?.Invoke(resolvedTarget, resolvedType);
+        }
+
+        private void HandleInventorySlotSelected(int slotIndex)
+        {
+            OnInventorySlotSelected?.Invoke(slotIndex);
+        }
+
+        private void HandleUseItemRequested()
+        {
+            if (_inventoryController == null || _interactionProbe.ProximityTarget == null)
+            {
+                return;
+            }
+
+            InteractableObject target = _interactionProbe.ProximityTarget;
+            float distance = target.GetDistanceFrom(transform.position);
+            if (distance < 0f || distance > _interactionProbe.InteractionRadius)
+            {
+                return;
+            }
+
+            if (!target.HasRequiredItem || target.IsRequiredItemSatisfied)
+            {
+                return;
+            }
+
+            if (!_inventoryController.UseSelectedItemOn(target))
+            {
+                return;
+            }
+
+            target.MarkRequiredItemSatisfied();
+            OnInteractionResolved?.Invoke(target, InteractionType.UseItem);
         }
     }
 }
