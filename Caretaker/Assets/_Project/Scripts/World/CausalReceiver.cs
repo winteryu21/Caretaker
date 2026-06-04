@@ -18,6 +18,9 @@ namespace Caretaker.World
     /// </remarks>
     public class CausalReceiver : MonoBehaviour
     {
+        private static readonly Color DEBUG_COLOR_ACTIVATED = Color.green;
+        private static readonly Color DEBUG_COLOR_DEACTIVATED = Color.red;
+
         [SerializeField] private string _receiverId;
 
         [Header("State Change Events")]
@@ -27,6 +30,11 @@ namespace Caretaker.World
         [Tooltip("체크포인트 복원 등으로 비활성화될 때 호출됩니다.")]
         [SerializeField] private UnityEvent _onDeactivated;
 
+        [Header("Debug")]
+        [Tooltip("SpriteRenderer가 있으면 활성화/비활성화 시 색상을 자동 변경합니다.")]
+        [SerializeField] private bool _debugColorFeedback = true;
+
+        private SpriteRenderer _spriteRenderer;
         private bool _isActivated;
         private string _lastStateKey;
         private string _lastStateValue;
@@ -42,6 +50,16 @@ namespace Caretaker.World
 
         /// <summary>마지막으로 적용된 상태 값.</summary>
         public string LastStateValue => _lastStateValue;
+
+        private void Awake()
+        {
+            _spriteRenderer = GetComponent<SpriteRenderer>();
+
+            if (_debugColorFeedback && _spriteRenderer != null)
+            {
+                _spriteRenderer.color = DEBUG_COLOR_DEACTIVATED;
+            }
+        }
 
         private void OnEnable()
         {
@@ -103,6 +121,14 @@ namespace Caretaker.World
             }
 
             _isActivated = activated;
+
+            // 디버그: SpriteRenderer 색상 자동 변경 (빨강 → 초록)
+            if (_debugColorFeedback && _spriteRenderer != null)
+            {
+                _spriteRenderer.color = activated
+                    ? DEBUG_COLOR_ACTIVATED
+                    : DEBUG_COLOR_DEACTIVATED;
+            }
 
             if (activated)
             {

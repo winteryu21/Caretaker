@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 using Caretaker.Core;
 using Caretaker.Shared;
@@ -32,6 +33,7 @@ namespace Caretaker.World
         private readonly Dictionary<string, CausalReceiver> _receiverRegistry = new();
         private GameFlowManager _gameFlowManager;
         private SessionRoleManager _roleManager;
+        private SceneLoader _sceneLoader;
 
         // ── 이벤트 ──
         /// <summary>
@@ -55,10 +57,30 @@ namespace Caretaker.World
             base.OnNetworkSpawn();
             ResolveDependencies();
 
+            // Phase 씬 로드 완료 시 Receiver 재수집
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+
+            if (_sceneLoader != null)
+            {
+                _sceneLoader.OnPhaseSceneLoaded += HandlePhaseSceneLoaded;
+            }
+
             if (IsServer)
             {
                 RebuildReceiverRegistry();
             }
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+
+            if (_sceneLoader != null)
+            {
+                _sceneLoader.OnPhaseSceneLoaded -= HandlePhaseSceneLoaded;
+            }
+
+            base.OnNetworkDespawn();
         }
 
         // ── public: Receiver 등록/해제 ──
@@ -314,6 +336,29 @@ namespace Caretaker.World
             return Array.Empty<string>();
         }
 
+        private void HandlePhaseSceneLoaded(PhaseId phaseId, TimelineRole role, string sceneName)
+        {
+            if (IsServer)
+            {
+                // 1프레임 뒤에 재수집 — 새 씬의 MonoBehaviour.OnEnable()이 먼저 실행되도록
+                StartCoroutine(RebuildReceiverRegistryDelayed());
+            }
+        }
+
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (IsServer && mode == LoadSceneMode.Additive)
+            {
+                StartCoroutine(RebuildReceiverRegistryDelayed());
+            }
+        }
+
+        private System.Collections.IEnumerator RebuildReceiverRegistryDelayed()
+        {
+            yield return null; // 1프레임 대기 — OnEnable() 실행 보장
+            RebuildReceiverRegistry();
+        }
+
         private void ResolveDependencies()
         {
             if (_gameFlowManager == null)
@@ -324,6 +369,11 @@ namespace Caretaker.World
             if (_roleManager == null)
             {
                 _roleManager = FindAnyObjectByType<SessionRoleManager>();
+            }
+
+            if (_sceneLoader == null)
+            {
+                _sceneLoader = FindAnyObjectByType<SceneLoader>();
             }
         }
 
