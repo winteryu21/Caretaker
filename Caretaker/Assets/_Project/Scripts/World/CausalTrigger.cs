@@ -17,10 +17,20 @@ namespace Caretaker.World
         /// <summary>이 트리거의 고유 식별자.</summary>
         public string TriggerId => _triggerId;
 
-        // Unity 생명주기
+        /// <summary>
+        /// Activates this causal trigger entry point.
+        /// </summary>
+        /// <returns>True when the trigger has a valid trigger ID.</returns>
+        public bool Activate()
+        {
+            if (string.IsNullOrWhiteSpace(_triggerId))
+            {
+                Debug.LogWarning("CausalTrigger activation failed. TriggerId is empty.", this);
+                return false;
+            }
 
-        // public 메서드
-
-        // private 메서드
+            Debug.Log($"CausalTrigger activated: triggerId={_triggerId}", this);
+            return true;
+        }
     }
 }
