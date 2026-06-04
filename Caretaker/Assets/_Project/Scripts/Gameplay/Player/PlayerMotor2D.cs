@@ -63,6 +63,11 @@ public class PlayerMotor2D : MonoBehaviour
     /// </summary>
     public bool IsGrounded { get; private set; }
 
+    /// <summary>
+    /// 플레이어가 현재 웅크리고 있는지 여부.
+    /// </summary>
+    public bool IsCrouching => _isCrouching;
+
     private void Awake()
     {
         _boxCollider = GetComponent<BoxCollider2D>();

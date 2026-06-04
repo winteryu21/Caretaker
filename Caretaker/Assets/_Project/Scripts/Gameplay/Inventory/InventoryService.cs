@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 
+using UnityEngine;
+
 namespace Caretaker.Gameplay
 {
     /// <summary>
@@ -81,17 +83,21 @@ namespace Caretaker.Gameplay
         {
             if (string.IsNullOrWhiteSpace(itemId))
             {
+                Debug.Log("Use item failed: item id is empty.");
                 return false;
             }
 
             InventoryState state = GetOrCreateState(playerId);
             if (!state.OwnedItemIds.Contains(itemId))
             {
+                Debug.Log($"Use item failed: player does not own item. playerId={playerId}, itemId={itemId}");
                 return false;
             }
 
             if (!string.IsNullOrWhiteSpace(requiredItemId) && itemId != requiredItemId)
             {
+                Debug.Log(
+                    $"Use item failed: wrong item for target. playerId={playerId}, itemId={itemId}, requiredItem={requiredItemId}");
                 return false;
             }
 
@@ -105,12 +111,14 @@ namespace Caretaker.Gameplay
         {
             if (string.IsNullOrWhiteSpace(itemId))
             {
+                Debug.Log("Consume item failed: item id is empty.");
                 return false;
             }
 
             InventoryState state = GetOrCreateState(playerId);
             if (!state.OwnedItemIds.Remove(itemId))
             {
+                Debug.Log($"Consume item failed: player does not own item. playerId={playerId}, itemId={itemId}");
                 return false;
             }
 
