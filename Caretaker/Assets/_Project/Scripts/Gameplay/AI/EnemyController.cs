@@ -1,4 +1,8 @@
+using System.Collections.Generic;
+
 using UnityEngine;
+
+using Caretaker.World;
 
 namespace Caretaker.Gameplay
 {
@@ -24,6 +28,8 @@ namespace Caretaker.Gameplay
         }
 
         [SerializeField] private EnemyMovementMode _movementMode = EnemyMovementMode.Grounded;
+        [SerializeField] private string _roomId;
+        [SerializeField] private RoomManager _roomManager;
         [SerializeField] private EnemyTuningSO _tuning;
         [SerializeField] private Transform[] _patrolWaypoints;
         [SerializeField] private PlayerMotor2D _targetPlayer;
@@ -49,6 +55,8 @@ namespace Caretaker.Gameplay
         private float _waitTimeRemaining;
         private float _facingSign = 1f;
         private float _searchDirectionSign = 1f;
+        private AlertState _roomAlertState = AlertState.None;
+        private bool _isSubscribedToRoomAlerts;
 
         /// <summary>
         /// 현재 순찰 이동이 목표로 삼는 Waypoint 인덱스.
@@ -65,6 +73,11 @@ namespace Caretaker.Gameplay
         /// </summary>
         public EnemyStateMachine.EnemyState CurrentState => _stateMachine.CurrentState;
 
+        /// <summary>
+        /// AlertService가 전파된 경보를 적용할 때 사용하는 방 ID.
+        /// </summary>
+        public string RoomId => _roomId;
+
         private void Awake()
         {
             EnsureComponentReferences();
@@ -78,12 +91,14 @@ namespace Caretaker.Gameplay
         private void OnEnable()
         {
             LocalWorldPlayerSpawner.OnCurrentPlayerChanged += HandleCurrentPlayerChanged;
+            SubscribeRoomAlerts();
             TryBindCurrentPlayer();
         }
 
         private void OnDisable()
         {
             LocalWorldPlayerSpawner.OnCurrentPlayerChanged -= HandleCurrentPlayerChanged;
+            UnsubscribeRoomAlerts();
         }
 
         private void OnValidate()
@@ -93,6 +108,7 @@ namespace Caretaker.Gameplay
             CacheFacingSign();
             SyncPerceptionTuning();
             SyncPerceptionFacing();
+            ValidateRoomAlertConfiguration();
         }
 
         private void FixedUpdate()
@@ -110,6 +126,42 @@ namespace Caretaker.Gameplay
             CacheTargetCollider();
         }
 
+        /// <summary>
+        /// 이 적이 속한 방 ID를 설정한다.
+        /// </summary>
+        /// <param name="roomId">경보 전파에 사용할 방 ID.</param>
+        public void SetRoomId(string roomId)
+        {
+            _roomId = roomId ?? string.Empty;
+            SyncRoomAlertState();
+        }
+
+        /// <summary>
+        /// 방 경보를 수신할 룸 매니저를 설정한다.
+        /// </summary>
+        /// <param name="roomManager">경보 이벤트를 발행하는 룸 매니저.</param>
+        public void SetRoomManager(RoomManager roomManager)
+        {
+            UnsubscribeRoomAlerts();
+            _roomManager = roomManager;
+
+            if (isActiveAndEnabled)
+            {
+                SubscribeRoomAlerts();
+            }
+
+            SyncRoomAlertState();
+        }
+
+        /// <summary>
+        /// 방 경보 상태를 이 적에게 적용한다.
+        /// </summary>
+        /// <param name="alertState">경보 서비스에서 받은 경보 상태.</param>
+        public void ApplyRoomAlert(AlertState alertState)
+        {
+            _roomAlertState = alertState;
+        }
+
         private void TickEnemy(float deltaTime)
         {
             EnsureComponentReferences();
@@ -122,10 +174,15 @@ namespace Caretaker.Gameplay
             bool canSeePlayer = TryEvaluateTargetSight();
             EnemyStateMachine.EnemyState state = _stateMachine.TickState(
                 canSeePlayer,
+                _roomAlertState == AlertState.Alert,
                 deltaTime,
                 GetSearchDuration());
 
-            if (state == EnemyStateMachine.EnemyState.Search && previousState != EnemyStateMachine.EnemyState.Search)
+            if (state == EnemyStateMachine.EnemyState.Alert && previousState != EnemyStateMachine.EnemyState.Alert)
+            {
+                BeginRoomAlertSearch();
+            }
+            else if (state == EnemyStateMachine.EnemyState.Search && previousState != EnemyStateMachine.EnemyState.Search)
             {
                 BeginSearch();
             }
@@ -136,6 +193,7 @@ namespace Caretaker.Gameplay
                     TickChase(deltaTime);
                     break;
                 case EnemyStateMachine.EnemyState.Search:
+                case EnemyStateMachine.EnemyState.Alert:
                     TickSearch(deltaTime);
                     break;
                 default:
@@ -177,6 +235,13 @@ namespace Caretaker.Gameplay
         private void BeginSearch()
         {
             _searchCenterPosition = _lastKnownPlayerPosition;
+            _searchDirectionSign = Mathf.Approximately(_facingSign, 0f) ? 1f : _facingSign;
+            _searchTargetPosition = GetSearchPatrolTarget();
+        }
+
+        private void BeginRoomAlertSearch()
+        {
+            _searchCenterPosition = GetCurrentPosition();
             _searchDirectionSign = Mathf.Approximately(_facingSign, 0f) ? 1f : _facingSign;
             _searchTargetPosition = GetSearchPatrolTarget();
         }
@@ -509,6 +574,87 @@ namespace Caretaker.Gameplay
         private void HandleCurrentPlayerChanged(GameObject currentPlayer)
         {
             TryBindPlayer(currentPlayer);
+        }
+
+        private void SubscribeRoomAlerts()
+        {
+            if (_isSubscribedToRoomAlerts)
+            {
+                return;
+            }
+
+            if (_roomManager == null)
+            {
+                _roomManager = GetComponentInParent<RoomManager>();
+            }
+
+            if (_roomManager == null)
+            {
+                return;
+            }
+
+            _roomManager.OnAlertRoomsChanged += HandleAlertRoomsChanged;
+            _isSubscribedToRoomAlerts = true;
+            SyncRoomAlertState();
+        }
+
+        private void UnsubscribeRoomAlerts()
+        {
+            if (!_isSubscribedToRoomAlerts || _roomManager == null)
+            {
+                _isSubscribedToRoomAlerts = false;
+                return;
+            }
+
+            _roomManager.OnAlertRoomsChanged -= HandleAlertRoomsChanged;
+            _isSubscribedToRoomAlerts = false;
+        }
+
+        private void HandleAlertRoomsChanged(IReadOnlyList<string> alertRoomIds)
+        {
+            if (!ContainsRoomId(alertRoomIds, _roomId))
+            {
+                ApplyRoomAlert(AlertState.None);
+                return;
+            }
+
+            SyncRoomAlertState();
+        }
+
+        private void SyncRoomAlertState()
+        {
+            ApplyRoomAlert(_roomManager != null ? _roomManager.GetRoomAlertState(_roomId) : AlertState.None);
+        }
+
+        private void ValidateRoomAlertConfiguration()
+        {
+            if (string.IsNullOrWhiteSpace(_roomId))
+            {
+                Debug.LogWarning($"{name}에 경보 전파용 방 ID가 설정되지 않았습니다.", this);
+            }
+
+            if (_roomManager == null && GetComponentInParent<RoomManager>() == null)
+            {
+                Debug.LogWarning($"{name}에 경보 전파용 RoomManager가 설정되지 않았습니다.", this);
+            }
+        }
+
+        private static bool ContainsRoomId(IReadOnlyList<string> roomIds, string roomId)
+        {
+            if (roomIds == null || string.IsNullOrWhiteSpace(roomId))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < roomIds.Count; i++)
+            {
+                if (roomIds[i] == roomId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void TryBindPlayer(GameObject currentPlayer)

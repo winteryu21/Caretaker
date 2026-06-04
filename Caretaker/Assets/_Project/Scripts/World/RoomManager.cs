@@ -4,6 +4,8 @@ using System.Linq;
 
 using UnityEngine;
 
+using Caretaker.Gameplay;
+
 namespace Caretaker.World
 {
     /// <summary>
@@ -19,8 +21,10 @@ namespace Caretaker.World
 
         // 1. Serialize 필드
         [SerializeField] private RoomGraphSO[] _roomGraphs;
+        [SerializeField] [Min(0f)] private float _alertDurationSeconds = 30f;
 
         // 2. private 필드
+        private readonly AlertService _alertService = new();
         private readonly Dictionary<ulong, RoomVisitState> _roomStatesByPlayer = new();
         private RoomService _roomService = new();
 
@@ -30,10 +34,18 @@ namespace Caretaker.World
         /// <summary>플레이어가 새 룸을 처음 방문할 때 발생한다. (playerId, roomId)</summary>
         public event Action<ulong, string> OnRoomVisited;
 
+        /// <summary>활성 경보 방 목록이 변경될 때 발생한다.</summary>
+        public event Action<IReadOnlyList<string>> OnAlertRoomsChanged;
+
         // 3. Unity 생명주기
         private void Awake()
         {
             RebuildRoomService();
+        }
+
+        private void Update()
+        {
+            TickRoomAlerts(Time.time);
         }
 
         /// <summary>
@@ -147,6 +159,85 @@ namespace Caretaker.World
         }
 
         /// <summary>
+        /// 발생 방과 인접 방에 Alert 경보를 발생시킨다.
+        /// </summary>
+        /// <param name="sourceRoomId">경보가 발생한 방 ID.</param>
+        /// <returns>발생 방을 포함한 영향 방 ID 목록.</returns>
+        public IReadOnlyList<string> RaiseRoomAlert(string sourceRoomId)
+        {
+            return RaiseRoomAlert(sourceRoomId, AlertState.Alert, _alertDurationSeconds, Time.time);
+        }
+
+        /// <summary>
+        /// 발생 방과 인접 방에 지정한 경보 상태를 발생시킨다.
+        /// </summary>
+        /// <param name="sourceRoomId">경보가 발생한 방 ID.</param>
+        /// <param name="alertState">적용할 경보 상태.</param>
+        /// <param name="alertDuration">초 단위 경보 지속 시간.</param>
+        /// <param name="currentTime">초 단위 현재 게임 시간.</param>
+        /// <returns>발생 방을 포함한 영향 방 ID 목록.</returns>
+        public IReadOnlyList<string> RaiseRoomAlert(
+            string sourceRoomId,
+            AlertState alertState,
+            float alertDuration,
+            float currentTime)
+        {
+            if (!CanTrackRoom(sourceRoomId))
+            {
+                return EMPTY_ROOM_IDS;
+            }
+
+            IReadOnlyList<string> affectedRoomIds = _alertService.RaiseAlert(
+                sourceRoomId,
+                GetAdjacentRooms(sourceRoomId),
+                alertState,
+                alertDuration,
+                currentTime);
+
+            if (affectedRoomIds.Count > 0)
+            {
+                PublishAlertRoomsChanged();
+            }
+
+            return affectedRoomIds;
+        }
+
+        /// <summary>
+        /// 만료 시간이 지난 방 경보를 감쇠시킨다.
+        /// </summary>
+        /// <param name="currentTime">초 단위 현재 게임 시간.</param>
+        /// <returns>경보가 None으로 감쇠된 방 ID 목록.</returns>
+        public IReadOnlyList<string> TickRoomAlerts(float currentTime)
+        {
+            IReadOnlyList<string> expiredRoomIds = _alertService.Tick(currentTime);
+            if (expiredRoomIds.Count > 0)
+            {
+                PublishAlertRoomsChanged();
+            }
+
+            return expiredRoomIds;
+        }
+
+        /// <summary>
+        /// 방의 활성 경보 상태를 조회한다.
+        /// </summary>
+        /// <param name="roomId">조회할 방 ID.</param>
+        /// <returns>현재 경보 상태. 비활성 상태면 None.</returns>
+        public AlertState GetRoomAlertState(string roomId)
+        {
+            return _alertService.GetAlertState(roomId);
+        }
+
+        /// <summary>
+        /// 모든 활성 경보 방 ID를 조회한다.
+        /// </summary>
+        /// <returns>활성 경보 방 ID 목록.</returns>
+        public IReadOnlyList<string> GetActiveAlertRoomIds()
+        {
+            return _alertService.GetActiveAlertRoomIds();
+        }
+
+        /// <summary>
         /// 룸 그래프에 룸 ID가 존재하는지 확인한다.
         /// </summary>
         /// <param name="roomId">확인할 룸 ID.</param>
@@ -177,6 +268,11 @@ namespace Caretaker.World
             }
 
             return true;
+        }
+
+        private void PublishAlertRoomsChanged()
+        {
+            OnAlertRoomsChanged?.Invoke(GetActiveAlertRoomIds());
         }
 
         private RoomVisitState GetOrCreateRoomState(ulong playerId)

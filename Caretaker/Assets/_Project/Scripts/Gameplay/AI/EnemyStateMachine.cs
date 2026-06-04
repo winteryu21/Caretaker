@@ -14,6 +14,7 @@ namespace Caretaker.Gameplay
         public enum EnemyState
         {
             Patrol,
+            Alert,
             Chase,
             Search
         }
@@ -46,9 +47,29 @@ namespace Caretaker.Gameplay
         /// <returns>갱신된 적 상태.</returns>
         public EnemyState TickState(bool canSeePlayer, float deltaTime, float searchDuration)
         {
+            return TickState(canSeePlayer, false, deltaTime, searchDuration);
+        }
+
+        /// <summary>
+        /// 감지 결과, 방 경보, 경과 시간을 기준으로 상태 머신을 진행한다.
+        /// </summary>
+        /// <param name="canSeePlayer">현재 적이 플레이어를 볼 수 있는지 여부.</param>
+        /// <param name="hasRoomAlert">적이 속한 방에 Alert 상태가 활성화되어 있는지 여부.</param>
+        /// <param name="deltaTime">초 단위 경과 시간.</param>
+        /// <param name="searchDuration">시야 이탈 후 탐색 지속 시간.</param>
+        /// <returns>갱신된 적 상태.</returns>
+        public EnemyState TickState(bool canSeePlayer, bool hasRoomAlert, float deltaTime, float searchDuration)
+        {
             if (canSeePlayer)
             {
                 CurrentState = EnemyState.Chase;
+                SearchTimeRemaining = 0f;
+                return CurrentState;
+            }
+
+            if (hasRoomAlert && CurrentState != EnemyState.Chase && CurrentState != EnemyState.Search)
+            {
+                CurrentState = EnemyState.Alert;
                 SearchTimeRemaining = 0f;
                 return CurrentState;
             }
@@ -67,6 +88,10 @@ namespace Caretaker.Gameplay
                 {
                     Reset();
                 }
+            }
+            else if (CurrentState == EnemyState.Alert && !hasRoomAlert)
+            {
+                Reset();
             }
 
             return CurrentState;
