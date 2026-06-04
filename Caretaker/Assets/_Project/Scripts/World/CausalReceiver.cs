@@ -12,15 +12,25 @@ namespace Caretaker.World
     /// 계층: Unity Component
     ///
     /// 사용법:
-    /// 1. Inspector에서 _receiverId를 CausalRuleSO의 receiverEffects[].receiverId와 동일하게 설정한다.
-    /// 2. _onActivated / _onDeactivated UnityEvent에 Animator, Light2D, Collider2D 등을 연결한다.
-    /// 3. CausalityManager가 Phase 씬 로드 시 자동으로 레지스트리에 등록한다.
+    /// 1. Inspector에서 _causalRule에 CausalRuleSO를 드래그한다.
+    /// 2. 다수의 Receiver Effect가 있으면 드롭다운에서 하나를 선택한다.
+    /// 3. _onActivated / _onDeactivated UnityEvent에 Animator, Light2D, Collider2D 등을 연결한다.
+    /// 4. CausalityManager가 Phase 씬 로드 시 자동으로 레지스트리에 등록한다.
     /// </remarks>
     public class CausalReceiver : MonoBehaviour
     {
         private static readonly Color DEBUG_COLOR_ACTIVATED = Color.green;
         private static readonly Color DEBUG_COLOR_DEACTIVATED = Color.red;
 
+        [Header("Causal Rule")]
+        [Tooltip("CausalRuleSO를 드래그하면 Receiver ID가 자동 설정됩니다.")]
+        [SerializeField] private CausalRuleSO _causalRule;
+
+        [Tooltip("CausalRuleSO에 Receiver Effect가 여러 개일 경우, 이 컴포넌트가 수신할 효과의 인덱스입니다.")]
+        [SerializeField] private int _receiverEffectIndex;
+
+        [Header("Resolved ID")]
+        [Tooltip("CausalRuleSO에서 자동 추출된 Receiver ID입니다.")]
         [SerializeField] private string _receiverId;
 
         [Header("State Change Events")]
@@ -51,6 +61,12 @@ namespace Caretaker.World
         /// <summary>마지막으로 적용된 상태 값.</summary>
         public string LastStateValue => _lastStateValue;
 
+        /// <summary>연결된 CausalRuleSO 에셋.</summary>
+        public CausalRuleSO CausalRule => _causalRule;
+
+        /// <summary>선택된 Receiver Effect 인덱스.</summary>
+        public int ReceiverEffectIndex => _receiverEffectIndex;
+
         private void Awake()
         {
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -73,6 +89,8 @@ namespace Caretaker.World
 
         private void OnValidate()
         {
+            SyncReceiverIdFromRule();
+
             if (_receiverId != null)
             {
                 _receiverId = _receiverId.Trim();
@@ -123,11 +141,25 @@ namespace Caretaker.World
             _isActivated = activated;
 
             // 디버그: SpriteRenderer 색상 자동 변경 (빨강 → 초록)
-            if (_debugColorFeedback && _spriteRenderer != null)
+            if (_debugColorFeedback)
             {
-                _spriteRenderer.color = activated
-                    ? DEBUG_COLOR_ACTIVATED
-                    : DEBUG_COLOR_DEACTIVATED;
+                if (_spriteRenderer == null)
+                {
+                    _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+                }
+
+                if (_spriteRenderer != null)
+                {
+                    Color targetColor = activated ? DEBUG_COLOR_ACTIVATED : DEBUG_COLOR_DEACTIVATED;
+                    _spriteRenderer.color = targetColor;
+                    Debug.Log(
+                        $"CausalReceiver '{_receiverId}': color → {(activated ? "GREEN" : "RED")}", this);
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"CausalReceiver '{_receiverId}': SpriteRenderer not found in children.", this);
+                }
             }
 
             if (activated)
@@ -138,6 +170,29 @@ namespace Caretaker.World
             {
                 _onDeactivated?.Invoke();
             }
+        }
+
+        /// <summary>
+        /// CausalRuleSO와 선택된 인덱스로부터 Receiver ID를 동기화한다.
+        /// OnValidate 및 Custom Editor에서 호출된다.
+        /// </summary>
+        private void SyncReceiverIdFromRule()
+        {
+            if (_causalRule == null || _causalRule.ReceiverEffects == null)
+            {
+                return;
+            }
+
+            CausalRuleSO.CausalReceiverEffect[] effects = _causalRule.ReceiverEffects;
+
+            if (effects.Length == 0)
+            {
+                return;
+            }
+
+            // 인덱스 범위 보정
+            _receiverEffectIndex = Mathf.Clamp(_receiverEffectIndex, 0, effects.Length - 1);
+            _receiverId = effects[_receiverEffectIndex].ReceiverId;
         }
 
         private void RegisterSelf()

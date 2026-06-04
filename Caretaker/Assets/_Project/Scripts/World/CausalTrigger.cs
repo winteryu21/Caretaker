@@ -12,17 +12,26 @@ namespace Caretaker.World
     ///
     /// 사용법:
     /// 1. InteractableObject와 같은 GameObject에 부착한다.
-    /// 2. _triggerId를 CausalRuleSO의 triggerId와 동일하게 설정한다.
+    /// 2. Inspector에서 _causalRule에 CausalRuleSO를 드래그하면 triggerId가 자동 설정된다.
     /// 3. InteractableObject.RunOperate() 시 자동으로 Fire()가 호출된다.
     /// </remarks>
     public class CausalTrigger : MonoBehaviour
     {
+        [Header("Causal Rule")]
+        [Tooltip("CausalRuleSO를 드래그하면 triggerId가 자동 설정됩니다.")]
+        [SerializeField] private CausalRuleSO _causalRule;
+
+        [Header("Resolved ID")]
+        [Tooltip("CausalRuleSO에서 자동 추출된 Trigger ID입니다.")]
         [SerializeField] private string _triggerId;
 
         private CausalityManager _causalityManager;
 
         /// <summary>이 트리거의 고유 식별자. (예: CR_P1_POWER_LEVER)</summary>
         public string TriggerId => _triggerId;
+
+        /// <summary>연결된 CausalRuleSO 에셋.</summary>
+        public CausalRuleSO CausalRule => _causalRule;
 
         private void Awake()
         {
@@ -31,6 +40,11 @@ namespace Caretaker.World
 
         private void OnValidate()
         {
+            if (_causalRule != null)
+            {
+                _triggerId = _causalRule.TriggerId;
+            }
+
             if (_triggerId != null)
             {
                 _triggerId = _triggerId.Trim();
