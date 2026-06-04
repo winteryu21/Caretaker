@@ -1,3 +1,5 @@
+using System;
+
 using Caretaker.Core;
 using Caretaker.Shared;
 using Caretaker.World;
@@ -8,11 +10,11 @@ using UnityEngine.SceneManagement;
 namespace Caretaker.Gameplay
 {
     /// <summary>
-    /// Spawns the local world avatar after the local timeline phase scene is loaded.
+    /// 로컬 타임라인 Phase 씬이 로드된 뒤 로컬 월드 아바타를 생성한다.
     /// </summary>
     /// <remarks>
-    /// This is the local gameplay avatar path. Network replication and host-authoritative spawn
-    /// validation remain separate Sprint 2 work.
+    /// 로컬 플레이용 아바타 생성 경로다. 네트워크 복제와 Host 권한 스폰 검증은
+    /// Sprint 2의 별도 작업으로 남겨둔다.
     /// </remarks>
     [DisallowMultipleComponent]
     public sealed class LocalWorldPlayerSpawner : MonoBehaviour
@@ -23,8 +25,13 @@ namespace Caretaker.Gameplay
 
         private GameObject _currentPlayer;
 
-        /// <summary>Current local world player instance, if one has been spawned.</summary>
+        /// <summary>생성된 로컬 월드 플레이어 인스턴스.</summary>
         public GameObject CurrentPlayer => _currentPlayer;
+
+        /// <summary>
+        /// 로컬 월드 플레이어가 생성되거나 교체될 때 발생한다.
+        /// </summary>
+        public static event Action<GameObject> OnCurrentPlayerChanged;
 
         private void Awake()
         {
@@ -50,12 +57,12 @@ namespace Caretaker.Gameplay
         }
 
         /// <summary>
-        /// Creates or replaces the local world player for the loaded phase scene.
+        /// 로드된 Phase 씬의 로컬 월드 플레이어를 생성하거나 교체한다.
         /// </summary>
-        /// <param name="phaseId">Loaded phase.</param>
-        /// <param name="timelineRole">Local timeline role.</param>
-        /// <param name="sceneName">Loaded phase scene name.</param>
-        /// <returns>The spawned local world player, or null if no prefab is configured.</returns>
+        /// <param name="phaseId">로드된 Phase.</param>
+        /// <param name="timelineRole">로컬 타임라인 역할.</param>
+        /// <param name="sceneName">로드된 Phase 씬 이름.</param>
+        /// <returns>생성된 로컬 월드 플레이어. 프리팹이 없으면 null.</returns>
         public GameObject SpawnLocalPlayer(PhaseId phaseId, TimelineRole timelineRole, string sceneName)
         {
             if (_playerPrefab == null)
@@ -77,6 +84,8 @@ namespace Caretaker.Gameplay
             {
                 participant.SetPlayerId(GetLocalClientId());
             }
+
+            OnCurrentPlayerChanged?.Invoke(_currentPlayer);
 
             return _currentPlayer;
         }
