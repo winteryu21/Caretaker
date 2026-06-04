@@ -252,9 +252,8 @@ namespace Caretaker.World
         {
             if (!_receiverRegistry.TryGetValue(receiverId, out CausalReceiver receiver))
             {
-                // Phase 씬 로드 타이밍에 따라 아직 등록되지 않았을 수 있음
-                Debug.LogWarning(
-                    $"CausalReceiver not found in registry: '{receiverId}'.", this);
+                // Phase 1~2에서는 자기 시간대 씬만 로드하므로,
+                // 상대 시간대의 Receiver가 없는 것은 정상 동작이다.
                 return;
             }
 

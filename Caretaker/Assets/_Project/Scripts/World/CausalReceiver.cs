@@ -53,7 +53,7 @@ namespace Caretaker.World
 
         private void Awake()
         {
-            _spriteRenderer = GetComponent<SpriteRenderer>();
+            _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
             if (_debugColorFeedback && _spriteRenderer != null)
             {
