@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 using Caretaker.Core;
+using Caretaker.Gameplay;
 using Caretaker.Shared;
 
 namespace Caretaker.World
@@ -330,8 +331,17 @@ namespace Caretaker.World
 
         private IReadOnlyList<string> GetPlayerOwnedItems(ulong clientId)
         {
-            // TODO: Host 측 InventoryService에서 해당 플레이어의 소지 아이템 ID 목록을 조회한다.
-            // 현재는 빈 목록을 반환하여 아이템 조건이 없는 트리거만 작동한다.
+            InventoryController[] inventoryControllers = FindObjectsByType<InventoryController>();
+
+            for (int i = 0; i < inventoryControllers.Length; i++)
+            {
+                InventoryController inventoryController = inventoryControllers[i];
+                if (inventoryController != null && inventoryController.PlayerId == clientId)
+                {
+                    return inventoryController.OwnedItemIds;
+                }
+            }
+
             return Array.Empty<string>();
         }
 

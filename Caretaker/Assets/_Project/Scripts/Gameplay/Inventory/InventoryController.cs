@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using Unity.Netcode;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -15,7 +16,7 @@ namespace Caretaker.Gameplay
     /// 플레이어 입력과 오브젝트 상호작용 콜백을 인벤토리 상태에 연결한다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class InventoryController : MonoBehaviour
+    public class InventoryController : NetworkBehaviour
     {
         private const string ITEM_DEFINITION_FOLDER = "Assets/_Project/Data/Inventory";
 
@@ -33,9 +34,19 @@ namespace Caretaker.Gameplay
         public event Action<InventoryState> OnInventoryChanged;
 
         /// <summary>
+        /// 이 인벤토리 상태가 속한 플레이어 ID.
+        /// </summary>
+        public ulong PlayerId => _playerId;
+
+        /// <summary>
         /// 현재 플레이어의 인벤토리 상태.
         /// </summary>
         public InventoryState State => _inventoryService.GetState(_playerId);
+
+        /// <summary>
+        /// 현재 플레이어가 보유한 아이템 ID 목록.
+        /// </summary>
+        public IReadOnlyList<string> OwnedItemIds => State.OwnedItemIds;
 
         /// <summary>
         /// 현재 선택된 아이템 ID.
@@ -106,12 +117,16 @@ namespace Caretaker.Gameplay
                 return false;
             }
 
-            if (!_inventoryService.AcquireItem(_playerId, itemId))
+            if (!ApplyAcquireItem(itemId))
             {
                 return false;
             }
 
-            NotifyInventoryChanged();
+            if (ShouldMirrorToServer())
+            {
+                AcquireItemServerRpc(itemId);
+            }
+
             return true;
         }
 
@@ -120,12 +135,16 @@ namespace Caretaker.Gameplay
         /// </summary>
         public bool SelectSlot(int slotIndex)
         {
-            if (!_inventoryService.SelectSlot(_playerId, slotIndex))
+            if (!ApplySelectSlot(slotIndex))
             {
                 return false;
             }
 
-            NotifyInventoryChanged();
+            if (ShouldMirrorToServer())
+            {
+                SelectSlotServerRpc(slotIndex);
+            }
+
             return true;
         }
 
@@ -142,23 +161,28 @@ namespace Caretaker.Gameplay
                 return false;
             }
 
-            ItemDefinitionSO itemDefinition = GetItemDefinition(SelectedItemId);
+            string selectedItemId = SelectedItemId;
+            ItemDefinitionSO itemDefinition = GetItemDefinition(selectedItemId);
             if (itemDefinition == null)
             {
-                Debug.LogWarning($"Item definition not found: itemId={SelectedItemId}", this);
+                Debug.LogWarning($"Item definition not found: itemId={selectedItemId}", this);
                 return false;
             }
 
             bool consumable = itemDefinition.Consumable;
-            if (!_inventoryService.UseItem(_playerId, SelectedItemId, target.RequiredItemId, consumable))
+            if (!ApplyUseItem(selectedItemId, target.RequiredItemId, consumable))
             {
                 Debug.Log(
-                    $"Use selected item failed: item does not satisfy target requirement. playerId={_playerId}, itemId={SelectedItemId}, target={target.ObjectId}, requiredItem={target.RequiredItemId}",
+                    $"Use selected item failed: item does not satisfy target requirement. playerId={_playerId}, itemId={selectedItemId}, target={target.ObjectId}, requiredItem={target.RequiredItemId}",
                     this);
                 return false;
             }
 
-            NotifyInventoryChanged();
+            if (ShouldMirrorToServer())
+            {
+                UseItemServerRpc(selectedItemId, target.RequiredItemId);
+            }
+
             return true;
         }
 
@@ -197,6 +221,69 @@ namespace Caretaker.Gameplay
             }
 
             return null;
+        }
+
+        private bool ApplyAcquireItem(string itemId)
+        {
+            if (!_inventoryService.AcquireItem(_playerId, itemId))
+            {
+                return false;
+            }
+
+            NotifyInventoryChanged();
+            return true;
+        }
+
+        private bool ApplySelectSlot(int slotIndex)
+        {
+            if (!_inventoryService.SelectSlot(_playerId, slotIndex))
+            {
+                return false;
+            }
+
+            NotifyInventoryChanged();
+            return true;
+        }
+
+        private bool ApplyUseItem(string itemId, string requiredItemId, bool consumable)
+        {
+            if (!_inventoryService.UseItem(_playerId, itemId, requiredItemId, consumable))
+            {
+                return false;
+            }
+
+            NotifyInventoryChanged();
+            return true;
+        }
+
+        private bool ShouldMirrorToServer()
+        {
+            return IsSpawned && !IsServer;
+        }
+
+        [Rpc(SendTo.Server)]
+        private void AcquireItemServerRpc(string itemId)
+        {
+            AcquireItem(itemId);
+        }
+
+        [Rpc(SendTo.Server)]
+        private void SelectSlotServerRpc(int slotIndex)
+        {
+            SelectSlot(slotIndex);
+        }
+
+        [Rpc(SendTo.Server)]
+        private void UseItemServerRpc(string itemId, string requiredItemId)
+        {
+            ItemDefinitionSO itemDefinition = GetItemDefinition(itemId);
+            if (itemDefinition == null)
+            {
+                Debug.LogWarning($"Item definition not found: itemId={itemId}", this);
+                return;
+            }
+
+            ApplyUseItem(itemId, requiredItemId, itemDefinition.Consumable);
         }
 
         private void NotifyInventoryChanged()
