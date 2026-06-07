@@ -406,6 +406,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.NetworkPlayerOwnerGate
   ShowTopMostFoldoutHeaderGroup: 1
+  _restrictObserversToOwner: 1
+  _hideNonOwnerPresentation: 1
 --- !u!114 &699921817410106043
 MonoBehaviour:
   m_ObjectHideFlags: 0
