@@ -28,6 +28,7 @@ namespace Caretaker.World
 
         private CausalTrigger _causalTrigger;
         private Collider2D _cachedCollider2D;
+        private IOperateAction[] _operateActions;
         private bool _isHighlighted;
         private bool _isItemAcquired;
         private bool _isRequiredItemSatisfied;
@@ -81,6 +82,7 @@ namespace Caretaker.World
         {
             _cachedCollider2D = GetComponent<Collider2D>();
             _causalTrigger = GetComponent<CausalTrigger>();
+            _operateActions = GetComponents<IOperateAction>();
             ConfigureInteractionCollider();
             SetHighlight(_highlightOnAwake);
         }
@@ -212,16 +214,24 @@ namespace Caretaker.World
 
         private bool RunOperate(PlayerController actor)
         {
-            // 인과 트리거가 부착되어 있으면 인과 파이프라인으로 전달
+            bool executed = false;
+
             if (_causalTrigger != null)
             {
                 _causalTrigger.Fire();
-                return true;
+                executed = true;
             }
 
-            // 인과 트리거가 없는 일반 조작 (문 열기, 레버 등)
-            Debug.Log($"Operate interaction (non-causal): object={_objectId}", this);
-            return true;
+            for (int i = 0; i < _operateActions.Length; i++)
+            {
+                IOperateAction operateAction = _operateActions[i];
+                if (operateAction != null)
+                {
+                    executed |= operateAction.Execute(actor);
+                }
+            }
+
+            return executed;
         }
 
         private void ConfigureInteractionCollider()
