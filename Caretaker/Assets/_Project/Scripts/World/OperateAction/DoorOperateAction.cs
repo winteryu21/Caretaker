@@ -1,6 +1,7 @@
 using UnityEngine;
 
 using Caretaker.Gameplay;
+using Caretaker.Shared;
 
 namespace Caretaker.World
 {
@@ -8,6 +9,7 @@ namespace Caretaker.World
     /// 일반 조작 요청을 대상 문의 열기 동작으로 전달합니다.
     /// </summary>
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(InteractableObject))]
     public sealed class DoorOperateAction : MonoBehaviour, IOperateAction
     {
         private static readonly int IS_OPEN = Animator.StringToHash("IsOpen");
@@ -21,7 +23,18 @@ namespace Caretaker.World
 
         private void Awake()
         {
+            EnsureOperateInteractionType();
             ResolveTargetComponents();
+        }
+
+        private void Reset()
+        {
+            EnsureOperateInteractionType();
+        }
+
+        private void OnValidate()
+        {
+            EnsureOperateInteractionType();
         }
 
         /// <summary>
@@ -68,6 +81,14 @@ namespace Caretaker.World
                     _blockingCollider = colliders[i];
                     break;
                 }
+            }
+        }
+
+        private void EnsureOperateInteractionType()
+        {
+            if (TryGetComponent(out InteractableObject interactableObject))
+            {
+                interactableObject.EnsureInteractionType(InteractionType.Operate);
             }
         }
     }

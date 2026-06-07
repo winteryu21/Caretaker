@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 using Caretaker.Gameplay;
+using Caretaker.Shared;
 
 namespace Caretaker.World
 {
@@ -9,6 +10,7 @@ namespace Caretaker.World
     /// 지정된 퍼즐 화면을 열고 닫는 일반 조작입니다.
     /// </summary>
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(InteractableObject))]
     public sealed class PuzzleOperateAction : MonoBehaviour, IOperateAction
     {
         [Header("Puzzle")]
@@ -22,6 +24,21 @@ namespace Caretaker.World
         /// 퍼즐 화면이 현재 열려 있는지 반환합니다.
         /// </summary>
         public bool IsOpen => _puzzleRoot != null && _puzzleRoot.activeSelf;
+
+        private void Awake()
+        {
+            EnsureOperateInteractionType();
+        }
+
+        private void Reset()
+        {
+            EnsureOperateInteractionType();
+        }
+
+        private void OnValidate()
+        {
+            EnsureOperateInteractionType();
+        }
 
         /// <summary>
         /// 지정된 퍼즐 화면을 엽니다.
@@ -52,6 +69,14 @@ namespace Caretaker.World
 
             _puzzleRoot.SetActive(false);
             _onPuzzleClosed?.Invoke();
+        }
+
+        private void EnsureOperateInteractionType()
+        {
+            if (TryGetComponent(out InteractableObject interactableObject))
+            {
+                interactableObject.EnsureInteractionType(InteractionType.Operate);
+            }
         }
     }
 }

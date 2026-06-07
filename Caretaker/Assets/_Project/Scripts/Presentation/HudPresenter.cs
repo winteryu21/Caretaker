@@ -14,13 +14,57 @@ namespace Caretaker.Presentation
     /// </remarks>
     public class HudPresenter : MonoBehaviour
     {
+        [Header("Shell")]
+        [SerializeField] private GameObject _hudRoot;
+        [SerializeField] private Transform _objectiveArea;
+        [SerializeField] private Transform _inventoryArea;
+        [SerializeField] private Transform _interactionPromptArea;
+        [SerializeField] private Transform _modalOverlayArea;
+        [SerializeField] private Transform _statusArea;
+
+        [Header("Objective")]
+        [SerializeField] private TMP_Text _objectiveText;
+        [SerializeField] private GameObject _objectiveRoot;
+
+        [Header("Interaction Prompt")]
+        [SerializeField] private InteractionPromptPresenter _interactionPromptPresenter;
+
+        [Header("Causality")]
+        [SerializeField] private CausalityIndicatorPresenter _causalityIndicatorPresenter;
+
         [Header("Radio")]
         [SerializeField] private TMP_Text _radioStatusText;
         [SerializeField] private GameObject _radioActiveIndicator;
 
+        private string _objective = string.Empty;
         private RadioState _radioState = RadioState.Idle;
         private ulong _radioTalkerId = RadioNetworkBridge.NO_TALKER_ID;
         private string _radioStatus = "Waiting for Radio";
+        private bool _modalOverlayVisible;
+
+        /// <summary>HUD 전체 루트.</summary>
+        public GameObject HudRoot => _hudRoot;
+
+        /// <summary>Objective UI가 배치될 영역.</summary>
+        public Transform ObjectiveArea => _objectiveArea;
+
+        /// <summary>Inventory HUD가 배치될 영역.</summary>
+        public Transform InventoryArea => _inventoryArea;
+
+        /// <summary>상호작용 프롬프트가 배치될 영역.</summary>
+        public Transform InteractionPromptArea => _interactionPromptArea;
+
+        /// <summary>Examine/퍼즐 등 modal UI가 배치될 영역.</summary>
+        public Transform ModalOverlayArea => _modalOverlayArea;
+
+        /// <summary>무전기/상태 표시가 배치될 영역.</summary>
+        public Transform StatusArea => _statusArea;
+
+        /// <summary>현재 HUD에 표시 중인 목표 문구.</summary>
+        public string Objective => _objective;
+
+        /// <summary>modal overlay 표시 여부.</summary>
+        public bool IsModalOverlayVisible => _modalOverlayVisible;
 
         /// <summary>
         /// 현재 HUD에 표시 중인 무전기 상태 문구를 반환한다.
@@ -29,7 +73,87 @@ namespace Caretaker.Presentation
 
         private void Awake()
         {
+            ResolveDefaultReferences();
+            RenderObjective();
+            RenderModalOverlay();
             RenderRadioState();
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            ResolveDefaultReferences();
+        }
+#endif
+
+        /// <summary>
+        /// HUD 전체 표시 여부를 설정한다.
+        /// </summary>
+        public void SetHudVisible(bool isVisible)
+        {
+            if (_hudRoot != null)
+            {
+                _hudRoot.SetActive(isVisible);
+            }
+        }
+
+        /// <summary>
+        /// 현재 목표 문구를 표시한다.
+        /// </summary>
+        public void SetObjective(string objective)
+        {
+            _objective = objective ?? string.Empty;
+            RenderObjective();
+        }
+
+        /// <summary>
+        /// 현재 목표 문구를 비우고 숨긴다.
+        /// </summary>
+        public void ClearObjective()
+        {
+            SetObjective(string.Empty);
+        }
+
+        /// <summary>
+        /// 상호작용 프롬프트를 표시한다.
+        /// </summary>
+        public void ShowInteractionPrompt(string promptText)
+        {
+            if (_interactionPromptPresenter != null)
+            {
+                _interactionPromptPresenter.ShowPrompt(promptText);
+            }
+        }
+
+        /// <summary>
+        /// 상호작용 프롬프트를 숨긴다.
+        /// </summary>
+        public void HideInteractionPrompt()
+        {
+            if (_interactionPromptPresenter != null)
+            {
+                _interactionPromptPresenter.HidePrompt();
+            }
+        }
+
+        /// <summary>
+        /// modal overlay 영역을 켜거나 끈다.
+        /// </summary>
+        public void SetModalOverlayVisible(bool isVisible)
+        {
+            _modalOverlayVisible = isVisible;
+            RenderModalOverlay();
+        }
+
+        /// <summary>
+        /// 인과 변경 Pulse를 표시한다.
+        /// </summary>
+        public void ShowCausalityPulse()
+        {
+            if (_causalityIndicatorPresenter != null)
+            {
+                _causalityIndicatorPresenter.ShowCausalityPulse();
+            }
         }
 
         /// <summary>
@@ -43,6 +167,47 @@ namespace Caretaker.Presentation
             _radioTalkerId = talkerId;
             _radioStatus = BuildRadioStatusText(state, talkerId);
             RenderRadioState();
+        }
+
+        private void ResolveDefaultReferences()
+        {
+            if (_hudRoot == null)
+            {
+                _hudRoot = gameObject;
+            }
+
+            if (_interactionPromptPresenter == null)
+            {
+                _interactionPromptPresenter = GetComponentInChildren<InteractionPromptPresenter>(true);
+            }
+
+            if (_causalityIndicatorPresenter == null)
+            {
+                _causalityIndicatorPresenter = GetComponentInChildren<CausalityIndicatorPresenter>(true);
+            }
+        }
+
+        private void RenderObjective()
+        {
+            bool hasObjective = !string.IsNullOrWhiteSpace(_objective);
+
+            if (_objectiveText != null)
+            {
+                _objectiveText.text = _objective;
+            }
+
+            if (_objectiveRoot != null)
+            {
+                _objectiveRoot.SetActive(hasObjective);
+            }
+        }
+
+        private void RenderModalOverlay()
+        {
+            if (_modalOverlayArea != null)
+            {
+                _modalOverlayArea.gameObject.SetActive(_modalOverlayVisible);
+            }
         }
 
         private void RenderRadioState()
