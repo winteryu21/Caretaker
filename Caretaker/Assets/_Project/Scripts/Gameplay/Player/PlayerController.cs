@@ -99,6 +99,7 @@ namespace Caretaker.Gameplay
         {
             if (_inventoryController == null || _interactionProbe.ProximityTarget == null)
             {
+                Debug.Log("Use item failed: inventory controller or proximity target is missing.", this);
                 return;
             }
 
@@ -106,21 +107,41 @@ namespace Caretaker.Gameplay
             float distance = target.GetDistanceFrom(transform.position);
             if (distance < 0f || distance > _interactionProbe.InteractionRadius)
             {
+                Debug.Log(
+                    $"Use item failed: target is out of range. object={target.ObjectId}, distance={distance}, maxDistance={_interactionProbe.InteractionRadius}",
+                    this);
                 return;
             }
 
             if (!target.HasRequiredItem || target.IsRequiredItemSatisfied)
             {
+                Debug.Log(
+                    $"Use item failed: target does not accept an item or is already satisfied. object={target.ObjectId}, hasRequiredItem={target.HasRequiredItem}, isSatisfied={target.IsRequiredItemSatisfied}",
+                    this);
                 return;
             }
 
             if (!_inventoryController.UseSelectedItemOn(target))
             {
+                Debug.Log($"Use item failed: selected item was rejected by inventory. object={target.ObjectId}", this);
                 return;
             }
 
             target.MarkRequiredItemSatisfied();
             OnInteractionResolved?.Invoke(target, InteractionType.UseItem);
+        }
+
+        private void ActivateCausalTriggerIfPresent(InteractableObject target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            if (target.TryGetComponent(out CausalTrigger causalTrigger))
+            {
+                causalTrigger.Fire();
+            }
         }
     }
 }

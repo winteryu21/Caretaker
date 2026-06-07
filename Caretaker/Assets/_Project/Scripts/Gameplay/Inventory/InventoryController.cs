@@ -42,6 +42,15 @@ namespace Caretaker.Gameplay
         /// </summary>
         public string SelectedItemId => State.SelectedItemId;
 
+        /// <summary>
+        /// Sets the local inventory owner ID used to keep player inventory state private.
+        /// </summary>
+        /// <param name="playerId">Owner client ID.</param>
+        public void SetPlayerId(ulong playerId)
+        {
+            _playerId = playerId;
+        }
+
         private void Awake()
         {
             _playerController = GetComponent<PlayerController>();
@@ -127,6 +136,9 @@ namespace Caretaker.Gameplay
         {
             if (target == null || string.IsNullOrWhiteSpace(SelectedItemId))
             {
+                Debug.Log(
+                    $"Use selected item failed: target or selected item is missing. target={(target != null ? target.ObjectId : "null")}, selectedItem={SelectedItemId}",
+                    this);
                 return false;
             }
 
@@ -140,6 +152,9 @@ namespace Caretaker.Gameplay
             bool consumable = itemDefinition.Consumable;
             if (!_inventoryService.UseItem(_playerId, SelectedItemId, target.RequiredItemId, consumable))
             {
+                Debug.Log(
+                    $"Use selected item failed: item does not satisfy target requirement. playerId={_playerId}, itemId={SelectedItemId}, target={target.ObjectId}, requiredItem={target.RequiredItemId}",
+                    this);
                 return false;
             }
 

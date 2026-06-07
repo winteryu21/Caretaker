@@ -26,6 +26,7 @@ namespace Caretaker.World
         [SerializeField] private Behaviour[] _outlineBehaviours;
         [SerializeField] private bool _highlightOnAwake;
 
+        private CausalTrigger _causalTrigger;
         private Collider2D _cachedCollider2D;
         private bool _isHighlighted;
         private bool _isItemAcquired;
@@ -79,6 +80,7 @@ namespace Caretaker.World
         private void Awake()
         {
             _cachedCollider2D = GetComponent<Collider2D>();
+            _causalTrigger = GetComponent<CausalTrigger>();
             ConfigureInteractionCollider();
             SetHighlight(_highlightOnAwake);
         }
@@ -210,7 +212,15 @@ namespace Caretaker.World
 
         private bool RunOperate(PlayerController actor)
         {
-            Debug.Log($"Operate interaction: object={_objectId}", this);
+            // 인과 트리거가 부착되어 있으면 인과 파이프라인으로 전달
+            if (_causalTrigger != null)
+            {
+                _causalTrigger.Fire();
+                return true;
+            }
+
+            // 인과 트리거가 없는 일반 조작 (문 열기, 레버 등)
+            Debug.Log($"Operate interaction (non-causal): object={_objectId}", this);
             return true;
         }
 

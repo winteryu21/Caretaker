@@ -3,9 +3,12 @@ using System.Reflection;
 using NUnit.Framework;
 
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 using Caretaker.Gameplay;
+using Caretaker.Shared;
 
 namespace Caretaker.Tests.Editor
 {
@@ -151,6 +154,167 @@ namespace Caretaker.Tests.Editor
             DestroyController(controller);
         }
 
+        [Test]
+        public void OnEnable_AssignsCurrentPlayerFromSpawnerInSameScene()
+        {
+            const string phaseSceneName = "Phase1_Past";
+
+            Scene phaseScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            phaseScene.name = phaseSceneName;
+            GameObject playerPrefab = new("NetworkPlayerPrefab");
+            playerPrefab.AddComponent<PlayerMotor2D>();
+            GameObject spawnerObject = new("Spawner");
+            LocalWorldPlayerSpawner spawner = spawnerObject.AddComponent<LocalWorldPlayerSpawner>();
+            SerializedObject spawnerSerializedObject = new(spawner);
+            spawnerSerializedObject.FindProperty("_playerPrefab").objectReferenceValue = playerPrefab;
+            spawnerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+            GameObject player = spawner.SpawnLocalPlayer(PhaseId.Phase1, TimelineRole.Past, phaseSceneName);
+
+            GameObject enemyObject = new("Enemy");
+            EnemyController enemy = enemyObject.AddComponent<EnemyController>();
+
+            Assert.That(GetTargetPlayer(enemy), Is.SameAs(player.GetComponent<PlayerMotor2D>()));
+
+            Object.DestroyImmediate(enemyObject);
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(spawnerObject);
+            Object.DestroyImmediate(playerPrefab);
+        }
+
+        [Test]
+        public void SpawnLocalPlayer_AssignsPlayerToAlreadyEnabledEnemy()
+        {
+            const string phaseSceneName = "Phase1_Past";
+
+            Scene phaseScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            phaseScene.name = phaseSceneName;
+            GameObject enemyObject = new("Enemy");
+            EnemyController enemy = enemyObject.AddComponent<EnemyController>();
+            GameObject playerPrefab = new("NetworkPlayerPrefab");
+            playerPrefab.AddComponent<PlayerMotor2D>();
+            GameObject spawnerObject = new("Spawner");
+            LocalWorldPlayerSpawner spawner = spawnerObject.AddComponent<LocalWorldPlayerSpawner>();
+            SerializedObject spawnerSerializedObject = new(spawner);
+            spawnerSerializedObject.FindProperty("_playerPrefab").objectReferenceValue = playerPrefab;
+            spawnerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+            GameObject player = spawner.SpawnLocalPlayer(PhaseId.Phase1, TimelineRole.Past, phaseSceneName);
+
+            Assert.That(GetTargetPlayer(enemy), Is.SameAs(player.GetComponent<PlayerMotor2D>()));
+
+            Object.DestroyImmediate(enemyObject);
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(spawnerObject);
+            Object.DestroyImmediate(playerPrefab);
+        }
+
+        [Test]
+        public void SpawnLocalPlayer_ReplacesAlreadyEnabledEnemyTarget()
+        {
+            const string phaseSceneName = "Phase1_Past";
+
+            Scene phaseScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            phaseScene.name = phaseSceneName;
+            GameObject enemyObject = new("Enemy");
+            EnemyController enemy = enemyObject.AddComponent<EnemyController>();
+            GameObject playerPrefab = new("NetworkPlayerPrefab");
+            playerPrefab.AddComponent<PlayerMotor2D>();
+            GameObject spawnerObject = new("Spawner");
+            LocalWorldPlayerSpawner spawner = spawnerObject.AddComponent<LocalWorldPlayerSpawner>();
+            SerializedObject spawnerSerializedObject = new(spawner);
+            spawnerSerializedObject.FindProperty("_playerPrefab").objectReferenceValue = playerPrefab;
+            spawnerSerializedObject.ApplyModifiedPropertiesWithoutUndo();
+            GameObject firstPlayer = spawner.SpawnLocalPlayer(PhaseId.Phase1, TimelineRole.Past, phaseSceneName);
+            GameObject secondPlayer = spawner.SpawnLocalPlayer(PhaseId.Phase1, TimelineRole.Past, phaseSceneName);
+
+            Assert.That(GetTargetPlayer(enemy), Is.SameAs(secondPlayer.GetComponent<PlayerMotor2D>()));
+            Assert.That(GetTargetPlayer(enemy), Is.Not.SameAs(firstPlayer.GetComponent<PlayerMotor2D>()));
+
+            Object.DestroyImmediate(enemyObject);
+            Object.DestroyImmediate(firstPlayer);
+            Object.DestroyImmediate(secondPlayer);
+            Object.DestroyImmediate(spawnerObject);
+            Object.DestroyImmediate(playerPrefab);
+        }
+
+        [Test]
+        public void TickEnemy_DetectsChasesSearchesThenReturnsToPatrol()
+        {
+            EnemyController controller = CreateController(
+                Vector3.zero,
+                CreateTuning(1f, 0f, 10f, 45f, 4f, 10f),
+                CreateWaypoint("WaypointA", Vector3.zero),
+                CreateWaypoint("WaypointB", Vector3.right));
+            controller.transform.localScale = new Vector3(-1f, 1f, 1f);
+            PlayerMotor2D player = CreatePlayer(new Vector3(5f, 0f, 0f));
+
+            SerializedObject perceptionObject = new(controller.GetComponent<EnemyPerception2D>());
+            perceptionObject.FindProperty("_tuning").objectReferenceValue = CreateTuning(1f, 0f, 10f, 45f, 4f, 10f);
+            perceptionObject.FindProperty("_obstructionLayers").intValue = 0;
+            perceptionObject.ApplyModifiedPropertiesWithoutUndo();
+            controller.SetTargetPlayer(player);
+            InvokeOnValidate(controller);
+
+            TickEnemy(controller, 0.1f);
+
+            Assert.That(controller.CurrentState, Is.EqualTo(EnemyStateMachine.EnemyState.Chase));
+            Assert.That(controller.GetComponent<Rigidbody2D>().linearVelocity.x, Is.EqualTo(4f).Within(0.001f));
+
+            player.transform.position = new Vector3(-5f, 0f, 0f);
+            TickEnemy(controller, 0.1f);
+
+            Assert.That(controller.CurrentState, Is.EqualTo(EnemyStateMachine.EnemyState.Search));
+            Assert.That(controller.GetComponent<Rigidbody2D>().linearVelocity.x, Is.EqualTo(1f).Within(0.001f));
+
+            TickEnemy(controller, 10.1f);
+
+            Assert.That(controller.CurrentState, Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+
+            Object.DestroyImmediate(player.gameObject);
+            DestroyController(controller);
+        }
+
+        [Test]
+        public void EnemyStateMachine_SearchLastsForConfiguredLoseSightDelay()
+        {
+            EnemyStateMachine stateMachine = new();
+
+            Assert.That(stateMachine.TickState(true, 0.1f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Chase));
+            Assert.That(stateMachine.TickState(false, 0.1f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Search));
+            Assert.That(stateMachine.TickState(false, 9.9f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Search));
+            Assert.That(stateMachine.TickState(false, 0.2f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+        }
+
+        [Test]
+        public void EvaluateSight_AppliesRangeFovCrouchAndObstructionRules()
+        {
+            EnemyPerception2D perception = CreatePerception(CreateTuning(1f, 0f, 10f, 45f, 4f, 10f), 0);
+            perception.SetFacingDirection(Vector2.right);
+
+            Assert.That(perception.EvaluateSight(new Vector2(6f, 0f), false), Is.True);
+            Assert.That(perception.EvaluateSight(new Vector2(6f, 0f), true), Is.False);
+            Assert.That(perception.EvaluateSight(new Vector2(6f, 6f), false), Is.False);
+
+            Object.DestroyImmediate(perception.gameObject);
+        }
+
+        [Test]
+        public void EvaluateSight_ReturnsFalseWhenObstacleBlocksRaycast()
+        {
+            EnemyPerception2D perception = CreatePerception(CreateTuning(1f, 0f, 10f, 45f, 4f, 10f), 1);
+            perception.SetFacingDirection(Vector2.right);
+            GameObject obstacle = new("Obstacle");
+            obstacle.transform.position = new Vector3(2f, 0f, 0f);
+            BoxCollider2D obstacleCollider = obstacle.AddComponent<BoxCollider2D>();
+            obstacleCollider.size = Vector2.one;
+            Physics2D.SyncTransforms();
+
+            Assert.That(perception.EvaluateSight(new Vector2(5f, 0f), false), Is.False);
+
+            Object.DestroyImmediate(obstacle);
+            Object.DestroyImmediate(perception.gameObject);
+        }
+
         private static EnemyController CreateController(
             Vector3 position,
             EnemyTuningSO tuning,
@@ -200,12 +364,51 @@ namespace Caretaker.Tests.Editor
 
         private static EnemyTuningSO CreateTuning(float moveSpeed, float patrolWaitTime)
         {
+            return CreateTuning(moveSpeed, patrolWaitTime, 10f, 45f, 5f, 10f);
+        }
+
+        private static EnemyTuningSO CreateTuning(
+            float moveSpeed,
+            float patrolWaitTime,
+            float sightDistance,
+            float fovDegrees,
+            float chaseSpeed,
+            float loseSightSeconds)
+        {
             EnemyTuningSO tuning = ScriptableObject.CreateInstance<EnemyTuningSO>();
             SerializedObject serializedObject = new(tuning);
             serializedObject.FindProperty("_moveSpeed").floatValue = moveSpeed;
             serializedObject.FindProperty("_patrolWaitTime").floatValue = patrolWaitTime;
+            serializedObject.FindProperty("_sightDistance").floatValue = sightDistance;
+            serializedObject.FindProperty("_fovDegrees").floatValue = fovDegrees;
+            serializedObject.FindProperty("_chaseSpeed").floatValue = chaseSpeed;
+            serializedObject.FindProperty("_loseSightSeconds").floatValue = loseSightSeconds;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
             return tuning;
+        }
+
+        private static PlayerMotor2D CreatePlayer(Vector3 position)
+        {
+            GameObject gameObject = new("Player");
+            gameObject.transform.position = position;
+            return gameObject.AddComponent<PlayerMotor2D>();
+        }
+
+        private static EnemyPerception2D CreatePerception(EnemyTuningSO tuning, int obstructionLayerMask)
+        {
+            GameObject gameObject = new("EnemyPerception");
+            EnemyPerception2D perception = gameObject.AddComponent<EnemyPerception2D>();
+            SerializedObject serializedObject = new(perception);
+            serializedObject.FindProperty("_tuning").objectReferenceValue = tuning;
+            serializedObject.FindProperty("_obstructionLayers").intValue = obstructionLayerMask;
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+            return perception;
+        }
+
+        private static PlayerMotor2D GetTargetPlayer(EnemyController enemy)
+        {
+            FieldInfo fieldInfo = typeof(EnemyController).GetField("_targetPlayer", INSTANCE_PRIVATE);
+            return (PlayerMotor2D)fieldInfo.GetValue(enemy);
         }
 
         private static Transform CreateWaypoint(string name, Vector3 position)
@@ -230,6 +433,12 @@ namespace Caretaker.Tests.Editor
         private static void TickPatrol(EnemyController controller, float deltaTime)
         {
             MethodInfo methodInfo = typeof(EnemyController).GetMethod("TickPatrol", INSTANCE_PRIVATE);
+            methodInfo.Invoke(controller, new object[] { deltaTime });
+        }
+
+        private static void TickEnemy(EnemyController controller, float deltaTime)
+        {
+            MethodInfo methodInfo = typeof(EnemyController).GetMethod("TickEnemy", INSTANCE_PRIVATE);
             methodInfo.Invoke(controller, new object[] { deltaTime });
         }
 

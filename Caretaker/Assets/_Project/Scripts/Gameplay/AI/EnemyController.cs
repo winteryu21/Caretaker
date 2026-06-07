@@ -1,16 +1,20 @@
+using System.Collections.Generic;
+
 using UnityEngine;
+
+using Caretaker.World;
 
 namespace Caretaker.Gameplay
 {
     /// <summary>
-    /// 적의 Waypoint 순찰 이동과 바라보는 방향을 제어한다.
+    /// 적의 순찰, 추격, 탐색, 바라보는 방향을 제어한다.
     /// </summary>
     /// <remarks>
-    /// DSD §3.5 — AI / 경보 시스템.
-    /// 이후 FSM 작업에서 이 컴포넌트에 이동 목표를 전달할 수 있다.
+    /// DSD 3.5 AI / 경보 시스템의 Unity 컴포넌트.
     /// </remarks>
     [RequireComponent(typeof(BoxCollider2D))]
     [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(EnemyPerception2D))]
     public class EnemyController : MonoBehaviour
     {
         private const float ARRIVAL_DISTANCE = 0.05f;
@@ -23,23 +27,36 @@ namespace Caretaker.Gameplay
             Flying
         }
 
-        [SerializeField] private EnemyMovementMode _movementMode = EnemyMovementMode.Grounded; // 지상형은 중력, 비행형은 Waypoint 전체 좌표를 따른다.
-        [SerializeField] private EnemyTuningSO _tuning; // 이동 속도와 Waypoint 대기 시간을 제공하는 튜닝 데이터.
-        [SerializeField] private Transform[] _patrolWaypoints; // 순서대로 순회할 순찰 지점 배열.
-        [SerializeField] private LayerMask _groundLayers = Physics2D.DefaultRaycastLayers; // 지상형 적이 낙하 방지에 사용할 바닥 레이어.
-        [SerializeField] [Min(0f)] private float _groundProbeForwardDistance = 0.15f; // 발끝보다 앞쪽을 얼마나 더 확인할지 정한다.
-        [SerializeField] [Min(0.01f)] private float _groundProbeDownDistance = 0.4f; // 앞쪽 발밑 바닥을 찾기 위해 아래로 검사할 거리.
-        [SerializeField] [Min(0.1f)] private float _stuckSkipSeconds = 1f; // 이 시간 동안 목표에 가까워지지 못하면 다음 Waypoint로 넘어간다.
+        [SerializeField] private EnemyMovementMode _movementMode = EnemyMovementMode.Grounded;
+        [SerializeField] private string _roomId;
+        [SerializeField] private RoomManager _roomManager;
+        [SerializeField] private EnemyTuningSO _tuning;
+        [SerializeField] private Transform[] _patrolWaypoints;
+        [SerializeField] private PlayerMotor2D _targetPlayer;
+        [SerializeField] private LayerMask _groundLayers = Physics2D.DefaultRaycastLayers;
+        [SerializeField] [Min(0f)] private float _searchPatrolRadius = 1.5f;
+        [SerializeField] [Min(0f)] private float _groundProbeForwardDistance = 0.15f;
+        [SerializeField] [Min(0.01f)] private float _groundProbeDownDistance = 0.4f;
+        [SerializeField] [Min(0.1f)] private float _stuckSkipSeconds = 1f;
 
         private readonly RaycastHit2D[] _groundHits = new RaycastHit2D[4];
+        private readonly EnemyStateMachine _stateMachine = new();
 
-        private Collider2D _collider2D; // 발밑 검사 시작점을 계산하기 위한 Collider2D 캐시.
-        private Rigidbody2D _rigidbody2D; // 물리 기반 이동과 충돌 판정에 사용할 Rigidbody2D 캐시.
-        private int _currentPatrolWaypointIndex; // 현재 목표 Waypoint 인덱스.
-        private float _lastDistanceToWaypoint = float.PositiveInfinity; // 이전 tick에서 목표 Waypoint까지 남았던 거리.
-        private float _timeWithoutWaypointProgress; // 목표 Waypoint에 가까워지지 못한 누적 시간.
-        private float _waitTimeRemaining; // Waypoint 도착 후 남은 대기 시간.
-        private float _facingSign = 1f; // 현재 이동 방향의 x축 부호.
+        private Collider2D _collider2D;
+        private Collider2D _targetCollider;
+        private EnemyPerception2D _perception;
+        private Rigidbody2D _rigidbody2D;
+        private Vector2 _searchCenterPosition;
+        private Vector2 _searchTargetPosition;
+        private Vector2 _lastKnownPlayerPosition;
+        private int _currentPatrolWaypointIndex;
+        private float _lastDistanceToWaypoint = float.PositiveInfinity;
+        private float _timeWithoutWaypointProgress;
+        private float _waitTimeRemaining;
+        private float _facingSign = 1f;
+        private float _searchDirectionSign = 1f;
+        private AlertState _roomAlertState = AlertState.None;
+        private bool _isSubscribedToRoomAlerts;
 
         /// <summary>
         /// 현재 순찰 이동이 목표로 삼는 Waypoint 인덱스.
@@ -47,32 +64,216 @@ namespace Caretaker.Gameplay
         public int CurrentPatrolWaypointIndex => _currentPatrolWaypointIndex;
 
         /// <summary>
-        /// 적이 도착한 Waypoint에서 대기 중인지 반환한다.
+        /// 적이 도착한 Waypoint에서 대기 중인지 여부.
         /// </summary>
         public bool IsWaitingAtWaypoint => _waitTimeRemaining > 0f;
+
+        /// <summary>
+        /// 현재 AI 상태.
+        /// </summary>
+        public EnemyStateMachine.EnemyState CurrentState => _stateMachine.CurrentState;
+
+        /// <summary>
+        /// AlertService가 전파된 경보를 적용할 때 사용하는 방 ID.
+        /// </summary>
+        public string RoomId => _roomId;
 
         private void Awake()
         {
             EnsureComponentReferences();
+            CacheTargetCollider();
             CacheFacingSign();
             ConfigureRigidbody();
+            SyncPerceptionTuning();
+            SyncPerceptionFacing();
+        }
+
+        private void OnEnable()
+        {
+            LocalWorldPlayerSpawner.OnCurrentPlayerChanged += HandleCurrentPlayerChanged;
+            SubscribeRoomAlerts();
+            TryBindCurrentPlayer();
+        }
+
+        private void OnDisable()
+        {
+            LocalWorldPlayerSpawner.OnCurrentPlayerChanged -= HandleCurrentPlayerChanged;
+            UnsubscribeRoomAlerts();
         }
 
         private void OnValidate()
         {
             EnsureComponentReferences();
+            CacheTargetCollider();
             CacheFacingSign();
+            SyncPerceptionTuning();
+            SyncPerceptionFacing();
+            ValidateRoomAlertConfiguration();
         }
 
         private void FixedUpdate()
         {
-            TickPatrol(Time.fixedDeltaTime);
+            TickEnemy(Time.fixedDeltaTime);
+        }
+
+        /// <summary>
+        /// 이 적이 감지하고 추격할 플레이어를 지정한다.
+        /// </summary>
+        /// <param name="targetPlayer">타겟 플레이어 모터.</param>
+        public void SetTargetPlayer(PlayerMotor2D targetPlayer)
+        {
+            _targetPlayer = targetPlayer;
+            CacheTargetCollider();
+        }
+
+        /// <summary>
+        /// 이 적이 속한 방 ID를 설정한다.
+        /// </summary>
+        /// <param name="roomId">경보 전파에 사용할 방 ID.</param>
+        public void SetRoomId(string roomId)
+        {
+            _roomId = roomId ?? string.Empty;
+            SyncRoomAlertState();
+        }
+
+        /// <summary>
+        /// 방 경보를 수신할 룸 매니저를 설정한다.
+        /// </summary>
+        /// <param name="roomManager">경보 이벤트를 발행하는 룸 매니저.</param>
+        public void SetRoomManager(RoomManager roomManager)
+        {
+            UnsubscribeRoomAlerts();
+            _roomManager = roomManager;
+
+            if (isActiveAndEnabled)
+            {
+                SubscribeRoomAlerts();
+            }
+
+            SyncRoomAlertState();
+        }
+
+        /// <summary>
+        /// 방 경보 상태를 이 적에게 적용한다.
+        /// </summary>
+        /// <param name="alertState">경보 서비스에서 받은 경보 상태.</param>
+        public void ApplyRoomAlert(AlertState alertState)
+        {
+            _roomAlertState = alertState;
+        }
+
+        private void TickEnemy(float deltaTime)
+        {
+            EnsureComponentReferences();
+            if (_rigidbody2D == null || deltaTime <= 0f)
+            {
+                return;
+            }
+
+            EnemyStateMachine.EnemyState previousState = _stateMachine.CurrentState;
+            bool canSeePlayer = TryEvaluateTargetSight();
+            EnemyStateMachine.EnemyState state = _stateMachine.TickState(
+                canSeePlayer,
+                _roomAlertState == AlertState.Alert,
+                deltaTime,
+                GetSearchDuration());
+
+            if (state == EnemyStateMachine.EnemyState.Alert && previousState != EnemyStateMachine.EnemyState.Alert)
+            {
+                BeginRoomAlertSearch();
+            }
+            else if (state == EnemyStateMachine.EnemyState.Search && previousState != EnemyStateMachine.EnemyState.Search)
+            {
+                BeginSearch();
+            }
+
+            switch (state)
+            {
+                case EnemyStateMachine.EnemyState.Chase:
+                    TickChase(deltaTime);
+                    break;
+                case EnemyStateMachine.EnemyState.Search:
+                case EnemyStateMachine.EnemyState.Alert:
+                    TickSearch(deltaTime);
+                    break;
+                default:
+                    TickPatrol(deltaTime);
+                    break;
+            }
+        }
+
+        private bool TryEvaluateTargetSight()
+        {
+            if (_targetPlayer == null || _perception == null)
+            {
+                return false;
+            }
+
+            Vector2 playerPosition = _targetPlayer.transform.position;
+            bool canSeePlayer = _perception.EvaluateSight(playerPosition, _targetPlayer.IsCrouching, _targetCollider);
+            if (canSeePlayer)
+            {
+                _lastKnownPlayerPosition = playerPosition;
+            }
+
+            return canSeePlayer;
+        }
+
+        private void TickChase(float deltaTime)
+        {
+            if (_targetPlayer == null || _tuning == null)
+            {
+                StopPatrolMovement();
+                return;
+            }
+
+            Vector2 targetPosition = _targetPlayer.transform.position;
+            _lastKnownPlayerPosition = targetPosition;
+            MoveToward(targetPosition, deltaTime, Mathf.Max(0f, _tuning.ChaseSpeed));
+        }
+
+        private void BeginSearch()
+        {
+            _searchCenterPosition = _lastKnownPlayerPosition;
+            _searchDirectionSign = Mathf.Approximately(_facingSign, 0f) ? 1f : _facingSign;
+            _searchTargetPosition = GetSearchPatrolTarget();
+        }
+
+        private void BeginRoomAlertSearch()
+        {
+            _searchCenterPosition = GetCurrentPosition();
+            _searchDirectionSign = Mathf.Approximately(_facingSign, 0f) ? 1f : _facingSign;
+            _searchTargetPosition = GetSearchPatrolTarget();
+        }
+
+        private void TickSearch(float deltaTime)
+        {
+            if (_tuning == null)
+            {
+                StopPatrolMovement();
+                return;
+            }
+
+            Vector2 currentPosition = GetCurrentPosition();
+            Vector2 toSearchTarget = _searchTargetPosition - currentPosition;
+            if (GetDistanceToTarget(toSearchTarget) <= ARRIVAL_DISTANCE)
+            {
+                _searchDirectionSign *= -1f;
+                _searchTargetPosition = GetSearchPatrolTarget();
+            }
+
+            MoveToward(_searchTargetPosition, deltaTime, Mathf.Max(0f, _tuning.MoveSpeed));
+        }
+
+        private Vector2 GetSearchPatrolTarget()
+        {
+            return _searchCenterPosition + Vector2.right * (_searchPatrolRadius * _searchDirectionSign);
         }
 
         /// <summary>
         /// 주어진 시간 간격만큼 Waypoint 순찰 이동을 진행한다.
         /// </summary>
-        /// <param name="deltaTime">초 단위 시간 간격.</param>
+        /// <param name="deltaTime">초 단위 경과 시간.</param>
         private void TickPatrol(float deltaTime)
         {
             EnsureComponentReferences();
@@ -119,16 +320,14 @@ namespace Caretaker.Gameplay
             }
 
             UpdateFacing(toTarget.x);
-            MoveToward(targetPosition, deltaTime);
+            MoveToward(targetPosition, deltaTime, Mathf.Max(0f, _tuning.MoveSpeed));
         }
 
-        // 튜닝 데이터와 Waypoint가 모두 설정된 경우에만 순찰을 허용한다.
         private bool CanPatrol()
         {
             return _tuning != null && _patrolWaypoints != null && _patrolWaypoints.Length > 0;
         }
 
-        // 비어 있는 Waypoint 슬롯은 건너뛰고 실제 Transform이 있는 지점을 찾는다.
         private Transform GetValidCurrentWaypoint()
         {
             int waypointCount = _patrolWaypoints.Length;
@@ -148,7 +347,6 @@ namespace Caretaker.Gameplay
             return null;
         }
 
-        // 도착한 지점에서 대기를 시작하고 다음 목표 Waypoint를 미리 가리킨다.
         private void ArriveAtWaypoint()
         {
             AdvanceWaypointIndex();
@@ -156,7 +354,6 @@ namespace Caretaker.Gameplay
             _waitTimeRemaining = Mathf.Max(0f, _tuning.PatrolWaitTime);
         }
 
-        // 현재 목표에 도달할 수 없으면 멈춘 뒤 다음 Waypoint를 목표로 바꾼다.
         private void SkipCurrentWaypoint()
         {
             Transform skippedWaypoint = _patrolWaypoints[_currentPatrolWaypointIndex];
@@ -168,64 +365,59 @@ namespace Caretaker.Gameplay
             StopPatrolMovement();
         }
 
-        // 마지막 Waypoint 이후에는 첫 Waypoint로 돌아가 순환 순찰한다.
         private void AdvanceWaypointIndex()
         {
             _currentPatrolWaypointIndex = (_currentPatrolWaypointIndex + 1) % _patrolWaypoints.Length;
             ResetWaypointProgressTimer();
         }
 
-        // 순찰 이동은 Rigidbody2D 위치를 기준으로 계산한다.
         private Vector2 GetCurrentPosition()
         {
             return _rigidbody2D.position;
         }
 
-        // 지상형은 x축만, 비행형은 Waypoint 전체 좌표를 향해 이동한다.
-        private void MoveToward(Vector2 targetPosition, float deltaTime)
+        private void MoveToward(Vector2 targetPosition, float deltaTime, float speed)
         {
             if (_movementMode == EnemyMovementMode.Flying)
             {
-                MoveFlying(targetPosition, deltaTime);
+                MoveFlying(targetPosition, deltaTime, speed);
                 return;
             }
 
-            MoveGrounded(targetPosition.x, deltaTime);
+            MoveGrounded(targetPosition.x, deltaTime, speed);
         }
 
-        // 지상형 적은 x축 속도만 갱신하고 y축 움직임은 중력과 바닥 충돌에 맡긴다.
-        private void MoveGrounded(float targetX, float deltaTime)
+        private void MoveGrounded(float targetX, float deltaTime, float speed)
         {
             Vector2 currentPosition = GetCurrentPosition();
             float horizontalDistance = targetX - currentPosition.x;
             float direction = Mathf.Sign(horizontalDistance);
-            float speed = Mathf.Max(0f, _tuning.MoveSpeed);
             float maxSpeedWithoutOvershoot = Mathf.Abs(horizontalDistance) / deltaTime;
             Vector2 velocity = _rigidbody2D.linearVelocity;
 
-            if (!HasGroundAhead(direction))
+            if (Mathf.Abs(horizontalDistance) <= ARRIVAL_DISTANCE || !HasGroundAhead(direction))
             {
                 StopPatrolMovement();
                 return;
             }
 
+            UpdateFacing(horizontalDistance);
             velocity.x = direction * Mathf.Min(speed, maxSpeedWithoutOvershoot);
             _rigidbody2D.linearVelocity = velocity;
             _rigidbody2D.WakeUp();
         }
 
-        // 비행형 적은 중력 없이 Waypoint의 x/y 좌표를 모두 따라간다.
-        private void MoveFlying(Vector2 targetPosition, float deltaTime)
+        private void MoveFlying(Vector2 targetPosition, float deltaTime, float speed)
         {
             Vector2 currentPosition = GetCurrentPosition();
-            float stepDistance = Mathf.Max(0f, _tuning.MoveSpeed) * deltaTime;
+            float stepDistance = speed * deltaTime;
             Vector2 nextPosition = Vector2.MoveTowards(currentPosition, targetPosition, stepDistance);
 
+            UpdateFacing(targetPosition.x - currentPosition.x);
             _rigidbody2D.MovePosition(nextPosition);
             _rigidbody2D.WakeUp();
         }
 
-        // 순찰하지 않는 동안에는 이전 이동 속도가 남지 않도록 멈춘다.
         private void StopPatrolMovement()
         {
             Vector2 velocity = _rigidbody2D.linearVelocity;
@@ -242,7 +434,6 @@ namespace Caretaker.Gameplay
             _rigidbody2D.linearVelocity = velocity;
         }
 
-        // 지상형 적이 다음 발걸음에서 바닥을 잃는지 검사한다.
         private bool HasGroundAhead(float direction)
         {
             if (_movementMode == EnemyMovementMode.Flying || _collider2D == null)
@@ -289,7 +480,6 @@ namespace Caretaker.Gameplay
             return false;
         }
 
-        // 지상형은 x축 거리만, 비행형은 2D 전체 거리를 도착 판정에 사용한다.
         private float GetDistanceToTarget(Vector2 toTarget)
         {
             if (_movementMode == EnemyMovementMode.Flying)
@@ -300,7 +490,6 @@ namespace Caretaker.Gameplay
             return Mathf.Abs(toTarget.x);
         }
 
-        // 목표까지의 거리가 줄어들면 stuck 타이머를 리셋하고, 줄어들지 않을 때만 누적한다.
         private void UpdateWaypointProgressTimer(float distanceToTarget, float deltaTime)
         {
             if (distanceToTarget < _lastDistanceToWaypoint - PROGRESS_EPSILON)
@@ -315,14 +504,12 @@ namespace Caretaker.Gameplay
             _lastDistanceToWaypoint = distanceToTarget;
         }
 
-        // 새 목표 Waypoint로 바뀌면 이전 목표의 stuck 판정을 초기화한다.
         private void ResetWaypointProgressTimer()
         {
             _lastDistanceToWaypoint = float.PositiveInfinity;
             _timeWithoutWaypointProgress = 0f;
         }
 
-        // 기본 스프라이트가 왼쪽을 바라보므로 이동 방향과 반대 부호를 적용해 좌우를 전환한다.
         private void UpdateFacing(float horizontalDirection)
         {
             if (Mathf.Abs(horizontalDirection) <= FACING_EPSILON)
@@ -334,16 +521,157 @@ namespace Caretaker.Gameplay
             Vector3 localScale = transform.localScale;
             localScale.x = Mathf.Abs(localScale.x) * -_facingSign;
             transform.localScale = localScale;
+            SyncPerceptionFacing();
         }
 
-        // 기존 프리팹 스케일의 좌우 방향을 보존하기 위해 현재 이동 방향 부호를 캐시한다.
         private void CacheFacingSign()
         {
             float localScaleX = transform.localScale.x;
             if (Mathf.Abs(localScaleX) > FACING_EPSILON)
             {
-                _facingSign = Mathf.Sign(localScaleX);
+                _facingSign = -Mathf.Sign(localScaleX);
             }
+        }
+
+        private void SyncPerceptionFacing()
+        {
+            if (_perception != null)
+            {
+                _perception.SetFacingDirection(Vector2.right * _facingSign);
+            }
+        }
+
+        private void SyncPerceptionTuning()
+        {
+            if (_perception != null)
+            {
+                _perception.SetTuning(_tuning);
+            }
+        }
+
+        private float GetSearchDuration()
+        {
+            return _tuning != null ? Mathf.Max(0f, _tuning.LoseSightSeconds) : 0f;
+        }
+
+        private void CacheTargetCollider()
+        {
+            _targetCollider = _targetPlayer != null ? _targetPlayer.GetComponent<Collider2D>() : null;
+        }
+
+        private void TryBindCurrentPlayer()
+        {
+            LocalWorldPlayerSpawner playerSpawner = FindAnyObjectByType<LocalWorldPlayerSpawner>();
+            if (playerSpawner == null || playerSpawner.CurrentPlayer == null)
+            {
+                SetTargetPlayer(null);
+                return;
+            }
+
+            TryBindPlayer(playerSpawner.CurrentPlayer);
+        }
+
+        private void HandleCurrentPlayerChanged(GameObject currentPlayer)
+        {
+            TryBindPlayer(currentPlayer);
+        }
+
+        private void SubscribeRoomAlerts()
+        {
+            if (_isSubscribedToRoomAlerts)
+            {
+                return;
+            }
+
+            if (_roomManager == null)
+            {
+                _roomManager = GetComponentInParent<RoomManager>();
+            }
+
+            if (_roomManager == null)
+            {
+                return;
+            }
+
+            _roomManager.OnAlertRoomsChanged += HandleAlertRoomsChanged;
+            _isSubscribedToRoomAlerts = true;
+            SyncRoomAlertState();
+        }
+
+        private void UnsubscribeRoomAlerts()
+        {
+            if (!_isSubscribedToRoomAlerts || _roomManager == null)
+            {
+                _isSubscribedToRoomAlerts = false;
+                return;
+            }
+
+            _roomManager.OnAlertRoomsChanged -= HandleAlertRoomsChanged;
+            _isSubscribedToRoomAlerts = false;
+        }
+
+        private void HandleAlertRoomsChanged(IReadOnlyList<string> alertRoomIds)
+        {
+            if (!ContainsRoomId(alertRoomIds, _roomId))
+            {
+                ApplyRoomAlert(AlertState.None);
+                return;
+            }
+
+            SyncRoomAlertState();
+        }
+
+        private void SyncRoomAlertState()
+        {
+            ApplyRoomAlert(_roomManager != null ? _roomManager.GetRoomAlertState(_roomId) : AlertState.None);
+        }
+
+        private void ValidateRoomAlertConfiguration()
+        {
+            if (string.IsNullOrWhiteSpace(_roomId))
+            {
+                Debug.LogWarning($"{name}에 경보 전파용 방 ID가 설정되지 않았습니다.", this);
+            }
+
+            if (_roomManager == null && GetComponentInParent<RoomManager>() == null)
+            {
+                Debug.LogWarning($"{name}에 경보 전파용 RoomManager가 설정되지 않았습니다.", this);
+            }
+        }
+
+        private static bool ContainsRoomId(IReadOnlyList<string> roomIds, string roomId)
+        {
+            if (roomIds == null || string.IsNullOrWhiteSpace(roomId))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < roomIds.Count; i++)
+            {
+                if (roomIds[i] == roomId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void TryBindPlayer(GameObject currentPlayer)
+        {
+            if (currentPlayer == null || currentPlayer.scene != gameObject.scene)
+            {
+                SetTargetPlayer(null);
+                return;
+            }
+
+            if (currentPlayer.TryGetComponent(out PlayerMotor2D playerMotor))
+            {
+                SetTargetPlayer(playerMotor);
+                return;
+            }
+
+            SetTargetPlayer(null);
         }
 
         private void EnsureComponentReferences()
@@ -353,13 +681,17 @@ namespace Caretaker.Gameplay
                 _collider2D = GetComponent<Collider2D>();
             }
 
+            if (_perception == null)
+            {
+                _perception = GetComponent<EnemyPerception2D>();
+            }
+
             if (_rigidbody2D == null)
             {
                 _rigidbody2D = GetComponent<Rigidbody2D>();
             }
         }
 
-        // 이동 모드에 맞춰 Rigidbody2D의 중력과 물리 타입을 설정한다.
         private void ConfigureRigidbody()
         {
             if (!TryGetComponent(out Rigidbody2D body))
