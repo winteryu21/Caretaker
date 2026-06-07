@@ -1,3 +1,5 @@
+using System;
+
 using UnityEngine;
 
 using Caretaker.Gameplay;
@@ -13,6 +15,11 @@ namespace Caretaker.World
     [RequireComponent(typeof(CircleCollider2D))]
     public class InteractableObject : MonoBehaviour
     {
+        /// <summary>
+        /// 로컬 플레이어가 오브젝트 조사를 완료했을 때 발생합니다.
+        /// </summary>
+        public static event Action<InteractableObject, PlayerController> OnExamineRequested;
+
         [Header("Object Identity")]
         [SerializeField] private string _objectId;
         [SerializeField] private InteractionType _interactionTypes = InteractionType.Examine;
@@ -21,6 +28,7 @@ namespace Caretaker.World
         [SerializeField] private string _requiredItemId;
         [SerializeField] private string _grantedItemId;
         [SerializeField] [TextArea] private string _examineText;
+        [SerializeField] private Sprite _examineImage;
 
         [Header("Highlight")]
         [SerializeField] private Behaviour[] _outlineBehaviours;
@@ -72,6 +80,11 @@ namespace Caretaker.World
         /// 조사 시 표시할 텍스트입니다.
         /// </summary>
         public string ExamineText => _examineText;
+
+        /// <summary>
+        /// 조사 팝업에 선택적으로 표시할 이미지입니다.
+        /// </summary>
+        public Sprite ExamineImage => _examineImage;
 
         /// <summary>
         /// 현재 하이라이트가 켜져 있는지 반환합니다.
@@ -204,6 +217,7 @@ namespace Caretaker.World
         private void RunExamine(PlayerController actor)
         {
             Debug.Log($"Examine interaction: object={_objectId}, text={_examineText}", this);
+            OnExamineRequested?.Invoke(this, actor);
         }
 
         private bool RunAcquire(PlayerController actor)
