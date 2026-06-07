@@ -146,7 +146,7 @@ namespace Caretaker.Gameplay
 
             if (target.TryGetComponent(out CausalTrigger causalTrigger))
             {
-                causalTrigger.Activate();
+                causalTrigger.Fire();
             }
         }
     }
