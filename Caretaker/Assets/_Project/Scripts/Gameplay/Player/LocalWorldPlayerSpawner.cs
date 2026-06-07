@@ -1,3 +1,5 @@
+using System;
+
 using System.Collections.Generic;
 
 using Caretaker.Core;
@@ -34,6 +36,11 @@ namespace Caretaker.Gameplay
 
         /// <summary>Current local world player instance, if one has been spawned.</summary>
         public GameObject CurrentPlayer => _currentPlayer;
+
+        /// <summary>
+        /// 로컬 월드 플레이어가 생성되거나 교체될 때 발생한다.
+        /// </summary>
+        public static event Action<GameObject> OnCurrentPlayerChanged;
 
         private void Awake()
         {
@@ -115,6 +122,8 @@ namespace Caretaker.Gameplay
             {
                 inventoryController.SetPlayerId(GetLocalClientId());
             }
+
+            OnCurrentPlayerChanged?.Invoke(_currentPlayer);
 
             return _currentPlayer;
         }

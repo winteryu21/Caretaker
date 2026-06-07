@@ -111,7 +111,7 @@ MonoBehaviour:
   _patrolWaypoints: []
   _groundLayers:
     serializedVersion: 2
-    m_Bits: 4294967291
+    m_Bits: 51
   _groundProbeForwardDistance: 0.15
   _groundProbeDownDistance: 0.4
   _stuckSkipSeconds: 1
