@@ -42,6 +42,15 @@ namespace Caretaker.Gameplay
         /// </summary>
         public string SelectedItemId => State.SelectedItemId;
 
+        /// <summary>
+        /// Sets the local inventory owner ID used to keep player inventory state private.
+        /// </summary>
+        /// <param name="playerId">Owner client ID.</param>
+        public void SetPlayerId(ulong playerId)
+        {
+            _playerId = playerId;
+        }
+
         private void Awake()
         {
             _playerController = GetComponent<PlayerController>();
