@@ -24,14 +24,30 @@ namespace Caretaker.Gameplay
         private PlayerMotor2D _motor2D;
 
         /// <summary>
+        /// 전투 모드에서 공격 입력이 발생했을 때 발생합니다.
+        /// 화면 좌표는 조준 방향 계산에 사용할 수 있습니다.
+        /// </summary>
+        public event Action<Vector2> OnCombatRequested;
+
+        /// <summary>
         /// 유효한 상호작용 대상과 타입이 확정되고 실행되었을 때 발생합니다.
         /// </summary>
         public event Action<InteractableObject, InteractionType> OnInteractionResolved;
 
         /// <summary>
+        /// 플레이어 행동 모드가 변경되었을 때 발생합니다.
+        /// </summary>
+        public event Action<PlayerActionMode> OnActionModeChanged;
+
+        /// <summary>
         /// 인벤토리 슬롯 선택 입력이 확정되었을 때 발생합니다. 슬롯 인덱스는 0부터 시작합니다.
         /// </summary>
         public event Action<int> OnInventorySlotSelected;
+
+        /// <summary>
+        /// 현재 로컬 플레이어 행동 모드입니다.
+        /// </summary>
+        public PlayerActionMode ActionMode => _inputReader.ActionMode;
 
         private void Awake()
         {
@@ -44,8 +60,11 @@ namespace Caretaker.Gameplay
 
         private void OnEnable()
         {
+            _inputReader.OnActionModeChanged += HandleActionModeChanged;
+            _inputReader.OnCombatRequested += HandleCombatRequested;
             _inputReader.OnInteractionRequested += HandleInteractionRequested;
             _inputReader.OnInventorySlotSelected += HandleInventorySlotSelected;
+            _interactionProbe.SetInteractionEnabled(_inputReader.ActionMode == PlayerActionMode.Investigation);
         }
 
         // 플레이어의 이동과 점프, 웅크리기, 달리기 입력을 모터2D에 전달합니다.
@@ -61,8 +80,21 @@ namespace Caretaker.Gameplay
 
         private void OnDisable()
         {
+            _inputReader.OnActionModeChanged -= HandleActionModeChanged;
+            _inputReader.OnCombatRequested -= HandleCombatRequested;
             _inputReader.OnInteractionRequested -= HandleInteractionRequested;
             _inputReader.OnInventorySlotSelected -= HandleInventorySlotSelected;
+        }
+
+        private void HandleActionModeChanged(PlayerActionMode actionMode)
+        {
+            _interactionProbe.SetInteractionEnabled(actionMode == PlayerActionMode.Investigation);
+            OnActionModeChanged?.Invoke(actionMode);
+        }
+
+        private void HandleCombatRequested(Vector2 pointerScreenPosition)
+        {
+            OnCombatRequested?.Invoke(pointerScreenPosition);
         }
 
         // 플레이어 입력 요청을 서비스에 전달해 실제 상호작용 여부를 판정합니다.

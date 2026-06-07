@@ -31,6 +31,7 @@ namespace Caretaker.Gameplay
         private InteractableObject _highlightedHoverTarget;
         private InteractableObject _highlightedProximityTarget;
         private InteractableObject _hoverTarget;
+        private bool _isInteractionEnabled = true;
         private InteractableObject _proximityTarget;
         private InteractionType _proximityInteractionType = InteractionType.None;
 
@@ -71,6 +72,11 @@ namespace Caretaker.Gameplay
 
         private void Update()
         {
+            if (!_isInteractionEnabled)
+            {
+                return;
+            }
+
             RefreshHoverTarget();
             RefreshProximityTarget();
             RefreshHighlights();
@@ -78,11 +84,24 @@ namespace Caretaker.Gameplay
 
         private void OnDisable()
         {
-            ClearHighlight(ref _highlightedHoverTarget);
-            ClearHighlight(ref _highlightedProximityTarget);
-            _hoverTarget = null;
-            _proximityTarget = null;
-            _proximityInteractionType = InteractionType.None;
+            ClearTargets();
+        }
+
+        /// <summary>
+        /// 상호작용 대상 탐지와 하이라이트를 활성화하거나 비활성화합니다.
+        /// </summary>
+        public void SetInteractionEnabled(bool isEnabled)
+        {
+            if (_isInteractionEnabled == isEnabled)
+            {
+                return;
+            }
+
+            _isInteractionEnabled = isEnabled;
+            if (!isEnabled)
+            {
+                ClearTargets();
+            }
         }
 
         private void RefreshHoverTarget()
@@ -267,6 +286,15 @@ namespace Caretaker.Gameplay
                 currentTarget.SetHighlight(false);
                 currentTarget = null;
             }
+        }
+
+        private void ClearTargets()
+        {
+            ClearHighlight(ref _highlightedHoverTarget);
+            ClearHighlight(ref _highlightedProximityTarget);
+            _hoverTarget = null;
+            _proximityTarget = null;
+            _proximityInteractionType = InteractionType.None;
         }
 
         private void RefreshInteractableContactFilter()

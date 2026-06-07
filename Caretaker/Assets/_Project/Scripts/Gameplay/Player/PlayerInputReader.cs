@@ -32,13 +32,24 @@ namespace Caretaker.Gameplay
         private InputAction _sprintAction;
         private bool _jumpPressedThisFrame;
         private int _lastKeyboardHorizontalDirection;
+        private PlayerActionMode _actionMode = PlayerActionMode.Investigation;
         private bool _wasKeyboardLeftPressed;
         private bool _wasKeyboardRightPressed;
+
+        /// <summary>
+        /// 플레이어가 전투 행동을 요청했을 때 발생합니다.
+        /// </summary>
+        public event Action<Vector2> OnCombatRequested;
 
         /// <summary>
         /// 플레이어가 상호작용을 요청했을 때 발생합니다.
         /// </summary>
         public event Action<InteractionRequest> OnInteractionRequested;
+
+        /// <summary>
+        /// 플레이어 행동 모드가 변경되었을 때 발생합니다.
+        /// </summary>
+        public event Action<PlayerActionMode> OnActionModeChanged;
 
         /// <summary>
         /// 플레이어가 인벤토리 슬롯을 선택했을 때 발생합니다. 슬롯 인덱스는 0부터 시작합니다.
@@ -72,6 +83,11 @@ namespace Caretaker.Gameplay
         /// 달리기 입력이 현재 유지 중인지 반환합니다.
         /// </summary>
         public bool IsSprintPressed => _sprintAction.IsPressed();
+
+        /// <summary>
+        /// 현재 로컬 플레이어 행동 모드입니다.
+        /// </summary>
+        public PlayerActionMode ActionMode => _actionMode;
 
         private void Awake()
         {
@@ -110,6 +126,7 @@ namespace Caretaker.Gameplay
 
         private void Update()
         {
+            HandleActionModeInput();
             HandleInventorySlotInput();
             HandleUseItemInput();
         }
@@ -134,19 +151,33 @@ namespace Caretaker.Gameplay
             Vector2 pointerPosition = Mouse.current != null
                 ? Mouse.current.position.ReadValue()
                 : Vector2.zero;
+
+            if (_actionMode == PlayerActionMode.Combat)
+            {
+                OnCombatRequested?.Invoke(pointerPosition);
+                return;
+            }
+
             var request = new InteractionRequest(InteractionType.Examine, pointerPosition);
             OnInteractionRequested?.Invoke(request);
         }
 
         private void HandleInteractPerformed(InputAction.CallbackContext context)
         {
+            if (_actionMode != PlayerActionMode.Investigation)
+            {
+                return;
+            }
+
             var request = new InteractionRequest(InteractionType.Operate, Vector2.zero);
             OnInteractionRequested?.Invoke(request);
         }
 
         private void HandleUseItemInput()
         {
-            if (Mouse.current == null || !Mouse.current.rightButton.wasPressedThisFrame)
+            if (_actionMode != PlayerActionMode.Investigation ||
+                Mouse.current == null ||
+                !Mouse.current.rightButton.wasPressedThisFrame)
             {
                 return;
             }
@@ -154,6 +185,20 @@ namespace Caretaker.Gameplay
             Vector2 pointerPosition = Mouse.current.position.ReadValue();
             var request = new InteractionRequest(InteractionType.UseItem, pointerPosition);
             OnInteractionRequested?.Invoke(request);
+        }
+
+        private void HandleActionModeInput()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null || !keyboard.tabKey.wasPressedThisFrame)
+            {
+                return;
+            }
+
+            _actionMode = _actionMode == PlayerActionMode.Investigation
+                ? PlayerActionMode.Combat
+                : PlayerActionMode.Investigation;
+            OnActionModeChanged?.Invoke(_actionMode);
         }
 
         private void HandleInventorySlotInput()
