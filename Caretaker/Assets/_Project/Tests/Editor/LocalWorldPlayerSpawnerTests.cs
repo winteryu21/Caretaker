@@ -39,5 +39,38 @@ namespace Caretaker.Tests.Editor
             Object.DestroyImmediate(spawnerObject);
             Object.DestroyImmediate(prefab);
         }
+
+        [Test]
+        public void SpawnLocalPlayer_UsesSpawnPointInLoadedPhaseScene()
+        {
+            const string phaseSceneName = "Phase1_Future";
+            Vector3 spawnPosition = new(-134.5f, 68.9f, 0f);
+
+            Scene phaseScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            phaseScene.name = phaseSceneName;
+            GameObject spawnPoint = new("SpawnPoint");
+            spawnPoint.transform.position = spawnPosition;
+            SceneManager.MoveGameObjectToScene(spawnPoint, phaseScene);
+
+            GameObject prefab = new("NetworkPlayerPrefab");
+            prefab.AddComponent<RoomParticipant>();
+            GameObject spawnerObject = new("Spawner");
+            LocalWorldPlayerSpawner spawner = spawnerObject.AddComponent<LocalWorldPlayerSpawner>();
+
+            var serializedObject = new UnityEditor.SerializedObject(spawner);
+            serializedObject.FindProperty("_playerPrefab").objectReferenceValue = prefab;
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+            GameObject player = spawner.SpawnLocalPlayer(PhaseId.Phase1, TimelineRole.Future, phaseSceneName);
+
+            Assert.That(player, Is.Not.Null);
+            Assert.That(player.transform.position, Is.EqualTo(spawnPosition));
+            Assert.That(player.scene.name, Is.EqualTo(phaseSceneName));
+
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(spawnerObject);
+            Object.DestroyImmediate(prefab);
+            Object.DestroyImmediate(spawnPoint);
+        }
     }
 }
