@@ -87,11 +87,6 @@ namespace Caretaker.Gameplay
                 return;
             }
 
-            if (resolvedType == InteractionType.Operate)
-            {
-                ActivateCausalTriggerIfPresent(resolvedTarget);
-            }
-
             OnInteractionResolved?.Invoke(resolvedTarget, resolvedType);
         }
 
@@ -133,21 +128,7 @@ namespace Caretaker.Gameplay
             }
 
             target.MarkRequiredItemSatisfied();
-            ActivateCausalTriggerIfPresent(target);
             OnInteractionResolved?.Invoke(target, InteractionType.UseItem);
-        }
-
-        private void ActivateCausalTriggerIfPresent(InteractableObject target)
-        {
-            if (target == null)
-            {
-                return;
-            }
-
-            if (target.TryGetComponent(out CausalTrigger causalTrigger))
-            {
-                causalTrigger.Activate();
-            }
         }
     }
 }
