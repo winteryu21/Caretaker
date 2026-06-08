@@ -24,20 +24,9 @@ namespace Caretaker.Gameplay
         private PlayerMotor2D _motor2D;
 
         /// <summary>
-        /// 전투 모드에서 공격 입력이 발생했을 때 발생합니다.
-        /// 화면 좌표는 조준 방향 계산에 사용할 수 있습니다.
-        /// </summary>
-        public event Action<Vector2> OnCombatRequested;
-
-        /// <summary>
         /// 유효한 상호작용 대상과 타입이 확정되고 실행되었을 때 발생합니다.
         /// </summary>
         public event Action<InteractableObject, InteractionType> OnInteractionResolved;
-
-        /// <summary>
-        /// 플레이어 행동 모드가 변경되었을 때 발생합니다.
-        /// </summary>
-        public event Action<PlayerActionMode> OnActionModeChanged;
 
         /// <summary>
         /// 인벤토리 슬롯 선택 입력이 확정되었을 때 발생합니다. 슬롯 인덱스는 0부터 시작합니다.
@@ -45,9 +34,9 @@ namespace Caretaker.Gameplay
         public event Action<int> OnInventorySlotSelected;
 
         /// <summary>
-        /// 현재 로컬 플레이어 행동 모드입니다.
+        /// 모달 UI에 의해 플레이어 게임플레이 입력이 잠겨 있는지 반환합니다.
         /// </summary>
-        public PlayerActionMode ActionMode => _inputReader.ActionMode;
+        public bool IsInputBlocked { get; private set; }
 
         private void Awake()
         {
@@ -60,16 +49,19 @@ namespace Caretaker.Gameplay
 
         private void OnEnable()
         {
-            _inputReader.OnActionModeChanged += HandleActionModeChanged;
-            _inputReader.OnCombatRequested += HandleCombatRequested;
             _inputReader.OnInteractionRequested += HandleInteractionRequested;
             _inputReader.OnInventorySlotSelected += HandleInventorySlotSelected;
-            _interactionProbe.SetInteractionEnabled(_inputReader.ActionMode == PlayerActionMode.Investigation);
         }
 
         // 플레이어의 이동과 점프, 웅크리기, 달리기 입력을 모터2D에 전달합니다.
         private void FixedUpdate()
         {
+            if (IsInputBlocked)
+            {
+                _motor2D.TickMotor(Vector2.zero, false, false, false, false);
+                return;
+            }
+
             _motor2D.TickMotor(
                 _inputReader.MoveInput,
                 _inputReader.ConsumeJumpPressed(),
@@ -80,26 +72,18 @@ namespace Caretaker.Gameplay
 
         private void OnDisable()
         {
-            _inputReader.OnActionModeChanged -= HandleActionModeChanged;
-            _inputReader.OnCombatRequested -= HandleCombatRequested;
             _inputReader.OnInteractionRequested -= HandleInteractionRequested;
             _inputReader.OnInventorySlotSelected -= HandleInventorySlotSelected;
-        }
-
-        private void HandleActionModeChanged(PlayerActionMode actionMode)
-        {
-            _interactionProbe.SetInteractionEnabled(actionMode == PlayerActionMode.Investigation);
-            OnActionModeChanged?.Invoke(actionMode);
-        }
-
-        private void HandleCombatRequested(Vector2 pointerScreenPosition)
-        {
-            OnCombatRequested?.Invoke(pointerScreenPosition);
         }
 
         // 플레이어 입력 요청을 서비스에 전달해 실제 상호작용 여부를 판정합니다.
         private void HandleInteractionRequested(InteractionRequest request)
         {
+            if (IsInputBlocked)
+            {
+                return;
+            }
+
             if (request.Type == InteractionType.UseItem)
             {
                 HandleUseItemRequested();
@@ -124,18 +108,28 @@ namespace Caretaker.Gameplay
 
         private void HandleInventorySlotSelected(int slotIndex)
         {
+            if (IsInputBlocked)
+            {
+                return;
+            }
+
             OnInventorySlotSelected?.Invoke(slotIndex);
         }
 
         private void HandleUseItemRequested()
         {
-            if (_inventoryController == null || _interactionProbe.ProximityTarget == null)
+            if (IsInputBlocked)
             {
-                Debug.Log("Use item failed: inventory controller or proximity target is missing.", this);
                 return;
             }
 
-            InteractableObject target = _interactionProbe.ProximityTarget;
+            if (_inventoryController == null || _interactionProbe.HoverTarget == null)
+            {
+                Debug.Log("Use item failed: inventory controller or hover target is missing.", this);
+                return;
+            }
+
+            InteractableObject target = _interactionProbe.HoverTarget;
             float distance = target.GetDistanceFrom(transform.position);
             if (distance < 0f || distance > _interactionProbe.InteractionRadius)
             {
@@ -160,7 +154,26 @@ namespace Caretaker.Gameplay
             }
 
             target.MarkRequiredItemSatisfied();
+            if (target.IsInteractable(InteractionType.Operate))
+            {
+                target.RunInteraction(InteractionType.Operate, this);
+            }
+
             OnInteractionResolved?.Invoke(target, InteractionType.UseItem);
+        }
+
+        /// <summary>
+        /// 모달 UI가 열려 있는 동안 게임플레이 입력 처리를 잠그거나 해제합니다.
+        /// </summary>
+        /// <param name="isBlocked">입력을 잠그려면 true입니다.</param>
+        public void SetInputBlocked(bool isBlocked)
+        {
+            IsInputBlocked = isBlocked;
+
+            if (_interactionProbe != null)
+            {
+                _interactionProbe.enabled = !isBlocked;
+            }
         }
     }
 }

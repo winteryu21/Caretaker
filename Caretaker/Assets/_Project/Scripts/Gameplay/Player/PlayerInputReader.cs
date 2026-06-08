@@ -30,16 +30,12 @@ namespace Caretaker.Gameplay
         private InputAction _moveAction;
         private PlayerInput _playerInput;
         private InputAction _sprintAction;
+        private PlayerControlMode _controlMode = PlayerControlMode.Normal;
+        private bool _isCombatAimPressed;
         private bool _jumpPressedThisFrame;
         private int _lastKeyboardHorizontalDirection;
-        private PlayerActionMode _actionMode = PlayerActionMode.Investigation;
         private bool _wasKeyboardLeftPressed;
         private bool _wasKeyboardRightPressed;
-
-        /// <summary>
-        /// 플레이어가 전투 행동을 요청했을 때 발생합니다.
-        /// </summary>
-        public event Action<Vector2> OnCombatRequested;
 
         /// <summary>
         /// 플레이어가 상호작용을 요청했을 때 발생합니다.
@@ -47,14 +43,29 @@ namespace Caretaker.Gameplay
         public event Action<InteractionRequest> OnInteractionRequested;
 
         /// <summary>
-        /// 플레이어 행동 모드가 변경되었을 때 발생합니다.
-        /// </summary>
-        public event Action<PlayerActionMode> OnActionModeChanged;
-
-        /// <summary>
         /// 플레이어가 인벤토리 슬롯을 선택했을 때 발생합니다. 슬롯 인덱스는 0부터 시작합니다.
         /// </summary>
         public event Action<int> OnInventorySlotSelected;
+
+        /// <summary>
+        /// Tab 입력으로 조작 모드가 변경되었을 때 발생합니다.
+        /// </summary>
+        public event Action<PlayerControlMode> OnControlModeChanged;
+
+        /// <summary>
+        /// 전투 모드에서 좌클릭 공격 입력이 발생했을 때 발생합니다.
+        /// </summary>
+        public event Action OnCombatAttackRequested;
+
+        /// <summary>
+        /// 전투 모드에서 우클릭 조준 유지 상태가 바뀌었을 때 발생합니다.
+        /// </summary>
+        public event Action<bool> OnCombatAimChanged;
+
+        /// <summary>
+        /// 현재 마우스 입력 해석 모드입니다.
+        /// </summary>
+        public PlayerControlMode ControlMode => _controlMode;
 
         /// <summary>
         /// 현재 이동 입력값을 반환합니다.
@@ -84,11 +95,6 @@ namespace Caretaker.Gameplay
         /// </summary>
         public bool IsSprintPressed => _sprintAction.IsPressed();
 
-        /// <summary>
-        /// 현재 로컬 플레이어 행동 모드입니다.
-        /// </summary>
-        public PlayerActionMode ActionMode => _actionMode;
-
         private void Awake()
         {
             _playerInput = GetComponent<PlayerInput>();
@@ -112,6 +118,7 @@ namespace Caretaker.Gameplay
             _jumpAction.performed -= HandleJumpPerformed;
             _clickAction.performed -= HandleClickPerformed;
             _interactAction.performed -= HandleInteractPerformed;
+            SetCombatAimPressed(false);
         }
 
         private void Reset()
@@ -126,9 +133,10 @@ namespace Caretaker.Gameplay
 
         private void Update()
         {
-            HandleActionModeInput();
+            HandleControlModeInput();
             HandleInventorySlotInput();
             HandleUseItemInput();
+            HandleCombatAimInput();
         }
 
         /// <summary>
@@ -148,57 +156,89 @@ namespace Caretaker.Gameplay
 
         private void HandleClickPerformed(InputAction.CallbackContext context)
         {
-            Vector2 pointerPosition = Mouse.current != null
-                ? Mouse.current.position.ReadValue()
-                : Vector2.zero;
-
-            if (_actionMode == PlayerActionMode.Combat)
+            if (_controlMode == PlayerControlMode.Combat)
             {
-                OnCombatRequested?.Invoke(pointerPosition);
+                OnCombatAttackRequested?.Invoke();
                 return;
             }
 
-            var request = new InteractionRequest(InteractionType.Examine, pointerPosition);
+            var request = new InteractionRequest(InteractionType.Examine, Vector2.zero);
             OnInteractionRequested?.Invoke(request);
         }
 
         private void HandleInteractPerformed(InputAction.CallbackContext context)
         {
-            if (_actionMode != PlayerActionMode.Investigation)
-            {
-                return;
-            }
-
             var request = new InteractionRequest(InteractionType.Operate, Vector2.zero);
             OnInteractionRequested?.Invoke(request);
         }
 
         private void HandleUseItemInput()
         {
-            if (_actionMode != PlayerActionMode.Investigation ||
-                Mouse.current == null ||
-                !Mouse.current.rightButton.wasPressedThisFrame)
+            if (Mouse.current == null || !Mouse.current.rightButton.wasPressedThisFrame)
             {
                 return;
             }
 
-            Vector2 pointerPosition = Mouse.current.position.ReadValue();
-            var request = new InteractionRequest(InteractionType.UseItem, pointerPosition);
+            if (_controlMode == PlayerControlMode.Combat)
+            {
+                return;
+            }
+
+            var request = new InteractionRequest(InteractionType.UseItem, Vector2.zero);
             OnInteractionRequested?.Invoke(request);
         }
 
-        private void HandleActionModeInput()
+        private void HandleControlModeInput()
         {
             Keyboard keyboard = Keyboard.current;
-            if (keyboard == null || !keyboard.tabKey.wasPressedThisFrame)
+            if (keyboard != null && keyboard.tabKey.wasPressedThisFrame)
+            {
+                ToggleControlMode();
+            }
+        }
+
+        private void ToggleControlMode()
+        {
+            PlayerControlMode targetMode = _controlMode == PlayerControlMode.Normal
+                ? PlayerControlMode.Combat
+                : PlayerControlMode.Normal;
+            SetControlMode(targetMode);
+        }
+
+        private void SetControlMode(PlayerControlMode controlMode)
+        {
+            if (_controlMode == controlMode)
             {
                 return;
             }
 
-            _actionMode = _actionMode == PlayerActionMode.Investigation
-                ? PlayerActionMode.Combat
-                : PlayerActionMode.Investigation;
-            OnActionModeChanged?.Invoke(_actionMode);
+            if (controlMode == PlayerControlMode.Normal)
+            {
+                SetCombatAimPressed(false);
+            }
+
+            _controlMode = controlMode;
+            OnControlModeChanged?.Invoke(_controlMode);
+        }
+
+        private void HandleCombatAimInput()
+        {
+            bool isPressed =
+                _controlMode == PlayerControlMode.Combat &&
+                Mouse.current != null &&
+                Mouse.current.rightButton.isPressed;
+            SetCombatAimPressed(isPressed);
+        }
+
+        private void SetCombatAimPressed(bool isPressed)
+        {
+            if (_isCombatAimPressed == isPressed)
+            {
+                return;
+            }
+
+            _isCombatAimPressed = isPressed;
+            OnCombatAimChanged?.Invoke(_isCombatAimPressed);
         }
 
         private void HandleInventorySlotInput()
