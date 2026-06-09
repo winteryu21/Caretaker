@@ -22,12 +22,13 @@ namespace Caretaker.World
         public static event Action<InteractableObject, PlayerController> OnExamineRequested;
 
         [Header("Object Identity")]
-        [SerializeField] private string _objectId;
+        [SerializeField] private ItemDefinitionSO _itemId;
         [SerializeField] private InteractionType _interactionTypes = InteractionType.Examine;
 
         [Header("Interaction")]
-        [SerializeField] private string _requiredItemId;
-        [SerializeField] private string _grantedItemId;
+        [SerializeField] private ItemDefinitionSO _grantedItemId;
+        [SerializeField] private ItemDefinitionSO _requiredItemId;
+        [SerializeField] private bool _isDestroy;
         [SerializeField] [TextArea] private string _examineText;
         [SerializeField] private Sprite _examineImage;
 
@@ -48,9 +49,9 @@ namespace Caretaker.World
         private bool _isRequiredItemSatisfied;
 
         /// <summary>
-        /// game-design 문서상의 오브젝트 식별자입니다. 예: OBJ_P1_SIGN
+        /// 오브젝트 식별에 사용할 아이템 ID입니다.
         /// </summary>
-        public string ObjectId => _objectId;
+        public string ObjectId => GetItemId(_itemId);
 
         /// <summary>
         /// 이 오브젝트가 지원하는 상호작용 타입 집합입니다.
@@ -60,12 +61,12 @@ namespace Caretaker.World
         /// <summary>
         /// 상호작용에 필요한 아이템 ID입니다. 비어 있으면 아이템이 필요하지 않습니다.
         /// </summary>
-        public string RequiredItemId => _requiredItemId;
+        public string RequiredItemId => GetItemId(_requiredItemId);
 
         /// <summary>
         /// 아이템 요구 조건이 있는 오브젝트인지 반환합니다.
         /// </summary>
-        public bool HasRequiredItem => !string.IsNullOrWhiteSpace(_requiredItemId);
+        public bool HasRequiredItem => _requiredItemId != null;
 
         /// <summary>
         /// 필요한 아이템 조건이 런타임에서 충족되었는지 반환합니다.
@@ -75,7 +76,12 @@ namespace Caretaker.World
         /// <summary>
         /// 습득 성공 시 인벤토리에 추가할 아이템 ID입니다.
         /// </summary>
-        public string GrantedItemId => _grantedItemId;
+        public string GrantedItemId => GetItemId(_grantedItemId);
+
+        /// <summary>
+        /// 습득 성공 후 이 오브젝트를 비활성화할지 여부입니다.
+        /// </summary>
+        public bool IsDestroy => _isDestroy;
 
         /// <summary>
         /// 이 오브젝트에서 아이템을 이미 획득했는지 반환합니다.
@@ -109,9 +115,6 @@ namespace Caretaker.World
 
         private void OnValidate()
         {
-            _objectId = _objectId?.Trim();
-            _requiredItemId = _requiredItemId?.Trim();
-            _grantedItemId = _grantedItemId?.Trim();
             ConfigureInteractionCollider();
         }
 
@@ -163,7 +166,7 @@ namespace Caretaker.World
             }
 
             _isHighlighted = isHighlighted;
-            Debug.Log($"Highlight {(isHighlighted ? "enabled" : "disabled")}: object={_objectId}", this);
+            Debug.Log($"Highlight {(isHighlighted ? "enabled" : "disabled")}: object={ObjectId}", this);
 
             if (isHighlighted && _useFallbackGlow && _glowRendererEntries.Length == 0)
             {
@@ -206,6 +209,11 @@ namespace Caretaker.World
         public void MarkItemAcquired()
         {
             _isItemAcquired = true;
+
+            if (_isDestroy)
+            {
+                gameObject.SetActive(false);
+            }
         }
 
         /// <summary>
@@ -240,13 +248,13 @@ namespace Caretaker.World
 
         private void RunExamine(PlayerController actor)
         {
-            Debug.Log($"Examine interaction: object={_objectId}, text={_examineText}", this);
+            Debug.Log($"Examine interaction: object={ObjectId}, text={_examineText}", this);
             OnExamineRequested?.Invoke(this, actor);
         }
 
         private bool RunAcquire(PlayerController actor)
         {
-            Debug.Log($"Acquire interaction: object={_objectId}, grantedItem={_grantedItemId}", this);
+            Debug.Log($"Acquire interaction: object={ObjectId}, grantedItem={GrantedItemId}", this);
             return true;
         }
 
@@ -274,7 +282,7 @@ namespace Caretaker.World
             if (!executed)
             {
                 Debug.LogWarning(
-                    $"Operate interaction did not execute. object={_objectId}, actions={_operateActions.Length}, hasCausalTrigger={_causalTrigger != null}",
+                    $"Operate interaction did not execute. object={ObjectId}, actions={_operateActions.Length}, hasCausalTrigger={_causalTrigger != null}",
                     this);
             }
 
@@ -395,6 +403,11 @@ namespace Caretaker.World
             glowRenderer.sortingOrder = sourceRenderer.sortingOrder + _fallbackGlowSortingOrderOffset;
             glowRenderer.sharedMaterial = sourceRenderer.sharedMaterial;
             glowRenderer.color = _fallbackGlowColor;
+        }
+
+        private static string GetItemId(ItemDefinitionSO itemDefinition)
+        {
+            return itemDefinition != null ? itemDefinition.ItemId : string.Empty;
         }
 
         private readonly struct GlowRendererEntry
