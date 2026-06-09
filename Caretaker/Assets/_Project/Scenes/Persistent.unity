@@ -387,6 +387,7 @@ GameObject:
   - component: {fileID: 2002}
   - component: {fileID: 2003}
   - component: {fileID: 2004}
+  - component: {fileID: 2005}
   m_Layer: 0
   m_Name: RuntimeSystems
   m_TagString: Untagged
@@ -452,6 +453,21 @@ MonoBehaviour:
   _playerPrefab: {fileID: 8695379886725363112, guid: f762b58daac55b84299548a34f7f538a, type: 3}
   _defaultSpawnPosition: {x: 0, y: 1, z: 0}
   _spawnPointName: SpawnPoint
+--- !u!114 &2005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f18f426ddb003034883f62004be7885a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Presentation.SplitViewManager
+  _sceneLoader: {fileID: 2002}
+  _roleManager: {fileID: 0}
+  _mainCamera: {fileID: 1002}
 --- !u!1 &2100
 GameObject:
   m_ObjectHideFlags: 0

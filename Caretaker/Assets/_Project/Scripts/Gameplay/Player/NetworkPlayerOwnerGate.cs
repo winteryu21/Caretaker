@@ -1,5 +1,6 @@
 using System;
 
+using Caretaker.Shared;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -19,6 +20,15 @@ namespace Caretaker.Gameplay
     {
         [SerializeField] private bool _restrictObserversToOwner = true;
         [SerializeField] private bool _hideNonOwnerPresentation = true;
+
+        private readonly NetworkVariable<bool> _phase3RemoteVisible = new(
+            false,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+        private readonly NetworkVariable<TimelineRole> _timelineRole = new(
+            TimelineRole.None,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
 
         private Collider2D[] _colliders;
         private InteractionProbe _interactionProbe;
@@ -40,6 +50,15 @@ namespace Caretaker.Gameplay
         /// </summary>
         public static event Action<GameObject> OnLocalOwnerPlayerDespawned;
 
+        /// <summary>Raised when any observed network player is spawned on this client.</summary>
+        public static event Action<NetworkPlayerOwnerGate> OnObservedPlayerSpawned;
+
+        /// <summary>Raised when any observed network player is despawned on this client.</summary>
+        public static event Action<NetworkPlayerOwnerGate> OnObservedPlayerDespawned;
+
+        /// <summary>Timeline represented by this network player.</summary>
+        public TimelineRole TimelineRole => _timelineRole.Value;
+
         private void Awake()
         {
             _playerController = GetComponent<PlayerController>();
@@ -56,6 +75,7 @@ namespace Caretaker.Gameplay
         public override void OnNetworkSpawn()
         {
             ApplyOwnershipControl(IsOwner);
+            OnObservedPlayerSpawned?.Invoke(this);
 
             if (IsOwner)
             {
@@ -75,6 +95,8 @@ namespace Caretaker.Gameplay
 
         public override void OnNetworkDespawn()
         {
+            OnObservedPlayerDespawned?.Invoke(this);
+
             if (IsOwner)
             {
                 OnLocalOwnerPlayerDespawned?.Invoke(gameObject);
@@ -87,18 +109,30 @@ namespace Caretaker.Gameplay
         /// Configures which client can observe this network player before it is spawned.
         /// </summary>
         /// <param name="ownerClientId">Client that owns and observes the player.</param>
-        public void ConfigureOwnerOnlyVisibility(ulong ownerClientId)
+        public void ConfigureVisibility(
+            ulong ownerClientId,
+            TimelineRole timelineRole,
+            bool allowRemoteObservers)
         {
             _configuredVisibilityOwnerClientId = ownerClientId;
             _hasConfiguredVisibilityOwner = true;
+            _timelineRole.Value = timelineRole;
+            _phase3RemoteVisible.Value = allowRemoteObservers;
             NetworkObject.CheckObjectVisibility = ShouldShowToClient;
         }
 
         private void ApplyOwnershipControl(bool isLocalOwner)
         {
-            SetPresentationEnabled(isLocalOwner || !_hideNonOwnerPresentation);
+            bool presentationEnabled = ShouldEnablePresentation(
+                isLocalOwner,
+                _phase3RemoteVisible.Value,
+                _hideNonOwnerPresentation);
+            bool localControlEnabled = ShouldEnableLocalControl(isLocalOwner);
 
-            if (isLocalOwner)
+            SetRendererVisibility(presentationEnabled);
+            SetPhysicsEnabled(localControlEnabled);
+
+            if (localControlEnabled)
             {
                 SetEnabled(_playerInput, true);
                 SetEnabled(_playerInputReader, true);
@@ -115,27 +149,58 @@ namespace Caretaker.Gameplay
 
         private bool ShouldShowToClient(ulong clientId)
         {
-            if (!_restrictObserversToOwner)
-            {
-                return true;
-            }
-
             ulong visibleOwnerClientId = _hasConfiguredVisibilityOwner
                 ? _configuredVisibilityOwnerClientId
                 : OwnerClientId;
-            return clientId == visibleOwnerClientId;
+            return ShouldObservePlayer(
+                clientId,
+                visibleOwnerClientId,
+                _restrictObserversToOwner,
+                _phase3RemoteVisible.Value);
         }
 
-        private void SetPresentationEnabled(bool isEnabled)
+        /// <summary>Returns whether this client should receive the player NetworkObject.</summary>
+        public static bool ShouldObservePlayer(
+            ulong clientId,
+            ulong ownerClientId,
+            bool restrictObserversToOwner,
+            bool phase3RemoteVisible)
+        {
+            return !restrictObserversToOwner
+                || phase3RemoteVisible
+                || clientId == ownerClientId;
+        }
+
+        /// <summary>Returns whether this client should render the player.</summary>
+        public static bool ShouldEnablePresentation(
+            bool isLocalOwner,
+            bool phase3RemoteVisible,
+            bool hideNonOwnerPresentation)
+        {
+            return isLocalOwner
+                || phase3RemoteVisible
+                || !hideNonOwnerPresentation;
+        }
+
+        /// <summary>Returns whether local input and physics should control the player.</summary>
+        public static bool ShouldEnableLocalControl(bool isLocalOwner)
+        {
+            return isLocalOwner;
+        }
+
+        private void SetRendererVisibility(bool isVisible)
         {
             if (_renderers != null)
             {
                 for (int i = 0; i < _renderers.Length; i++)
                 {
-                    SetEnabled(_renderers[i], isEnabled);
+                    SetEnabled(_renderers[i], isVisible);
                 }
             }
+        }
 
+        private void SetPhysicsEnabled(bool isEnabled)
+        {
             if (_colliders != null)
             {
                 for (int i = 0; i < _colliders.Length; i++)

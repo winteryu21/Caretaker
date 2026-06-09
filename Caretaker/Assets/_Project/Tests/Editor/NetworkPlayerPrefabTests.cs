@@ -61,6 +61,67 @@ namespace Caretaker.Tests.Editor
             Assert.That(networkTransform.AuthorityMode, Is.EqualTo(NetworkTransform.AuthorityModes.Owner));
         }
 
+        [TestCase(0UL, 1UL)]
+        [TestCase(1UL, 0UL)]
+        public void Phase3_RemotePlayerMovement_IsObservedAndRendered(
+            ulong localClientId,
+            ulong remoteOwnerClientId)
+        {
+            Assert.That(
+                NetworkPlayerOwnerGate.ShouldObservePlayer(
+                    localClientId,
+                    remoteOwnerClientId,
+                    restrictObserversToOwner: true,
+                    phase3RemoteVisible: true),
+                Is.True);
+            Assert.That(
+                NetworkPlayerOwnerGate.ShouldEnablePresentation(
+                    isLocalOwner: false,
+                    phase3RemoteVisible: true,
+                    hideNonOwnerPresentation: true),
+                Is.True);
+            Assert.That(NetworkPlayerOwnerGate.ShouldEnableLocalControl(isLocalOwner: false), Is.False);
+        }
+
+        [TestCase(0UL)]
+        [TestCase(1UL)]
+        public void Phase3_LocalPlayer_IsRenderedAndLocallyControlled(ulong localClientId)
+        {
+            Assert.That(
+                NetworkPlayerOwnerGate.ShouldObservePlayer(
+                    localClientId,
+                    localClientId,
+                    restrictObserversToOwner: true,
+                    phase3RemoteVisible: true),
+                Is.True);
+            Assert.That(
+                NetworkPlayerOwnerGate.ShouldEnablePresentation(
+                    isLocalOwner: true,
+                    phase3RemoteVisible: true,
+                    hideNonOwnerPresentation: true),
+                Is.True);
+            Assert.That(NetworkPlayerOwnerGate.ShouldEnableLocalControl(isLocalOwner: true), Is.True);
+        }
+
+        [Test]
+        public void Phase1And2_RemotePlayer_RemainsHiddenAndUncontrolled()
+        {
+            Assert.That(
+                NetworkPlayerOwnerGate.ShouldObservePlayer(
+                    clientId: 1UL,
+                    ownerClientId: 0UL,
+                    restrictObserversToOwner: true,
+                    phase3RemoteVisible: false),
+                Is.False);
+            Assert.That(
+                NetworkPlayerOwnerGate.ShouldEnablePresentation(
+                    isLocalOwner: false,
+                    phase3RemoteVisible: false,
+                    hideNonOwnerPresentation: true),
+                Is.False);
+            Assert.That(NetworkPlayerOwnerGate.ShouldEnableLocalControl(isLocalOwner: false), Is.False);
+        }
+
         [Test]
         public void NetworkPlayerPrefab_UsesProjectInputActions()
         {

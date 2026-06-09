@@ -130,7 +130,49 @@ namespace Caretaker.Gameplay
 
         private void HandlePhaseSceneLoaded(PhaseId phaseId, TimelineRole timelineRole, string sceneName)
         {
+            if (phaseId == PhaseId.Phase3)
+            {
+                HandlePhase3SceneLoaded(timelineRole, sceneName);
+                return;
+            }
+
             SpawnLocalPlayer(phaseId, timelineRole, sceneName);
+        }
+
+        private void HandlePhase3SceneLoaded(TimelineRole timelineRole, string sceneName)
+        {
+            ResolveDependencies();
+
+            if (CanSpawnNetworkPlayers())
+            {
+                if (_roleManager == null)
+                {
+                    return;
+                }
+
+                foreach (PlayerSessionData player in _roleManager.Players.Values)
+                {
+                    if (player.TimelineRole != timelineRole)
+                    {
+                        continue;
+                    }
+
+                    if (player.ClientId == NetworkManager.LocalClientId)
+                    {
+                        _loadedPhaseSceneName = sceneName;
+                    }
+
+                    SpawnNetworkPlayerForClient(player.ClientId, player.TimelineRole, PhaseId.Phase3, sceneName);
+                }
+
+                return;
+            }
+
+            TimelineRole localRole = _roleManager != null ? _roleManager.LocalTimelineRole : timelineRole;
+            if (localRole == timelineRole)
+            {
+                SpawnLocalPlayer(PhaseId.Phase3, timelineRole, sceneName);
+            }
         }
 
         private static void MovePlayerToLoadedPhaseScene(GameObject player, string sceneName)
@@ -228,7 +270,10 @@ namespace Caretaker.Gameplay
 
             if (player.TryGetComponent(out NetworkPlayerOwnerGate ownerGate))
             {
-                ownerGate.ConfigureOwnerOnlyVisibility(clientId);
+                ownerGate.ConfigureVisibility(
+                    clientId,
+                    timelineRole,
+                    phaseId == PhaseId.Phase3);
             }
 
             networkObject.SpawnWithOwnership(clientId, true);
