@@ -112,6 +112,11 @@ namespace Caretaker.Core
             {
                 LoadLocalPhase(_currentPhase);
             }
+
+            if (IsHostAuthority())
+            {
+                UpdateObjectivesForAllRoles();
+            }
         }
 
         private void OnDisable()
@@ -227,6 +232,51 @@ namespace Caretaker.Core
             return _currentObjectiveByRole.TryGetValue(timelineRole, out ObjectiveId objectiveId)
                 ? objectiveId
                 : ObjectiveId.None;
+        }
+
+        /// <summary>
+        /// 현재 역할별 Objective 표시 문구를 반환한다.
+        /// </summary>
+        /// <param name="timelineRole">조회할 시간대 역할.</param>
+        /// <param name="displayText">HUD에 표시할 Objective 문구.</param>
+        /// <returns>표시 가능한 Objective가 있으면 true.</returns>
+        public bool TryGetCurrentObjectiveDisplayText(TimelineRole timelineRole, out string displayText)
+        {
+            displayText = string.Empty;
+
+            ObjectiveId objectiveId = GetCurrentObjective(timelineRole);
+            if (objectiveId == ObjectiveId.None &&
+                _flowDefinition != null &&
+                _flowDefinition.TryResolveObjective(
+                    _currentPhase,
+                    timelineRole,
+                    _completedMajorIds,
+                    out ObjectiveId resolvedObjectiveId))
+            {
+                objectiveId = resolvedObjectiveId;
+            }
+
+            return TryGetObjectiveDisplayText(objectiveId, out displayText);
+        }
+
+        /// <summary>
+        /// Objective ID에 대응하는 HUD 표시 문구를 반환한다.
+        /// </summary>
+        /// <param name="objectiveId">Objective ID.</param>
+        /// <param name="displayText">HUD에 표시할 Objective 문구.</param>
+        /// <returns>표시 가능한 Objective가 있으면 true.</returns>
+        public bool TryGetObjectiveDisplayText(ObjectiveId objectiveId, out string displayText)
+        {
+            displayText = string.Empty;
+            if (objectiveId == ObjectiveId.None ||
+                _flowDefinition == null ||
+                !_flowDefinition.TryGetObjective(objectiveId, out GameFlowDefinitionSO.ObjectiveDefinition objective))
+            {
+                return false;
+            }
+
+            displayText = objective.DisplayText;
+            return !string.IsNullOrWhiteSpace(displayText);
         }
 
         /// <summary>
@@ -444,13 +494,9 @@ namespace Caretaker.Core
 
         private string GetObjectiveDisplayText(ObjectiveId objectiveId)
         {
-            if (_flowDefinition == null
-                || !_flowDefinition.TryGetObjective(objectiveId, out GameFlowDefinitionSO.ObjectiveDefinition objective))
-            {
-                return string.Empty;
-            }
-
-            return objective.DisplayText;
+            return TryGetObjectiveDisplayText(objectiveId, out string displayText)
+                ? displayText
+                : string.Empty;
         }
 
         private bool ApplyGameResult(GameResult gameResult)
