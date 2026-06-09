@@ -110,11 +110,16 @@ namespace Caretaker.Tests.Editor
                 out _);
             GameObject targetObject = new("Inspectable");
             InteractableObject target = targetObject.AddComponent<InteractableObject>();
+            ItemDefinitionSO item = ScriptableObject.CreateInstance<ItemDefinitionSO>();
 
             try
             {
+                SerializedObject serializedItem = new(item);
+                serializedItem.FindProperty("_itemId").stringValue = "OBJ_SIGN";
+                serializedItem.ApplyModifiedPropertiesWithoutUndo();
+
                 SerializedObject serializedObject = new(target);
-                serializedObject.FindProperty("_objectId").stringValue = "OBJ_SIGN";
+                serializedObject.FindProperty("_itemId").objectReferenceValue = item;
                 serializedObject.FindProperty("_examineText").stringValue = "A sign.";
                 serializedObject.ApplyModifiedPropertiesWithoutUndo();
 
@@ -128,6 +133,7 @@ namespace Caretaker.Tests.Editor
             finally
             {
                 Object.DestroyImmediate(targetObject);
+                Object.DestroyImmediate(item);
                 Object.DestroyImmediate(root);
             }
         }
