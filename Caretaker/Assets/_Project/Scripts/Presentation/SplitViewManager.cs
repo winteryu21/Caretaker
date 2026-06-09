@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 namespace Caretaker.Presentation
 {
     /// <summary>
-    /// Presents Past on top and Future on the bottom using two direct cameras.
+    /// 두 카메라를 직접 사용해 Past를 상단, Future를 하단에 표시한다.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class SplitViewManager : MonoBehaviour
@@ -27,7 +27,7 @@ namespace Caretaker.Presentation
         private bool _pastSceneLoaded;
         private bool _isSplitViewActive;
 
-        /// <summary>Whether the Phase 3 split view is currently active.</summary>
+        /// <summary>현재 Phase 3 스플릿뷰가 활성화되어 있는지 여부.</summary>
         public bool IsActive => _isSplitViewActive;
 
         private void Awake()
@@ -65,7 +65,7 @@ namespace Caretaker.Presentation
             DisableSplitView();
         }
 
-        /// <summary>Activates the top/bottom split when both scenes and players are available.</summary>
+        /// <summary>두 시간대 씬과 플레이어가 모두 준비되면 상하 스플릿뷰를 활성화한다.</summary>
         public void EnableSplitView()
         {
             ResolveDependencies();
@@ -118,7 +118,7 @@ namespace Caretaker.Presentation
             _isSplitViewActive = true;
         }
 
-        /// <summary>Restores the persistent camera to full screen.</summary>
+        /// <summary>Persistent 메인 카메라를 전체 화면으로 복원한다.</summary>
         public void DisableSplitView()
         {
             if (_mainCamera != null)

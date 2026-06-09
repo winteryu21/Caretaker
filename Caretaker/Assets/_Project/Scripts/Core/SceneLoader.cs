@@ -9,8 +9,8 @@ using UnityEngine.SceneManagement;
 namespace Caretaker.Core
 {
     /// <summary>
-    /// Loads the phase scenes required by the local timeline.
-    /// Phase 3 loads both timelines so split view can render them locally.
+    /// 로컬 시간대에 필요한 Phase 씬을 로드한다.
+    /// Phase 3에서는 스플릿뷰 렌더링을 위해 Past와 Future 씬을 모두 로드한다.
     /// </summary>
     public sealed class SceneLoader : MonoBehaviour
     {
@@ -24,10 +24,10 @@ namespace Caretaker.Core
         private PhaseId _pendingPhaseId;
         private TimelineRole _pendingTimelineRole;
 
-        /// <summary>Raised after each required phase scene finishes loading.</summary>
+        /// <summary>필요한 각 Phase 씬의 로드가 완료될 때 발생한다.</summary>
         public event Action<PhaseId, TimelineRole, string> OnPhaseSceneLoaded;
 
-        /// <summary>Returns the build scene name for a phase and timeline role.</summary>
+        /// <summary>Phase와 시간대 역할에 해당하는 빌드 씬 이름을 반환한다.</summary>
         public static string GetPhaseSceneName(PhaseId phaseId, TimelineRole timelineRole)
         {
             string phaseName = phaseId switch
@@ -49,9 +49,9 @@ namespace Caretaker.Core
         }
 
         /// <summary>
-        /// Loads the scenes needed for the requested phase.
+        /// 요청한 Phase에 필요한 씬을 로드한다.
         /// </summary>
-        /// <returns>Whether the load request was accepted.</returns>
+        /// <returns>로드 요청이 접수되었는지 여부.</returns>
         public bool TryLoadPhase(PhaseId phaseId, TimelineRole timelineRole)
         {
             if (_isTransitioning)

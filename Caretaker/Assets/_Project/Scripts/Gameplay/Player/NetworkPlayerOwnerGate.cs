@@ -8,9 +8,9 @@ using UnityEngine.InputSystem;
 namespace Caretaker.Gameplay
 {
     /// <summary>
-    /// Enables local player control only on the owning Netcode client.
+    /// Netcode 소유 클라이언트에서만 로컬 플레이어 조작을 활성화한다.
     /// </summary>
-    /// <remarks>DSD §3.2, §3.3 - networked player ownership boundary.</remarks>
+    /// <remarks>DSD §3.2, §3.3 - 네트워크 플레이어 소유권 경계.</remarks>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NetworkObject))]
     [RequireComponent(typeof(PlayerController))]
@@ -41,22 +41,22 @@ namespace Caretaker.Gameplay
         private ulong _configuredVisibilityOwnerClientId;
 
         /// <summary>
-        /// Raised when the local owner's network player is spawned on this client.
+        /// 이 클라이언트가 소유한 네트워크 플레이어가 생성될 때 발생한다.
         /// </summary>
         public static event Action<GameObject> OnLocalOwnerPlayerSpawned;
 
         /// <summary>
-        /// Raised when the local owner's network player is despawned on this client.
+        /// 이 클라이언트가 소유한 네트워크 플레이어가 제거될 때 발생한다.
         /// </summary>
         public static event Action<GameObject> OnLocalOwnerPlayerDespawned;
 
-        /// <summary>Raised when any observed network player is spawned on this client.</summary>
+        /// <summary>이 클라이언트가 관찰하는 네트워크 플레이어가 생성될 때 발생한다.</summary>
         public static event Action<NetworkPlayerOwnerGate> OnObservedPlayerSpawned;
 
-        /// <summary>Raised when any observed network player is despawned on this client.</summary>
+        /// <summary>이 클라이언트가 관찰하는 네트워크 플레이어가 제거될 때 발생한다.</summary>
         public static event Action<NetworkPlayerOwnerGate> OnObservedPlayerDespawned;
 
-        /// <summary>Timeline represented by this network player.</summary>
+        /// <summary>이 네트워크 플레이어가 속한 시간대 역할.</summary>
         public TimelineRole TimelineRole => _timelineRole.Value;
 
         private void Awake()
@@ -106,9 +106,11 @@ namespace Caretaker.Gameplay
         }
 
         /// <summary>
-        /// Configures which client can observe this network player before it is spawned.
+        /// 네트워크 플레이어 생성 전에 소유자, 시간대 역할, 원격 관찰 허용 여부를 설정한다.
         /// </summary>
-        /// <param name="ownerClientId">Client that owns and observes the player.</param>
+        /// <param name="ownerClientId">플레이어를 소유한 클라이언트 ID.</param>
+        /// <param name="timelineRole">플레이어의 시간대 역할.</param>
+        /// <param name="allowRemoteObservers">다른 클라이언트의 관찰 허용 여부.</param>
         public void ConfigureVisibility(
             ulong ownerClientId,
             TimelineRole timelineRole,
@@ -159,7 +161,7 @@ namespace Caretaker.Gameplay
                 _phase3RemoteVisible.Value);
         }
 
-        /// <summary>Returns whether this client should receive the player NetworkObject.</summary>
+        /// <summary>클라이언트가 플레이어 NetworkObject를 관찰해야 하는지 반환한다.</summary>
         public static bool ShouldObservePlayer(
             ulong clientId,
             ulong ownerClientId,
@@ -171,7 +173,7 @@ namespace Caretaker.Gameplay
                 || clientId == ownerClientId;
         }
 
-        /// <summary>Returns whether this client should render the player.</summary>
+        /// <summary>클라이언트에서 플레이어 외형을 렌더링해야 하는지 반환한다.</summary>
         public static bool ShouldEnablePresentation(
             bool isLocalOwner,
             bool phase3RemoteVisible,
@@ -182,7 +184,7 @@ namespace Caretaker.Gameplay
                 || !hideNonOwnerPresentation;
         }
 
-        /// <summary>Returns whether local input and physics should control the player.</summary>
+        /// <summary>로컬 입력과 물리 시뮬레이션으로 플레이어를 제어해야 하는지 반환한다.</summary>
         public static bool ShouldEnableLocalControl(bool isLocalOwner)
         {
             return isLocalOwner;

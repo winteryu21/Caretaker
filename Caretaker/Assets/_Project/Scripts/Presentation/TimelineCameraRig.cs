@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Caretaker.Presentation
 {
     /// <summary>
-    /// Keeps a timeline camera aligned to the slower Phase 3 player.
+    /// 시간대 카메라를 Phase 3의 느린 플레이어 진행도에 맞춘다.
     /// </summary>
     [DefaultExecutionOrder(100)]
     public sealed class TimelineCameraRig : MonoBehaviour
@@ -14,7 +14,7 @@ namespace Caretaker.Presentation
         private Vector3 _basePosition;
         private bool _isFollowing;
 
-        /// <summary>Configures the two progress targets and this timeline's camera origin.</summary>
+        /// <summary>두 플레이어 진행도 대상과 현재 시간대 카메라의 기준 위치를 설정한다.</summary>
         public void Configure(Transform pastPlayer, Transform futurePlayer, Vector3 basePosition)
         {
             _pastPlayer = pastPlayer;
@@ -24,7 +24,7 @@ namespace Caretaker.Presentation
             ApplyProgress();
         }
 
-        /// <summary>Stops overriding this camera's position.</summary>
+        /// <summary>카메라 위치 덮어쓰기를 중지한다.</summary>
         public void StopFollowing()
         {
             _isFollowing = false;

@@ -3,14 +3,14 @@ using UnityEngine;
 namespace Caretaker.Presentation
 {
     /// <summary>
-    /// Owns the read-only camera used to render the other timeline directly.
+    /// 상대 시간대를 직접 렌더링하는 읽기 전용 보조 카메라를 관리한다.
     /// </summary>
     public sealed class RemoteTimelineView : MonoBehaviour
     {
         private Camera _camera;
         private TimelineCameraRig _cameraRig;
 
-        /// <summary>Creates the disabled auxiliary camera.</summary>
+        /// <summary>비활성 상태의 보조 카메라를 생성한다.</summary>
         public void Initialize()
         {
             if (_camera != null)
@@ -25,7 +25,7 @@ namespace Caretaker.Presentation
             _cameraRig = cameraObject.AddComponent<TimelineCameraRig>();
         }
 
-        /// <summary>Renders the remote timeline directly into the supplied viewport.</summary>
+        /// <summary>상대 시간대를 지정한 viewport에 직접 렌더링한다.</summary>
         public void Show(
             Camera templateCamera,
             Transform pastPlayer,
@@ -49,7 +49,7 @@ namespace Caretaker.Presentation
             _camera.enabled = true;
         }
 
-        /// <summary>Disables the auxiliary camera.</summary>
+        /// <summary>보조 카메라를 비활성화한다.</summary>
         public void Hide()
         {
             if (_camera != null)
