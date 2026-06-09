@@ -3,23 +3,61 @@ using UnityEngine;
 namespace Caretaker.Presentation
 {
     /// <summary>
-    /// 상대 시간대 보조 카메라와 RenderTexture 출력을 관리한다.
-    /// 읽기 전용 뷰로, 입력 권한이나 카메라 제어권을 갖지 않는다.
+    /// 상대 시간대를 직접 렌더링하는 읽기 전용 보조 카메라를 관리한다.
     /// </summary>
-    /// <remarks>
-    /// DSD §3.8 — Phase 3 스플릿뷰 시스템
-    /// 계층: Unity Component
-    /// </remarks>
-    public class RemoteTimelineView : MonoBehaviour
+    public sealed class RemoteTimelineView : MonoBehaviour
     {
-        // 1. Serialize 필드
+        private Camera _camera;
+        private TimelineCameraRig _cameraRig;
 
-        // 2. private 필드
+        /// <summary>비활성 상태의 보조 카메라를 생성한다.</summary>
+        public void Initialize()
+        {
+            if (_camera != null)
+            {
+                return;
+            }
 
-        // 3. Unity 생명주기
+            GameObject cameraObject = new("Remote Timeline Camera");
+            cameraObject.transform.SetParent(transform, false);
+            _camera = cameraObject.AddComponent<Camera>();
+            _camera.enabled = false;
+            _cameraRig = cameraObject.AddComponent<TimelineCameraRig>();
+        }
 
-        // 4. public 메서드
+        /// <summary>상대 시간대를 지정한 viewport에 직접 렌더링한다.</summary>
+        public void Show(
+            Camera templateCamera,
+            Transform pastPlayer,
+            Transform futurePlayer,
+            Rect viewport)
+        {
+            if (_camera == null || templateCamera == null)
+            {
+                Debug.LogWarning("RemoteTimelineView requires an initialized camera and template.", this);
+                return;
+            }
 
-        // 5. private 메서드
+            _camera.CopyFrom(templateCamera);
+            _camera.targetTexture = null;
+            _camera.rect = viewport;
+            _camera.depth = 0f;
+            _camera.transform.SetPositionAndRotation(
+                templateCamera.transform.position,
+                templateCamera.transform.rotation);
+            _cameraRig.Configure(pastPlayer, futurePlayer, templateCamera.transform.position);
+            _camera.enabled = true;
+        }
+
+        /// <summary>보조 카메라를 비활성화한다.</summary>
+        public void Hide()
+        {
+            if (_camera != null)
+            {
+                _camera.enabled = false;
+            }
+
+            _cameraRig?.StopFollowing();
+        }
     }
 }
