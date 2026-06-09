@@ -19,6 +19,7 @@ namespace Caretaker.Presentation
     {
         [Header("HUD")]
         [SerializeField] private HudPresenter _hudPresenter;
+        [SerializeField] private InventoryPresenter _inventoryPresenter;
 
         [Header("Runtime Sources")]
         [SerializeField] private LocalWorldPlayerSpawner _playerSpawner;
@@ -89,6 +90,11 @@ namespace Caretaker.Presentation
             if (_hudPresenter == null)
             {
                 _hudPresenter = GetComponent<HudPresenter>();
+            }
+
+            if (_inventoryPresenter == null)
+            {
+                _inventoryPresenter = GetComponentInChildren<InventoryPresenter>(true);
             }
         }
 #endif
@@ -203,6 +209,11 @@ namespace Caretaker.Presentation
                 _hudPresenter = GetComponent<HudPresenter>();
             }
 
+            if (_inventoryPresenter == null)
+            {
+                _inventoryPresenter = GetComponentInChildren<InventoryPresenter>(true);
+            }
+
             if (!_autoFindDependencies)
             {
                 return;
@@ -260,6 +271,11 @@ namespace Caretaker.Presentation
                 _inventoryController.OnInventoryChanged += HandleInventoryChanged;
             }
 
+            if (_inventoryPresenter != null)
+            {
+                _inventoryPresenter.BindInventory(_inventoryController);
+            }
+
             if (_playerInputReader != null)
             {
                 _playerInputReader.OnControlModeChanged += HandleControlModeChanged;
@@ -275,6 +291,11 @@ namespace Caretaker.Presentation
 
         private void UnbindInventory()
         {
+            if (_inventoryPresenter != null)
+            {
+                _inventoryPresenter.BindInventory(null);
+            }
+
             if (_inventoryController != null)
             {
                 _inventoryController.OnInventoryChanged -= HandleInventoryChanged;

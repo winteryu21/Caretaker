@@ -47,7 +47,74 @@ namespace Caretaker.Tests.Editor
             finally
             {
                 Object.DestroyImmediate(actor.gameObject);
-                Object.DestroyImmediate(target.gameObject);
+                DestroyInteractable(target);
+            }
+        }
+
+        [Test]
+        public void ItemDefinitions_ProvideObjectGrantedAndRequiredItemIds()
+        {
+            InteractableObject target = CreateInteractable(
+                "OBJ_BATTERY",
+                Vector3.zero,
+                InteractionType.Acquire,
+                requiredItemId: "ITEM_KEY_CARD",
+                grantedItemId: "ITEM_BATTERY");
+
+            try
+            {
+                Assert.That(target.ObjectId, Is.EqualTo("OBJ_BATTERY"));
+                Assert.That(target.GrantedItemId, Is.EqualTo("ITEM_BATTERY"));
+                Assert.That(target.RequiredItemId, Is.EqualTo("ITEM_KEY_CARD"));
+            }
+            finally
+            {
+                DestroyInteractable(target);
+            }
+        }
+
+        [Test]
+        public void MarkItemAcquired_DeactivatesObjectWhenIsDestroyEnabled()
+        {
+            InteractableObject target = CreateInteractable(
+                "OBJ_BATTERY",
+                Vector3.zero,
+                InteractionType.Acquire,
+                requiredItemId: string.Empty,
+                isDestroy: true);
+
+            try
+            {
+                target.MarkItemAcquired();
+
+                Assert.That(target.IsItemAcquired, Is.True);
+                Assert.That(target.gameObject.activeSelf, Is.False);
+            }
+            finally
+            {
+                DestroyInteractable(target);
+            }
+        }
+
+        [Test]
+        public void MarkItemAcquired_KeepsObjectActiveWhenIsDestroyDisabled()
+        {
+            InteractableObject target = CreateInteractable(
+                "OBJ_BATTERY",
+                Vector3.zero,
+                InteractionType.Acquire,
+                requiredItemId: string.Empty);
+
+            try
+            {
+                target.MarkItemAcquired();
+
+                Assert.That(target.IsItemAcquired, Is.True);
+                Assert.That(target.gameObject.activeSelf, Is.True);
+            }
+            finally
+            {
+                DestroyInteractable(target);
             }
         }
 
@@ -81,7 +148,7 @@ namespace Caretaker.Tests.Editor
             finally
             {
                 Object.DestroyImmediate(actor.gameObject);
-                Object.DestroyImmediate(target.gameObject);
+                DestroyInteractable(target);
             }
         }
 
@@ -115,7 +182,7 @@ namespace Caretaker.Tests.Editor
             finally
             {
                 Object.DestroyImmediate(actor.gameObject);
-                Object.DestroyImmediate(target.gameObject);
+                DestroyInteractable(target);
             }
         }
 
@@ -149,7 +216,7 @@ namespace Caretaker.Tests.Editor
             finally
             {
                 Object.DestroyImmediate(actor.gameObject);
-                Object.DestroyImmediate(target.gameObject);
+                DestroyInteractable(target);
             }
         }
 
@@ -251,19 +318,56 @@ namespace Caretaker.Tests.Editor
             string objectId,
             Vector3 position,
             InteractionType interactionTypes,
-            string requiredItemId)
+            string requiredItemId,
+            string grantedItemId = "",
+            bool isDestroy = false)
         {
             GameObject targetObject = new(objectId);
             targetObject.transform.position = position;
             InteractableObject target = targetObject.AddComponent<InteractableObject>();
+            ItemDefinitionSO item = CreateItemDefinition(objectId);
+            ItemDefinitionSO grantedItem = CreateItemDefinition(grantedItemId);
+            ItemDefinitionSO requiredItem = CreateItemDefinition(requiredItemId);
 
             SerializedObject serializedObject = new(target);
-            serializedObject.FindProperty("_objectId").stringValue = objectId;
+            serializedObject.FindProperty("_itemId").objectReferenceValue = item;
             serializedObject.FindProperty("_interactionTypes").intValue = (int)interactionTypes;
-            serializedObject.FindProperty("_requiredItemId").stringValue = requiredItemId;
+            serializedObject.FindProperty("_grantedItemId").objectReferenceValue = grantedItem;
+            serializedObject.FindProperty("_requiredItemId").objectReferenceValue = requiredItem;
+            serializedObject.FindProperty("_isDestroy").boolValue = isDestroy;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
 
             return target;
+        }
+
+        private static ItemDefinitionSO CreateItemDefinition(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return null;
+            }
+
+            ItemDefinitionSO itemDefinition = ScriptableObject.CreateInstance<ItemDefinitionSO>();
+            SerializedObject serializedItem = new(itemDefinition);
+            serializedItem.FindProperty("_itemId").stringValue = itemId;
+            serializedItem.ApplyModifiedPropertiesWithoutUndo();
+            return itemDefinition;
+        }
+
+        private static void DestroyInteractable(InteractableObject target)
+        {
+            SerializedObject serializedObject = new(target);
+            ItemDefinitionSO item =
+                serializedObject.FindProperty("_itemId").objectReferenceValue as ItemDefinitionSO;
+            ItemDefinitionSO grantedItem =
+                serializedObject.FindProperty("_grantedItemId").objectReferenceValue as ItemDefinitionSO;
+            ItemDefinitionSO requiredItem =
+                serializedObject.FindProperty("_requiredItemId").objectReferenceValue as ItemDefinitionSO;
+
+            Object.DestroyImmediate(target.gameObject);
+            Object.DestroyImmediate(item);
+            Object.DestroyImmediate(grantedItem);
+            Object.DestroyImmediate(requiredItem);
         }
 
         private static SpriteRenderer FindFallbackGlowRenderer(

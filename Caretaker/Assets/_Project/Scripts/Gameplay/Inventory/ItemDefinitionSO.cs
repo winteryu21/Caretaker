@@ -11,6 +11,7 @@ namespace Caretaker.Gameplay
     {
         [SerializeField] private string _itemId;
         [SerializeField] private string _displayName;
+        [SerializeField] [TextArea] private string _description;
         [SerializeField] private Sprite _icon;
         [SerializeField] private string _category;
         [SerializeField] private string[] _usableTargetTags;
@@ -21,6 +22,9 @@ namespace Caretaker.Gameplay
 
         /// <summary>UI에 표시할 아이템 이름.</summary>
         public string DisplayName => _displayName;
+
+        /// <summary>UI 상세 패널에 표시할 아이템 설명.</summary>
+        public string Description => _description;
 
         /// <summary>UI에 표시할 아이템 아이콘.</summary>
         public Sprite Icon => _icon;
