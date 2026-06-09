@@ -1,0 +1,106 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8000e14aa104540b0a659977e05b6c7, type: 3}
+  m_Name: SO_GameFlowDefinition
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Core.GameFlowDefinitionSO
+  _phases:
+  - _phaseId: 0
+    _transitionMajorId: 2
+    _nextPhaseId: 1
+  - _phaseId: 1
+    _transitionMajorId: 4
+    _nextPhaseId: 2
+  _objectives:
+  - _objectiveId: 100
+    _phaseId: 0
+    _timelineRole: 1
+    _unlockAfterMajorId: 0
+    _sortOrder: 0
+    _displayText: Explore the lobby.
+  - _objectiveId: 101
+    _phaseId: 0
+    _timelineRole: 2
+    _unlockAfterMajorId: 0
+    _sortOrder: 0
+    _displayText: Find the future-side power problem.
+  - _objectiveId: 102
+    _phaseId: 0
+    _timelineRole: 1
+    _unlockAfterMajorId: 1
+    _sortOrder: 10
+    _displayText: Guide the future player toward security access.
+  - _objectiveId: 103
+    _phaseId: 0
+    _timelineRole: 2
+    _unlockAfterMajorId: 1
+    _sortOrder: 10
+    _displayText: Reach the powered route and continue upward.
+  - _objectiveId: 108
+    _phaseId: 0
+    _timelineRole: 1
+    _unlockAfterMajorId: 2
+    _sortOrder: 20
+    _displayText: Confirm the security record is complete.
+  - _objectiveId: 109
+    _phaseId: 0
+    _timelineRole: 2
+    _unlockAfterMajorId: 2
+    _sortOrder: 20
+    _displayText: Use the security opening to advance.
+  - _objectiveId: 200
+    _phaseId: 1
+    _timelineRole: 1
+    _unlockAfterMajorId: 0
+    _sortOrder: 0
+    _displayText: Find the past-side key card.
+  - _objectiveId: 201
+    _phaseId: 1
+    _timelineRole: 2
+    _unlockAfterMajorId: 0
+    _sortOrder: 0
+    _displayText: Clear the future shield barrier.
+  - _objectiveId: 204
+    _phaseId: 1
+    _timelineRole: 1
+    _unlockAfterMajorId: 3
+    _sortOrder: 10
+    _displayText: Identify the blueprint in the archive.
+  - _objectiveId: 205
+    _phaseId: 1
+    _timelineRole: 2
+    _unlockAfterMajorId: 3
+    _sortOrder: 10
+    _displayText: Run the blueprint experiment.
+  - _objectiveId: 206
+    _phaseId: 1
+    _timelineRole: 1
+    _unlockAfterMajorId: 4
+    _sortOrder: 20
+    _displayText: Support the final sample recovery.
+  - _objectiveId: 207
+    _phaseId: 1
+    _timelineRole: 2
+    _unlockAfterMajorId: 4
+    _sortOrder: 20
+    _displayText: Recover the future sample.
+  - _objectiveId: 302
+    _phaseId: 2
+    _timelineRole: 1
+    _unlockAfterMajorId: 0
+    _sortOrder: 0
+    _displayText: Reach the past exit.
+  - _objectiveId: 303
+    _phaseId: 2
+    _timelineRole: 2
+    _unlockAfterMajorId: 0
+    _sortOrder: 0
+    _displayText: Reach the future exit.

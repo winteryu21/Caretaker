@@ -14,6 +14,9 @@ namespace Caretaker.Core
     {
         private string _loadedPhaseSceneName;
         private bool _isTransitioning;
+        private bool _hasPendingPhaseRequest;
+        private PhaseId _pendingPhaseId;
+        private TimelineRole _pendingTimelineRole;
 
         /// <summary>
         /// 로컬 Phase 씬 로드가 완료되었을 때 발생한다.
@@ -56,8 +59,13 @@ namespace Caretaker.Core
         {
             if (_isTransitioning)
             {
-                Debug.LogWarning("Phase scene transition is already running.", this);
-                return false;
+                _hasPendingPhaseRequest = true;
+                _pendingPhaseId = phaseId;
+                _pendingTimelineRole = timelineRole;
+                Debug.Log(
+                    $"Phase scene transition is already running. Queued next load: phase={phaseId}, role={timelineRole}",
+                    this);
+                return true;
             }
 
             if (timelineRole is not (TimelineRole.Past or TimelineRole.Future))
@@ -69,9 +77,11 @@ namespace Caretaker.Core
             string sceneName = GetPhaseSceneName(phaseId, timelineRole);
             if (_loadedPhaseSceneName == sceneName && SceneManager.GetSceneByName(sceneName).isLoaded)
             {
+                Debug.Log($"Phase scene already loaded: {sceneName}", this);
                 return true;
             }
 
+            Debug.Log($"Starting phase scene load: phase={phaseId}, role={timelineRole}, scene={sceneName}", this);
             StartCoroutine(LoadPhaseRoutine(phaseId, timelineRole, sceneName));
             return true;
         }
@@ -85,6 +95,7 @@ namespace Caretaker.Core
                 Scene loadedScene = SceneManager.GetSceneByName(_loadedPhaseSceneName);
                 if (loadedScene.isLoaded)
                 {
+                    Debug.Log($"Unloading previous phase scene: {_loadedPhaseSceneName}", this);
                     AsyncOperation unloadOperation = SceneManager.UnloadSceneAsync(loadedScene);
                     if (unloadOperation != null)
                     {
@@ -96,6 +107,7 @@ namespace Caretaker.Core
             Scene targetScene = SceneManager.GetSceneByName(sceneName);
             if (!targetScene.isLoaded)
             {
+                Debug.Log($"Loading phase scene additive: {sceneName}", this);
                 AsyncOperation loadOperation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
                 if (loadOperation == null)
                 {
@@ -109,7 +121,16 @@ namespace Caretaker.Core
 
             _loadedPhaseSceneName = sceneName;
             _isTransitioning = false;
+            Debug.Log($"Phase scene load complete: phase={phaseId}, role={timelineRole}, scene={sceneName}", this);
             OnPhaseSceneLoaded?.Invoke(phaseId, timelineRole, sceneName);
+
+            if (!_hasPendingPhaseRequest)
+            {
+                yield break;
+            }
+
+            _hasPendingPhaseRequest = false;
+            TryLoadPhase(_pendingPhaseId, _pendingTimelineRole);
         }
     }
 }
