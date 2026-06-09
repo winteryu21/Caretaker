@@ -114,6 +114,43 @@ namespace Caretaker.Tests.Editor
         }
 
         [Test]
+        public void GameFlowManager_TryGetCurrentObjectiveDisplayText_ReturnsResolvedObjectiveText()
+        {
+            GameObject managerObject = new("GameFlowManager");
+            GameFlowManager manager = managerObject.AddComponent<GameFlowManager>();
+            GameFlowDefinitionSO definition = CreateDefinition(
+                new GameFlowDefinitionSO.PhaseFlowDefinition[0],
+                new[]
+                {
+                    new GameFlowDefinitionSO.ObjectiveDefinition(
+                        ObjectiveId.P1_Past_ExploreLobby,
+                        PhaseId.Phase1,
+                        TimelineRole.Past,
+                        MajorId.None,
+                        0,
+                        "Explore the lobby.")
+                });
+
+            try
+            {
+                SetPrivateField(manager, "_flowDefinition", definition);
+                SetPrivateField(manager, "_currentPhase", PhaseId.Phase1);
+
+                bool found = manager.TryGetCurrentObjectiveDisplayText(
+                    TimelineRole.Past,
+                    out string displayText);
+
+                Assert.That(found, Is.True);
+                Assert.That(displayText, Is.EqualTo("Explore the lobby."));
+            }
+            finally
+            {
+                Object.DestroyImmediate(managerObject);
+                Object.DestroyImmediate(definition);
+            }
+        }
+
+        [Test]
         public void DefaultDefinitionAsset_ContainsDev39PhaseFlow()
         {
             GameFlowDefinitionSO definition = AssetDatabase.LoadAssetAtPath<GameFlowDefinitionSO>(
@@ -169,9 +206,14 @@ namespace Caretaker.Tests.Editor
 
         private static void SetPrivateField<T>(GameFlowDefinitionSO definition, string fieldName, T value)
         {
-            typeof(GameFlowDefinitionSO)
+            SetPrivateField((object)definition, fieldName, value);
+        }
+
+        private static void SetPrivateField<T>(object target, string fieldName, T value)
+        {
+            target.GetType()
                 .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
-                ?.SetValue(definition, value);
+                ?.SetValue(target, value);
         }
     }
 }
