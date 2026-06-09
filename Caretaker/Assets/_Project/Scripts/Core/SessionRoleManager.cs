@@ -22,6 +22,9 @@ namespace Caretaker.Core
         public event Action<NetworkSessionStatus> OnSessionStatusReceived;
         public event Action<ulong> OnPhaseAdvanceReadySubmitted;
         public event Action<PhaseId> OnPhaseTransitionReceived;
+        public event Action<PhaseId, MajorId> OnMajorCompletedReceived;
+        public event Action<TimelineRole, ObjectiveId> OnObjectiveChangedReceived;
+        public event Action<GameResult> OnGameResultReceived;
 
         public IReadOnlyDictionary<ulong, PlayerSessionData> Players => _players;
         public TimelineRole LocalTimelineRole { get; private set; } = TimelineRole.None;
@@ -148,10 +151,62 @@ namespace Caretaker.Core
         {
             if (!IsServer || !IsSpawned)
             {
+                Debug.LogWarning(
+                    $"Cannot broadcast phase transition. isServer={IsServer}, isSpawned={IsSpawned}, target={targetPhase}",
+                    this);
                 return;
             }
 
+            Debug.Log($"SessionRoleManager broadcasting phase transition: target={targetPhase}", this);
             ReceivePhaseTransitionClientRpc(targetPhase);
+        }
+
+        /// <summary>
+        /// Host가 확정한 Major 완료를 모든 클라이언트에 전파한다.
+        /// </summary>
+        /// <param name="phaseId">완료가 발생한 Phase.</param>
+        /// <param name="majorId">완료된 Major ID.</param>
+        public void BroadcastMajorCompleted(PhaseId phaseId, MajorId majorId)
+        {
+            if (!IsServer || !IsSpawned)
+            {
+                return;
+            }
+
+            ReceiveMajorCompletedClientRpc(phaseId, majorId);
+        }
+
+        /// <summary>
+        /// Host가 계산한 역할별 Objective 변경을 모든 클라이언트에 전파한다.
+        /// </summary>
+        /// <param name="timelineRole">Objective 대상 시간대 역할.</param>
+        /// <param name="objectiveId">현재 Objective ID.</param>
+        public void BroadcastObjectiveChanged(TimelineRole timelineRole, ObjectiveId objectiveId)
+        {
+            if (!IsServer || !IsSpawned)
+            {
+                return;
+            }
+
+            ReceiveObjectiveChangedClientRpc(timelineRole, objectiveId);
+        }
+
+        /// <summary>
+        /// Host가 확정한 게임 결과를 모든 클라이언트에 전파한다.
+        /// </summary>
+        /// <param name="gameResult">게임 결과.</param>
+        public void BroadcastGameResult(GameResult gameResult)
+        {
+            if (!IsServer || !IsSpawned)
+            {
+                Debug.LogWarning(
+                    $"Cannot broadcast game result. isServer={IsServer}, isSpawned={IsSpawned}, result={gameResult}",
+                    this);
+                return;
+            }
+
+            Debug.Log($"SessionRoleManager broadcasting game result: result={gameResult}", this);
+            ReceiveGameResultClientRpc(gameResult);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -319,7 +374,27 @@ namespace Caretaker.Core
         [ClientRpc]
         private void ReceivePhaseTransitionClientRpc(PhaseId targetPhase)
         {
+            Debug.Log($"SessionRoleManager received phase transition RPC: target={targetPhase}", this);
             OnPhaseTransitionReceived?.Invoke(targetPhase);
+        }
+
+        [ClientRpc]
+        private void ReceiveMajorCompletedClientRpc(PhaseId phaseId, MajorId majorId)
+        {
+            OnMajorCompletedReceived?.Invoke(phaseId, majorId);
+        }
+
+        [ClientRpc]
+        private void ReceiveObjectiveChangedClientRpc(TimelineRole timelineRole, ObjectiveId objectiveId)
+        {
+            OnObjectiveChangedReceived?.Invoke(timelineRole, objectiveId);
+        }
+
+        [ClientRpc]
+        private void ReceiveGameResultClientRpc(GameResult gameResult)
+        {
+            Debug.Log($"SessionRoleManager received game result RPC: result={gameResult}", this);
+            OnGameResultReceived?.Invoke(gameResult);
         }
     }
 }

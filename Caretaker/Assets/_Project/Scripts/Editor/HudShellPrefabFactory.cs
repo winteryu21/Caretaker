@@ -57,6 +57,17 @@ namespace Caretaker.Editor
                 new Vector2(0.5f, 0f),
                 new Vector2(0f, 24f),
                 new Vector2(520f, 96f));
+            InventoryPresenter inventoryPresenter = inventoryArea.AddComponent<InventoryPresenter>();
+            HorizontalLayoutGroup inventoryLayout = inventoryArea.AddComponent<HorizontalLayoutGroup>();
+            inventoryLayout.childAlignment = TextAnchor.MiddleCenter;
+            inventoryLayout.spacing = 8f;
+            inventoryLayout.childControlWidth = false;
+            inventoryLayout.childControlHeight = false;
+            InventorySlotPresenter[] hudSlots = CreateInventorySlots(
+                "HudInventorySlot",
+                inventoryArea.transform,
+                5,
+                new Vector2(92f, 84f));
             GameObject promptArea = CreateArea(
                 "InteractionPromptArea",
                 root.transform,
@@ -75,6 +86,122 @@ namespace Caretaker.Editor
                 Vector2.zero);
             Image modalBackdrop = modalArea.AddComponent<Image>();
             modalBackdrop.color = new Color(0f, 0f, 0f, 0.45f);
+
+            GameObject inventoryPopupRoot = CreateArea(
+                "InventoryPopupRoot",
+                root.transform,
+                Vector2.zero,
+                Vector2.one,
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero,
+                Vector2.zero);
+            Image inventoryPopupBackdrop = inventoryPopupRoot.AddComponent<Image>();
+            inventoryPopupBackdrop.color = new Color(0f, 0f, 0f, 0.5f);
+            GameObject inventoryDialog = CreateArea(
+                "InventoryDialog",
+                inventoryPopupRoot.transform,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero,
+                new Vector2(920f, 560f));
+            Image inventoryDialogImage = inventoryDialog.AddComponent<Image>();
+            inventoryDialogImage.color = new Color(0.07f, 0.09f, 0.13f, 0.98f);
+            TextMeshProUGUI inventoryTitle = CreateText("InventoryTitle", inventoryDialog.transform, "Inventory");
+            RectTransform inventoryTitleRect = inventoryTitle.rectTransform;
+            inventoryTitleRect.anchorMin = new Vector2(0f, 1f);
+            inventoryTitleRect.anchorMax = new Vector2(1f, 1f);
+            inventoryTitleRect.pivot = new Vector2(0.5f, 1f);
+            inventoryTitleRect.anchoredPosition = new Vector2(24f, -20f);
+            inventoryTitleRect.sizeDelta = new Vector2(-120f, 44f);
+            inventoryTitle.alignment = TextAlignmentOptions.Left;
+            inventoryTitle.fontSize = 30f;
+            inventoryTitle.fontStyle = FontStyles.Bold;
+            GameObject inventoryCloseButtonObject = CreateArea(
+                "InventoryCloseButton",
+                inventoryDialog.transform,
+                Vector2.one,
+                Vector2.one,
+                Vector2.one,
+                new Vector2(-24f, -20f),
+                new Vector2(64f, 44f));
+            Image inventoryCloseButtonImage = inventoryCloseButtonObject.AddComponent<Image>();
+            inventoryCloseButtonImage.color = new Color(0.24f, 0.28f, 0.36f, 1f);
+            Button inventoryCloseButton = inventoryCloseButtonObject.AddComponent<Button>();
+            inventoryCloseButton.targetGraphic = inventoryCloseButtonImage;
+            TextMeshProUGUI inventoryCloseLabel =
+                CreateText("InventoryCloseLabel", inventoryCloseButtonObject.transform, "X");
+            inventoryCloseLabel.fontSize = 22f;
+
+            GameObject popupPrimaryGrid = CreateArea(
+                "PopupPrimarySlots",
+                inventoryDialog.transform,
+                new Vector2(0f, 1f),
+                new Vector2(0.66f, 1f),
+                new Vector2(0f, 1f),
+                new Vector2(28f, -84f),
+                new Vector2(-48f, 92f));
+            HorizontalLayoutGroup primaryLayout = popupPrimaryGrid.AddComponent<HorizontalLayoutGroup>();
+            primaryLayout.childAlignment = TextAnchor.MiddleLeft;
+            primaryLayout.spacing = 8f;
+            primaryLayout.childControlWidth = false;
+            primaryLayout.childControlHeight = false;
+            InventorySlotPresenter[] popupPrimarySlots = CreateInventorySlots(
+                "PopupPrimarySlot",
+                popupPrimaryGrid.transform,
+                5,
+                new Vector2(92f, 84f));
+
+            GameObject popupStorageGrid = CreateArea(
+                "PopupStorageSlots",
+                inventoryDialog.transform,
+                new Vector2(0f, 0f),
+                new Vector2(0f, 0f),
+                new Vector2(0f, 0f),
+                new Vector2(28f, 28f),
+                new Vector2(500f, 176f));
+            GridLayoutGroup storageLayout = popupStorageGrid.AddComponent<GridLayoutGroup>();
+            storageLayout.childAlignment = TextAnchor.LowerLeft;
+            storageLayout.cellSize = new Vector2(92f, 84f);
+            storageLayout.spacing = new Vector2(8f, 8f);
+            storageLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            storageLayout.constraintCount = 5;
+            InventorySlotPresenter[] popupStorageSlots = CreateInventorySlots(
+                "PopupStorageSlot",
+                popupStorageGrid.transform,
+                10,
+                new Vector2(92f, 84f));
+
+            GameObject detailPanel = CreateArea(
+                "InventoryDetailPanel",
+                inventoryDialog.transform,
+                new Vector2(0.66f, 0f),
+                new Vector2(1f, 1f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(-24f, -44f),
+                new Vector2(-40f, -112f));
+            Image detailPanelImage = detailPanel.AddComponent<Image>();
+            detailPanelImage.color = new Color(0.05f, 0.065f, 0.09f, 1f);
+            TextMeshProUGUI detailNameText = CreateText("InventoryDetailName", detailPanel.transform, "No Item");
+            RectTransform detailNameRect = detailNameText.rectTransform;
+            detailNameRect.anchorMin = new Vector2(0f, 1f);
+            detailNameRect.anchorMax = new Vector2(1f, 1f);
+            detailNameRect.pivot = new Vector2(0.5f, 1f);
+            detailNameRect.anchoredPosition = new Vector2(20f, -20f);
+            detailNameRect.sizeDelta = new Vector2(-40f, 48f);
+            detailNameText.alignment = TextAlignmentOptions.Left;
+            detailNameText.fontSize = 26f;
+            detailNameText.fontStyle = FontStyles.Bold;
+            TextMeshProUGUI detailDescriptionText =
+                CreateText("InventoryDetailDescription", detailPanel.transform, "Select an item slot.");
+            RectTransform detailDescriptionRect = detailDescriptionText.rectTransform;
+            detailDescriptionRect.anchorMin = new Vector2(0f, 0f);
+            detailDescriptionRect.anchorMax = new Vector2(1f, 1f);
+            detailDescriptionRect.anchoredPosition = new Vector2(20f, -40f);
+            detailDescriptionRect.sizeDelta = new Vector2(-40f, -124f);
+            detailDescriptionText.alignment = TextAlignmentOptions.TopLeft;
+            detailDescriptionText.fontSize = 20f;
+            detailDescriptionText.textWrappingMode = TextWrappingModes.Normal;
 
             GameObject statusArea = CreateArea(
                 "StatusArea",
@@ -251,6 +378,7 @@ namespace Caretaker.Editor
 
             promptRoot.SetActive(false);
             modalArea.SetActive(false);
+            inventoryPopupRoot.SetActive(false);
             objectiveRoot.SetActive(false);
             radioIndicator.SetActive(false);
             combatModeIndicator.SetActive(false);
@@ -272,6 +400,14 @@ namespace Caretaker.Editor
             Assign(hudPresenter, "_normalModeIndicator", normalModeIndicator);
             Assign(hudPresenter, "_combatModeIndicator", combatModeIndicator);
             Assign(runtimeBinder, "_hudPresenter", hudPresenter);
+            Assign(runtimeBinder, "_inventoryPresenter", inventoryPresenter);
+            AssignArray(inventoryPresenter, "_hudSlots", hudSlots);
+            Assign(inventoryPresenter, "_popupRoot", inventoryPopupRoot);
+            AssignArray(inventoryPresenter, "_popupPrimarySlots", popupPrimarySlots);
+            AssignArray(inventoryPresenter, "_popupStorageSlots", popupStorageSlots);
+            Assign(inventoryPresenter, "_detailNameText", detailNameText);
+            Assign(inventoryPresenter, "_detailDescriptionText", detailDescriptionText);
+            Assign(inventoryPresenter, "_closeButton", inventoryCloseButton);
             Assign(examinePopupPresenter, "_panelRoot", modalArea);
             Assign(examinePopupPresenter, "_titleText", examineTitleText);
             Assign(examinePopupPresenter, "_bodyText", examineBodyText);
@@ -376,6 +512,96 @@ namespace Caretaker.Editor
             return tmp;
         }
 
+        private static InventorySlotPresenter[] CreateInventorySlots(
+            string namePrefix,
+            Transform parent,
+            int count,
+            Vector2 size)
+        {
+            InventorySlotPresenter[] slots = new InventorySlotPresenter[count];
+            for (int i = 0; i < count; i++)
+            {
+                slots[i] = CreateInventorySlot($"{namePrefix}{i + 1}", parent, size);
+            }
+
+            return slots;
+        }
+
+        private static InventorySlotPresenter CreateInventorySlot(
+            string name,
+            Transform parent,
+            Vector2 size)
+        {
+            GameObject slotObject = CreateArea(
+                name,
+                parent,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero,
+                size);
+            LayoutElement layoutElement = slotObject.AddComponent<LayoutElement>();
+            layoutElement.preferredWidth = size.x;
+            layoutElement.preferredHeight = size.y;
+            Image backgroundImage = slotObject.AddComponent<Image>();
+            backgroundImage.color = new Color(0.08f, 0.09f, 0.12f, 0.88f);
+
+            GameObject selectedIndicator = CreateArea(
+                "SelectedIndicator",
+                slotObject.transform,
+                Vector2.zero,
+                Vector2.one,
+                new Vector2(0.5f, 0.5f),
+                Vector2.zero,
+                Vector2.zero);
+            Image selectedImage = selectedIndicator.AddComponent<Image>();
+            selectedImage.color = new Color(0.32f, 0.72f, 1f, 0.3f);
+
+            GameObject iconObject = CreateArea(
+                "Icon",
+                slotObject.transform,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0f, 8f),
+                new Vector2(42f, 42f));
+            Image iconImage = iconObject.AddComponent<Image>();
+            iconImage.color = Color.white;
+            iconImage.preserveAspect = true;
+            iconImage.enabled = false;
+
+            TextMeshProUGUI keyText = CreateText("KeyLabel", slotObject.transform, string.Empty);
+            RectTransform keyRect = keyText.rectTransform;
+            keyRect.anchorMin = new Vector2(0f, 1f);
+            keyRect.anchorMax = new Vector2(0f, 1f);
+            keyRect.pivot = new Vector2(0f, 1f);
+            keyRect.anchoredPosition = new Vector2(6f, -4f);
+            keyRect.sizeDelta = new Vector2(24f, 20f);
+            keyText.alignment = TextAlignmentOptions.Left;
+            keyText.fontSize = 14f;
+
+            TextMeshProUGUI nameText = CreateText("ItemName", slotObject.transform, string.Empty);
+            RectTransform nameRect = nameText.rectTransform;
+            nameRect.anchorMin = new Vector2(0f, 0f);
+            nameRect.anchorMax = new Vector2(1f, 0f);
+            nameRect.pivot = new Vector2(0.5f, 0f);
+            nameRect.anchoredPosition = new Vector2(0f, 4f);
+            nameRect.sizeDelta = new Vector2(-8f, 24f);
+            nameText.alignment = TextAlignmentOptions.Center;
+            nameText.fontSize = 12f;
+            nameText.textWrappingMode = TextWrappingModes.NoWrap;
+            nameText.overflowMode = TextOverflowModes.Ellipsis;
+
+            InventorySlotPresenter presenter = slotObject.AddComponent<InventorySlotPresenter>();
+            Assign(presenter, "_backgroundImage", backgroundImage);
+            Assign(presenter, "_iconImage", iconImage);
+            Assign(presenter, "_nameText", nameText);
+            Assign(presenter, "_keyText", keyText);
+            Assign(presenter, "_selectedIndicator", selectedIndicator);
+            selectedIndicator.SetActive(false);
+            return presenter;
+        }
+
         private static GameObject FindRootObject(Scene scene, string objectName)
         {
             GameObject[] rootObjects = scene.GetRootGameObjects();
@@ -409,6 +635,19 @@ namespace Caretaker.Editor
         {
             SerializedObject serializedObject = new(target);
             serializedObject.FindProperty(propertyName).objectReferenceValue = value;
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void AssignArray(Object target, string propertyName, Object[] values)
+        {
+            SerializedObject serializedObject = new(target);
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            property.arraySize = values.Length;
+            for (int i = 0; i < values.Length; i++)
+            {
+                property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            }
+
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
     }

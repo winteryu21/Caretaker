@@ -12,6 +12,7 @@ namespace Caretaker.Gameplay
     {
         public ulong PlayerId;
         public List<string> OwnedItemIds = new();
+        public List<string> SlotItemIds = new();
         public string SelectedItemId;
         public List<string> ConsumedItemIds = new();
     }
