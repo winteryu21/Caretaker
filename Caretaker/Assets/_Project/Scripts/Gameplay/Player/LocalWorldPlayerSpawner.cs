@@ -240,6 +240,7 @@ namespace Caretaker.Gameplay
             _currentPlayer = player;
             MovePlayerToLoadedPhaseScene(_currentPlayer, _loadedPhaseSceneName);
             MovePlayerToSpawnPoint(_currentPlayer, _loadedPhaseSceneName);
+            OnCurrentPlayerChanged?.Invoke(_currentPlayer);
         }
 
         private void HandleLocalOwnerPlayerDespawned(GameObject player)
@@ -247,6 +248,7 @@ namespace Caretaker.Gameplay
             if (_currentPlayer == player)
             {
                 _currentPlayer = null;
+                OnCurrentPlayerChanged?.Invoke(null);
             }
         }
 

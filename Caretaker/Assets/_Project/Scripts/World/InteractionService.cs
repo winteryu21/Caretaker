@@ -18,7 +18,7 @@ namespace Caretaker.World
         /// 요청과 현재 후보 대상을 바탕으로 상호작용을 판정합니다.
         /// </summary>
         /// <param name="request">플레이어 입력으로 생성된 상호작용 요청입니다.</param>
-        /// <param name="hoverTarget">현재 hover 대상입니다.</param>
+        /// <param name="hoverTarget">이전 호환용 인자입니다. 현재 판정은 근접 대상만 사용합니다.</param>
         /// <param name="proximityTarget">현재 근접 대상입니다.</param>
         /// <param name="proximityInteractionType">현재 근접 대상에 대해 우선 적용될 상호작용 타입입니다.</param>
         /// <param name="actor">상호작용을 시도하는 플레이어입니다.</param>
@@ -46,26 +46,17 @@ namespace Caretaker.World
             switch (request.Type)
             {
                 case InteractionType.Examine:
-                    return TryResolveAndRunInteraction(
+                    return TryResolvePrimaryClickInteraction(
                         hoverTarget,
-                        InteractionType.Examine,
                         actor,
-                        float.PositiveInfinity,
+                        maxDistance,
                         out resolvedTarget,
                         out resolvedType);
 
                 case InteractionType.Operate:
-                    if (proximityInteractionType == InteractionType.None ||
-                        proximityInteractionType == InteractionType.UseItem)
-                    {
-                        resolvedTarget = null;
-                        resolvedType = default;
-                        return false;
-                    }
-
                     return TryResolveAndRunInteraction(
                         proximityTarget,
-                        proximityInteractionType,
+                        InteractionType.Operate,
                         actor,
                         maxDistance,
                         out resolvedTarget,
@@ -102,8 +93,48 @@ namespace Caretaker.World
                 return false;
             }
 
-            // TODO [DEV-TBD]: target.RequiredItemId가 비어 있지 않으면 actor의 인벤토리 보유 여부를 검증한다.
+            if (interactionType == InteractionType.Acquire &&
+                (target.IsItemAcquired ||
+                 (target.HasRequiredItem && !target.IsRequiredItemSatisfied)))
+            {
+                return false;
+            }
+
+            if (interactionType == InteractionType.Operate &&
+                target.HasRequiredItem &&
+                !target.IsRequiredItemSatisfied)
+            {
+                return false;
+            }
+
             return target.IsInteractable(interactionType);
+        }
+
+        private bool TryResolvePrimaryClickInteraction(
+            InteractableObject target,
+            PlayerController actor,
+            float maxDistance,
+            out InteractableObject resolvedTarget,
+            out InteractionType resolvedType)
+        {
+            if (TryResolveAndRunInteraction(
+                    target,
+                    InteractionType.Acquire,
+                    actor,
+                    maxDistance,
+                    out resolvedTarget,
+                    out resolvedType))
+            {
+                return true;
+            }
+
+            return TryResolveAndRunInteraction(
+                target,
+                InteractionType.Examine,
+                actor,
+                maxDistance,
+                out resolvedTarget,
+                out resolvedType);
         }
 
         private bool TryResolveAndRunInteraction(

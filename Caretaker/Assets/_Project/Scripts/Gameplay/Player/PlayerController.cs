@@ -33,6 +33,11 @@ namespace Caretaker.Gameplay
         /// </summary>
         public event Action<int> OnInventorySlotSelected;
 
+        /// <summary>
+        /// 모달 UI에 의해 플레이어 게임플레이 입력이 잠겨 있는지 반환합니다.
+        /// </summary>
+        public bool IsInputBlocked { get; private set; }
+
         private void Awake()
         {
             _inputReader = GetComponent<PlayerInputReader>();
@@ -51,6 +56,12 @@ namespace Caretaker.Gameplay
         // 플레이어의 이동과 점프, 웅크리기, 달리기 입력을 모터2D에 전달합니다.
         private void FixedUpdate()
         {
+            if (IsInputBlocked)
+            {
+                _motor2D.TickMotor(Vector2.zero, false, false, false, false);
+                return;
+            }
+
             _motor2D.TickMotor(
                 _inputReader.MoveInput,
                 _inputReader.ConsumeJumpPressed(),
@@ -68,6 +79,11 @@ namespace Caretaker.Gameplay
         // 플레이어 입력 요청을 서비스에 전달해 실제 상호작용 여부를 판정합니다.
         private void HandleInteractionRequested(InteractionRequest request)
         {
+            if (IsInputBlocked)
+            {
+                return;
+            }
+
             if (request.Type == InteractionType.UseItem)
             {
                 HandleUseItemRequested();
@@ -92,18 +108,28 @@ namespace Caretaker.Gameplay
 
         private void HandleInventorySlotSelected(int slotIndex)
         {
+            if (IsInputBlocked)
+            {
+                return;
+            }
+
             OnInventorySlotSelected?.Invoke(slotIndex);
         }
 
         private void HandleUseItemRequested()
         {
-            if (_inventoryController == null || _interactionProbe.ProximityTarget == null)
+            if (IsInputBlocked)
             {
-                Debug.Log("Use item failed: inventory controller or proximity target is missing.", this);
                 return;
             }
 
-            InteractableObject target = _interactionProbe.ProximityTarget;
+            if (_inventoryController == null || _interactionProbe.HoverTarget == null)
+            {
+                Debug.Log("Use item failed: inventory controller or hover target is missing.", this);
+                return;
+            }
+
+            InteractableObject target = _interactionProbe.HoverTarget;
             float distance = target.GetDistanceFrom(transform.position);
             if (distance < 0f || distance > _interactionProbe.InteractionRadius)
             {
@@ -128,7 +154,26 @@ namespace Caretaker.Gameplay
             }
 
             target.MarkRequiredItemSatisfied();
+            if (target.IsInteractable(InteractionType.Operate))
+            {
+                target.RunInteraction(InteractionType.Operate, this);
+            }
+
             OnInteractionResolved?.Invoke(target, InteractionType.UseItem);
+        }
+
+        /// <summary>
+        /// 모달 UI가 열려 있는 동안 게임플레이 입력 처리를 잠그거나 해제합니다.
+        /// </summary>
+        /// <param name="isBlocked">입력을 잠그려면 true입니다.</param>
+        public void SetInputBlocked(bool isBlocked)
+        {
+            IsInputBlocked = isBlocked;
+
+            if (_interactionProbe != null)
+            {
+                _interactionProbe.enabled = !isBlocked;
+            }
         }
     }
 }

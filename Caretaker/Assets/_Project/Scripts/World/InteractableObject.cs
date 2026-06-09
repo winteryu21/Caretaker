@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 using Caretaker.Gameplay;
@@ -13,6 +14,13 @@ namespace Caretaker.World
     [RequireComponent(typeof(CircleCollider2D))]
     public class InteractableObject : MonoBehaviour
     {
+        private const string GLOW_OBJECT_PREFIX = "InteractionGlow";
+
+        /// <summary>
+        /// 로컬 플레이어가 오브젝트 조사를 완료했을 때 발생합니다.
+        /// </summary>
+        public static event Action<InteractableObject, PlayerController> OnExamineRequested;
+
         [Header("Object Identity")]
         [SerializeField] private string _objectId;
         [SerializeField] private InteractionType _interactionTypes = InteractionType.Examine;
@@ -21,14 +29,20 @@ namespace Caretaker.World
         [SerializeField] private string _requiredItemId;
         [SerializeField] private string _grantedItemId;
         [SerializeField] [TextArea] private string _examineText;
+        [SerializeField] private Sprite _examineImage;
 
         [Header("Highlight")]
         [SerializeField] private Behaviour[] _outlineBehaviours;
+        [SerializeField] private bool _useFallbackGlow = true;
+        [SerializeField] private Color _fallbackGlowColor = new(0.35f, 0.95f, 1f, 0.45f);
+        [SerializeField] [Range(1f, 1.5f)] private float _fallbackGlowScale = 1.08f;
+        [SerializeField] private int _fallbackGlowSortingOrderOffset = 1;
         [SerializeField] private bool _highlightOnAwake;
 
         private CausalTrigger _causalTrigger;
         private Collider2D _cachedCollider2D;
         private IOperateAction[] _operateActions;
+        private GlowRendererEntry[] _glowRendererEntries = Array.Empty<GlowRendererEntry>();
         private bool _isHighlighted;
         private bool _isItemAcquired;
         private bool _isRequiredItemSatisfied;
@@ -74,6 +88,11 @@ namespace Caretaker.World
         public string ExamineText => _examineText;
 
         /// <summary>
+        /// 조사 팝업에 선택적으로 표시할 이미지입니다.
+        /// </summary>
+        public Sprite ExamineImage => _examineImage;
+
+        /// <summary>
         /// 현재 하이라이트가 켜져 있는지 반환합니다.
         /// </summary>
         public bool IsHighlighted => _isHighlighted;
@@ -82,7 +101,8 @@ namespace Caretaker.World
         {
             _cachedCollider2D = GetComponent<Collider2D>();
             _causalTrigger = GetComponent<CausalTrigger>();
-            _operateActions = GetComponents<IOperateAction>();
+            RefreshOperateActions();
+            CacheFallbackGlowRenderers();
             ConfigureInteractionCollider();
             SetHighlight(_highlightOnAwake);
         }
@@ -108,6 +128,16 @@ namespace Caretaker.World
             return (_interactionTypes & interactionType) == interactionType;
         }
 
+        internal void EnsureInteractionType(InteractionType interactionType)
+        {
+            if (interactionType == InteractionType.None)
+            {
+                return;
+            }
+
+            _interactionTypes |= interactionType;
+        }
+
         /// <summary>
         /// 지정한 월드 위치에서 이 오브젝트까지의 최근접 거리를 반환합니다.
         /// </summary>
@@ -123,7 +153,7 @@ namespace Caretaker.World
         }
 
         /// <summary>
-        /// Inspector에 연결한 아웃라인 컴포넌트를 켜고 꺼서 하이라이트를 적용합니다.
+        /// Inspector에 연결한 아웃라인 컴포넌트와 fallback glow 렌더러를 켜고 꺼서 하이라이트를 적용합니다.
         /// </summary>
         public void SetHighlight(bool isHighlighted)
         {
@@ -134,6 +164,13 @@ namespace Caretaker.World
 
             _isHighlighted = isHighlighted;
             Debug.Log($"Highlight {(isHighlighted ? "enabled" : "disabled")}: object={_objectId}", this);
+
+            if (isHighlighted && _useFallbackGlow && _glowRendererEntries.Length == 0)
+            {
+                CacheFallbackGlowRenderers();
+            }
+
+            SetFallbackGlow(isHighlighted);
 
             if (_outlineBehaviours == null)
             {
@@ -204,6 +241,7 @@ namespace Caretaker.World
         private void RunExamine(PlayerController actor)
         {
             Debug.Log($"Examine interaction: object={_objectId}, text={_examineText}", this);
+            OnExamineRequested?.Invoke(this, actor);
         }
 
         private bool RunAcquire(PlayerController actor)
@@ -214,6 +252,8 @@ namespace Caretaker.World
 
         private bool RunOperate(PlayerController actor)
         {
+            RefreshOperateActions();
+
             bool executed = false;
 
             if (_causalTrigger != null)
@@ -231,7 +271,19 @@ namespace Caretaker.World
                 }
             }
 
+            if (!executed)
+            {
+                Debug.LogWarning(
+                    $"Operate interaction did not execute. object={_objectId}, actions={_operateActions.Length}, hasCausalTrigger={_causalTrigger != null}",
+                    this);
+            }
+
             return executed;
+        }
+
+        private void RefreshOperateActions()
+        {
+            _operateActions = GetComponents<IOperateAction>();
         }
 
         private void ConfigureInteractionCollider()
@@ -245,6 +297,117 @@ namespace Caretaker.World
             {
                 _cachedCollider2D.isTrigger = true;
             }
+        }
+
+        private void CacheFallbackGlowRenderers()
+        {
+            if (!_useFallbackGlow)
+            {
+                _glowRendererEntries = Array.Empty<GlowRendererEntry>();
+                return;
+            }
+
+            SpriteRenderer[] spriteRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+            if (spriteRenderers.Length == 0)
+            {
+                _glowRendererEntries = Array.Empty<GlowRendererEntry>();
+                return;
+            }
+
+            GlowRendererEntry[] entries = new GlowRendererEntry[spriteRenderers.Length];
+            int entryCount = 0;
+            for (int i = 0; i < spriteRenderers.Length; i++)
+            {
+                SpriteRenderer sourceRenderer = spriteRenderers[i];
+                if (sourceRenderer == null ||
+                    sourceRenderer.gameObject.name.StartsWith(GLOW_OBJECT_PREFIX, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                SpriteRenderer glowRenderer = CreateFallbackGlowRenderer(sourceRenderer);
+                if (glowRenderer != null)
+                {
+                    entries[entryCount] = new GlowRendererEntry(sourceRenderer, glowRenderer);
+                    entryCount++;
+                }
+            }
+
+            Array.Resize(ref entries, entryCount);
+            _glowRendererEntries = entries;
+        }
+
+        private SpriteRenderer CreateFallbackGlowRenderer(SpriteRenderer sourceRenderer)
+        {
+            if (sourceRenderer.sprite == null)
+            {
+                return null;
+            }
+
+            GameObject glowObject = new($"{GLOW_OBJECT_PREFIX}_{sourceRenderer.gameObject.name}");
+            Transform glowTransform = glowObject.transform;
+            glowTransform.SetParent(sourceRenderer.transform, false);
+            glowTransform.localPosition = Vector3.zero;
+            glowTransform.localRotation = Quaternion.identity;
+            glowTransform.localScale = Vector3.one * Mathf.Max(1f, _fallbackGlowScale);
+
+            SpriteRenderer glowRenderer = glowObject.AddComponent<SpriteRenderer>();
+            SyncFallbackGlowRenderer(sourceRenderer, glowRenderer);
+            glowRenderer.enabled = false;
+            glowObject.SetActive(false);
+            return glowRenderer;
+        }
+
+        private void SetFallbackGlow(bool isHighlighted)
+        {
+            for (int i = 0; i < _glowRendererEntries.Length; i++)
+            {
+                GlowRendererEntry entry = _glowRendererEntries[i];
+                SpriteRenderer sourceRenderer = entry.SourceRenderer;
+                SpriteRenderer glowRenderer = entry.GlowRenderer;
+                if (sourceRenderer == null || glowRenderer == null)
+                {
+                    continue;
+                }
+
+                bool shouldShow = isHighlighted && sourceRenderer.enabled && sourceRenderer.sprite != null;
+                if (shouldShow)
+                {
+                    SyncFallbackGlowRenderer(sourceRenderer, glowRenderer);
+                }
+
+                glowRenderer.gameObject.SetActive(shouldShow);
+                glowRenderer.enabled = shouldShow;
+            }
+        }
+
+        private void SyncFallbackGlowRenderer(SpriteRenderer sourceRenderer, SpriteRenderer glowRenderer)
+        {
+            glowRenderer.sprite = sourceRenderer.sprite;
+            glowRenderer.drawMode = sourceRenderer.drawMode;
+            glowRenderer.size = sourceRenderer.size;
+            glowRenderer.tileMode = sourceRenderer.tileMode;
+            glowRenderer.flipX = sourceRenderer.flipX;
+            glowRenderer.flipY = sourceRenderer.flipY;
+            glowRenderer.maskInteraction = sourceRenderer.maskInteraction;
+            glowRenderer.spriteSortPoint = sourceRenderer.spriteSortPoint;
+            glowRenderer.sortingLayerID = sourceRenderer.sortingLayerID;
+            glowRenderer.sortingOrder = sourceRenderer.sortingOrder + _fallbackGlowSortingOrderOffset;
+            glowRenderer.sharedMaterial = sourceRenderer.sharedMaterial;
+            glowRenderer.color = _fallbackGlowColor;
+        }
+
+        private readonly struct GlowRendererEntry
+        {
+            public GlowRendererEntry(SpriteRenderer sourceRenderer, SpriteRenderer glowRenderer)
+            {
+                SourceRenderer = sourceRenderer;
+                GlowRenderer = glowRenderer;
+            }
+
+            public SpriteRenderer SourceRenderer { get; }
+
+            public SpriteRenderer GlowRenderer { get; }
         }
     }
 }
