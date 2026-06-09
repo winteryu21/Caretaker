@@ -114,9 +114,42 @@ namespace Caretaker.Tests.Editor
                 presenter.HandleSlotDropped(2);
                 presenter.HandleSlotDragEnded();
 
-                Assert.That(inventoryController.OwnedItemIds[0], Is.EqualTo(itemTwo.ItemId));
-                Assert.That(inventoryController.OwnedItemIds[1], Is.EqualTo(itemThree.ItemId));
-                Assert.That(inventoryController.OwnedItemIds[2], Is.EqualTo(itemOne.ItemId));
+                Assert.That(inventoryController.SlotItemIds[0], Is.EqualTo(itemThree.ItemId));
+                Assert.That(inventoryController.SlotItemIds[1], Is.EqualTo(itemTwo.ItemId));
+                Assert.That(inventoryController.SlotItemIds[2], Is.EqualTo(itemOne.ItemId));
+            }
+            finally
+            {
+                Object.DestroyImmediate(presenterObject);
+                Object.DestroyImmediate(inventoryObject);
+            }
+        }
+
+        [Test]
+        public void HandleSlotClicked_StorageSlotShowsDetailWithoutSelectingItem()
+        {
+            InventoryController inventoryController = CreateInventoryController(
+                out GameObject inventoryObject,
+                out ItemDefinitionSO itemOne,
+                out ItemDefinitionSO itemTwo);
+            InventoryPresenter presenter = CreateInventoryPresenter(
+                out GameObject presenterObject,
+                out _,
+                out _,
+                out TMP_Text detailNameText,
+                out _);
+
+            try
+            {
+                inventoryController.AcquireItem(itemOne.ItemId);
+                inventoryController.AcquireItem(itemTwo.ItemId);
+                inventoryController.MoveSlot(1, InventoryService.HOTBAR_SLOT_COUNT);
+                presenter.BindInventory(inventoryController);
+
+                presenter.HandleSlotClicked(InventoryService.HOTBAR_SLOT_COUNT);
+
+                Assert.That(inventoryController.SelectedItemId, Is.EqualTo(itemOne.ItemId));
+                Assert.That(detailNameText.text, Is.EqualTo(itemTwo.DisplayName));
             }
             finally
             {

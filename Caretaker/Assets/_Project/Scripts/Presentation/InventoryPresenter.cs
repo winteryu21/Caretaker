@@ -12,8 +12,6 @@ namespace Caretaker.Presentation
     [DisallowMultipleComponent]
     public sealed class InventoryPresenter : MonoBehaviour
     {
-        private const int HUD_SLOT_COUNT = InventoryService.MAX_SLOT_COUNT;
-        private const int POPUP_STORAGE_SLOT_COUNT = 10;
         private const string EMPTY_DETAIL_NAME = "No Item";
         private const string EMPTY_DETAIL_DESCRIPTION = "Select an item slot.";
 
@@ -142,7 +140,7 @@ namespace Caretaker.Presentation
             }
 
             _detailSlotIndex = slotIndex;
-            if (_inventoryController != null)
+            if (_inventoryController != null && slotIndex < InventoryService.HOTBAR_SLOT_COUNT)
             {
                 _inventoryController.SelectSlot(slotIndex);
                 return;
@@ -166,8 +164,7 @@ namespace Caretaker.Presentation
         {
             if (_dragSourceSlotIndex < 0 ||
                 targetSlotIndex < 0 ||
-                _dragSourceSlotIndex == targetSlotIndex ||
-                !HasItemAt(targetSlotIndex))
+                _dragSourceSlotIndex == targetSlotIndex)
             {
                 return;
             }
@@ -186,13 +183,18 @@ namespace Caretaker.Presentation
 
         private void ConfigureSlots()
         {
-            ConfigureSlotArray(_hudSlots, isSelectable: true, acceptsDrop: true);
-            ConfigureSlotArray(_popupPrimarySlots, isSelectable: true, acceptsDrop: true);
-            ConfigureSlotArray(_popupStorageSlots, isSelectable: false, acceptsDrop: false);
+            ConfigureSlotArray(_hudSlots, slotIndexOffset: 0, isSelectable: true, acceptsDrop: true);
+            ConfigureSlotArray(_popupPrimarySlots, slotIndexOffset: 0, isSelectable: true, acceptsDrop: true);
+            ConfigureSlotArray(
+                _popupStorageSlots,
+                InventoryService.HOTBAR_SLOT_COUNT,
+                isSelectable: true,
+                acceptsDrop: true);
         }
 
         private void ConfigureSlotArray(
             InventorySlotPresenter[] slots,
+            int slotIndexOffset,
             bool isSelectable,
             bool acceptsDrop)
         {
@@ -205,7 +207,7 @@ namespace Caretaker.Presentation
             {
                 if (slots[i] != null)
                 {
-                    slots[i].Configure(this, i, isSelectable, acceptsDrop);
+                    slots[i].Configure(this, slotIndexOffset + i, isSelectable, acceptsDrop);
                 }
             }
         }
@@ -220,9 +222,13 @@ namespace Caretaker.Presentation
             _currentState = state;
             int selectedSlotIndex = ResolveSelectedSlotIndex(state);
 
-            RenderInteractiveSlots(_hudSlots, selectedSlotIndex);
-            RenderInteractiveSlots(_popupPrimarySlots, selectedSlotIndex);
-            RenderStorageSlots();
+            RenderSlots(_hudSlots, selectedSlotIndex, slotIndexOffset: 0, showHotbarKeys: true);
+            RenderSlots(_popupPrimarySlots, selectedSlotIndex, slotIndexOffset: 0, showHotbarKeys: true);
+            RenderSlots(
+                _popupStorageSlots,
+                selectedSlotIndex,
+                InventoryService.HOTBAR_SLOT_COUNT,
+                showHotbarKeys: false);
 
             if (_detailSlotIndex < 0 && selectedSlotIndex >= 0)
             {
@@ -232,45 +238,29 @@ namespace Caretaker.Presentation
             RenderDetail();
         }
 
-        private void RenderInteractiveSlots(
+        private void RenderSlots(
             InventorySlotPresenter[] slots,
-            int selectedSlotIndex)
+            int selectedSlotIndex,
+            int slotIndexOffset,
+            bool showHotbarKeys)
         {
             if (slots == null)
             {
                 return;
             }
 
-            int slotCount = Mathf.Min(HUD_SLOT_COUNT, slots.Length);
+            int slotCount = Mathf.Min(slots.Length, InventoryService.MAX_SLOT_COUNT - slotIndexOffset);
             for (int i = 0; i < slotCount; i++)
             {
-                string itemId = GetItemIdAt(i);
+                int slotIndex = slotIndexOffset + i;
+                string itemId = GetItemIdAt(slotIndex);
                 TryGetItemDefinition(itemId, out ItemDefinitionSO itemDefinition);
                 slots[i].Render(
                     itemId,
                     itemDefinition,
-                    i == selectedSlotIndex,
-                    (i + 1).ToString(),
+                    slotIndex == selectedSlotIndex,
+                    showHotbarKeys ? (i + 1).ToString() : string.Empty,
                     isEnabled: true);
-            }
-        }
-
-        private void RenderStorageSlots()
-        {
-            if (_popupStorageSlots == null)
-            {
-                return;
-            }
-
-            int slotCount = Mathf.Min(POPUP_STORAGE_SLOT_COUNT, _popupStorageSlots.Length);
-            for (int i = 0; i < slotCount; i++)
-            {
-                _popupStorageSlots[i].Render(
-                    string.Empty,
-                    null,
-                    isSelected: false,
-                    string.Empty,
-                    isEnabled: false);
             }
         }
 
@@ -309,12 +299,12 @@ namespace Caretaker.Presentation
         {
             if (_currentState == null ||
                 slotIndex < 0 ||
-                slotIndex >= _currentState.OwnedItemIds.Count)
+                slotIndex >= _currentState.SlotItemIds.Count)
             {
                 return string.Empty;
             }
 
-            return _currentState.OwnedItemIds[slotIndex];
+            return _currentState.SlotItemIds[slotIndex];
         }
 
         private bool TryGetItemDefinition(string itemId, out ItemDefinitionSO itemDefinition)
@@ -332,9 +322,9 @@ namespace Caretaker.Presentation
                 return -1;
             }
 
-            for (int i = 0; i < state.OwnedItemIds.Count; i++)
+            for (int i = 0; i < state.SlotItemIds.Count; i++)
             {
-                if (state.OwnedItemIds[i] == state.SelectedItemId)
+                if (state.SlotItemIds[i] == state.SelectedItemId)
                 {
                     return i;
                 }

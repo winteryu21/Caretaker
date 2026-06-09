@@ -603,6 +603,7 @@ sequenceDiagram
 **책임**
 
 - 플레이어별 개인 가방과 키 아이템 상태를 관리한다.
+- 인벤토리는 5개 hotbar 슬롯과 10개 storage 슬롯으로 분리한다.
 - 직접 아이템 공유를 금지하고, 아이템 사용은 대상 오브젝트와의 상호작용으로만 발생한다.
 - 체크포인트 복원을 위해 소지/소모 상태를 직렬화한다.
 
@@ -613,14 +614,15 @@ sequenceDiagram
 | `InventoryService` | Domain Service | 획득, 선택, 사용, 소모 규칙 |
 | `InventoryController` | Unity Component | 아이템 줍기 콜백과 UI 연결 |
 | `ItemDefinitionSO` | Data Asset | 아이템 ID, 표시명, 사용 가능 태그 |
-| `InventoryState` | Runtime State | 플레이어별 아이템 목록, 선택 아이템 |
+| `InventoryState` | Runtime State | 플레이어별 아이템 목록, 슬롯 배치, 선택 아이템 |
 
 **인터페이스**
 
 | Name | Input | Process | Output | Authority |
 | :--- | :--- | :--- | :--- | :--- |
 | `AcquireItem` | player id, item id | 중복/소지 제한 확인 | inventory changed | Host |
-| `SelectItem` | player id, item id | 소지 여부 확인 | selected item changed | Owner Client |
+| `SelectItem` | player id, item id | hotbar 배치와 소지 여부 확인 | selected item changed | Owner Client |
+| `MoveItem` | player id, from slot, to slot | 15칸 슬롯 안에서 이동/교환 | inventory changed | Owner Client |
 | `UseItemOnTarget` | player id, item id, target id | 대상 태그와 필요 조건 검증 | interaction request | Host |
 | `RestoreInventory` | checkpoint inventory state | 소지품 복원 | inventory changed | Host |
 
@@ -799,7 +801,7 @@ sequenceDiagram
 | `ShowInteractionPrompt` | nearby interactable, selected item | 가능한 행동 라벨 결정 | prompt state | Client local |
 | `ShowCausalityPulse` | pulse event | 구체 상태 정보 없이 공통 인과 아이콘 애니메이션 표시 | pulse animation | Client local |
 
-`InventoryPresenter`는 현재 `InventoryService.MAX_SLOT_COUNT` 기준으로 실제 HUD 슬롯 5개를 표시한다. `I` 키 팝업은 상세 정보 패널과 함께 5개 실제 슬롯, 10개 예비 슬롯 영역을 보여주며, 예비 슬롯은 인벤토리 도메인 모델이 확장되기 전까지 비활성 표시로 유지한다.
+`InventoryPresenter`는 HUD에 hotbar 5슬롯을 표시하고, `I` 키 팝업에서 hotbar 5슬롯과 storage 10슬롯을 함께 표시한다. storage 슬롯은 `InventoryState.slotItemIds[5..14]`에 연결된 실제 슬롯이며, 팝업에서 아이템 상세 확인과 드래그 이동/교환에 사용한다.
 | `ShowCheckpointNotice` | checkpoint event | 알림 표시 | toast / banner | Client local |
 | `ShowConnectionWarning` | timeout/reconnect state | 네트워크 상태 표시 | warning modal | Client local |
 
@@ -832,7 +834,7 @@ sequenceDiagram
 | 상태 | 필드 | 설명 |
 | :--- | :--- | :--- |
 | `PlayerRuntimeState` | `playerId`, `timelineRole`, `currentRoomId`, `position`, `isCrouching`, `isCaught` | 플레이어 복원과 UI 표시 기준 |
-| `InventoryState` | `playerId`, `ownedItemIds`, `selectedItemId`, `consumedItemIds` | 개인 가방 상태 |
+| `InventoryState` | `playerId`, `ownedItemIds`, `slotItemIds`, `selectedItemId`, `consumedItemIds` | 개인 가방 상태. `slotItemIds[0..4]`는 hotbar, `slotItemIds[5..14]`는 storage |
 | `CausalityState` | `appliedRuleIds`, `receiverStates`, `completedMajorIds` | 인과 결과와 진행 조건 |
 | `RoomVisitState` | `playerId`, `visitedRoomIds`, `currentRoomId` | 개인 미니맵과 체크포인트 |
 | `AlertState` | `roomId`, `alertLevel`, `expiresAtTick` | 경보 전파와 AI 상태 |

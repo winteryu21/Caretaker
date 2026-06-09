@@ -49,6 +49,11 @@ namespace Caretaker.Gameplay
         public IReadOnlyList<string> OwnedItemIds => State.OwnedItemIds;
 
         /// <summary>
+        /// 현재 플레이어의 전체 인벤토리 슬롯 아이템 ID 목록.
+        /// </summary>
+        public IReadOnlyList<string> SlotItemIds => State.SlotItemIds;
+
+        /// <summary>
         /// 현재 선택된 아이템 ID.
         /// </summary>
         public string SelectedItemId => State.SelectedItemId;
@@ -149,7 +154,7 @@ namespace Caretaker.Gameplay
         }
 
         /// <summary>
-        /// 보유 아이템 슬롯 순서를 변경한다.
+        /// 전체 인벤토리 슬롯 사이에서 아이템 위치 변경을 시도한다.
         /// </summary>
         public bool MoveSlot(int fromSlotIndex, int toSlotIndex)
         {

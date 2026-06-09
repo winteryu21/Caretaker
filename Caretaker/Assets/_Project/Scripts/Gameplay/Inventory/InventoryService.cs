@@ -10,9 +10,19 @@ namespace Caretaker.Gameplay
     public class InventoryService
     {
         /// <summary>
-        /// 플레이어가 사용할 수 있는 최대 인벤토리 슬롯 수.
+        /// 숫자키로 선택할 수 있는 빠른 슬롯 수.
         /// </summary>
-        public const int MAX_SLOT_COUNT = 5;
+        public const int HOTBAR_SLOT_COUNT = 5;
+
+        /// <summary>
+        /// 인벤토리 팝업에서 사용할 보관 슬롯 수.
+        /// </summary>
+        public const int STORAGE_SLOT_COUNT = 10;
+
+        /// <summary>
+        /// 플레이어가 사용할 수 있는 전체 인벤토리 슬롯 수.
+        /// </summary>
+        public const int MAX_SLOT_COUNT = HOTBAR_SLOT_COUNT + STORAGE_SLOT_COUNT;
 
         private readonly Dictionary<ulong, InventoryState> _statesByPlayerId = new();
 
@@ -27,15 +37,17 @@ namespace Caretaker.Gameplay
             }
 
             InventoryState state = GetOrCreateState(playerId);
-            if (state.OwnedItemIds.Contains(itemId) || state.OwnedItemIds.Count >= MAX_SLOT_COUNT)
+            int slotIndex = FindFirstEmptySlot(state);
+            if (state.OwnedItemIds.Contains(itemId) || slotIndex < 0)
             {
                 return false;
             }
 
             state.OwnedItemIds.Add(itemId);
+            state.SlotItemIds[slotIndex] = itemId;
             if (string.IsNullOrEmpty(state.SelectedItemId))
             {
-                state.SelectedItemId = itemId;
+                state.SelectedItemId = FindFirstHotbarItem(state);
             }
 
             return true;
@@ -47,12 +59,18 @@ namespace Caretaker.Gameplay
         public bool SelectSlot(ulong playerId, int slotIndex)
         {
             InventoryState state = GetOrCreateState(playerId);
-            if (slotIndex < 0 || slotIndex >= state.OwnedItemIds.Count)
+            if (!IsHotbarSlot(slotIndex))
             {
                 return false;
             }
 
-            state.SelectedItemId = state.OwnedItemIds[slotIndex];
+            string itemId = state.SlotItemIds[slotIndex];
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return false;
+            }
+
+            state.SelectedItemId = itemId;
             return true;
         }
 
@@ -67,7 +85,7 @@ namespace Caretaker.Gameplay
             }
 
             InventoryState state = GetOrCreateState(playerId);
-            if (!state.OwnedItemIds.Contains(itemId))
+            if (!state.OwnedItemIds.Contains(itemId) || !IsItemInHotbar(state, itemId))
             {
                 return false;
             }
@@ -77,23 +95,28 @@ namespace Caretaker.Gameplay
         }
 
         /// <summary>
-        /// 보유 아이템 목록 안에서 슬롯 위치를 바꾼다.
+        /// 전체 인벤토리 슬롯 사이에서 아이템 위치를 옮기거나 교환한다.
         /// </summary>
         public bool MoveItem(ulong playerId, int fromSlotIndex, int toSlotIndex)
         {
             InventoryState state = GetOrCreateState(playerId);
-            if (fromSlotIndex < 0 ||
-                fromSlotIndex >= state.OwnedItemIds.Count ||
-                toSlotIndex < 0 ||
-                toSlotIndex >= state.OwnedItemIds.Count ||
+            if (!IsInventorySlot(fromSlotIndex) ||
+                !IsInventorySlot(toSlotIndex) ||
                 fromSlotIndex == toSlotIndex)
             {
                 return false;
             }
 
-            string itemId = state.OwnedItemIds[fromSlotIndex];
-            state.OwnedItemIds.RemoveAt(fromSlotIndex);
-            state.OwnedItemIds.Insert(toSlotIndex, itemId);
+            string fromItemId = state.SlotItemIds[fromSlotIndex];
+            if (string.IsNullOrWhiteSpace(fromItemId))
+            {
+                return false;
+            }
+
+            string toItemId = state.SlotItemIds[toSlotIndex];
+            state.SlotItemIds[toSlotIndex] = fromItemId;
+            state.SlotItemIds[fromSlotIndex] = toItemId;
+            RefreshSelectedHotbarItem(state);
             return true;
         }
 
@@ -143,15 +166,14 @@ namespace Caretaker.Gameplay
                 return false;
             }
 
+            ClearItemFromSlots(state, itemId);
+
             if (!state.ConsumedItemIds.Contains(itemId))
             {
                 state.ConsumedItemIds.Add(itemId);
             }
 
-            if (state.SelectedItemId == itemId)
-            {
-                state.SelectedItemId = state.OwnedItemIds.Count > 0 ? state.OwnedItemIds[0] : null;
-            }
+            RefreshSelectedHotbarItem(state);
 
             return true;
         }
@@ -168,6 +190,7 @@ namespace Caretaker.Gameplay
         {
             if (_statesByPlayerId.TryGetValue(playerId, out InventoryState state))
             {
+                EnsureSlotState(state);
                 return state;
             }
 
@@ -175,8 +198,131 @@ namespace Caretaker.Gameplay
             {
                 PlayerId = playerId
             };
+            EnsureSlotState(state);
             _statesByPlayerId.Add(playerId, state);
             return state;
+        }
+
+        private static void EnsureSlotState(InventoryState state)
+        {
+            while (state.SlotItemIds.Count < MAX_SLOT_COUNT)
+            {
+                state.SlotItemIds.Add(string.Empty);
+            }
+
+            if (state.SlotItemIds.Count > MAX_SLOT_COUNT)
+            {
+                state.SlotItemIds.RemoveRange(MAX_SLOT_COUNT, state.SlotItemIds.Count - MAX_SLOT_COUNT);
+            }
+
+            for (int i = 0; i < state.OwnedItemIds.Count; i++)
+            {
+                string itemId = state.OwnedItemIds[i];
+                if (!string.IsNullOrWhiteSpace(itemId) && FindSlotIndex(state, itemId) < 0)
+                {
+                    int emptySlotIndex = FindFirstEmptySlot(state);
+                    if (emptySlotIndex >= 0)
+                    {
+                        state.SlotItemIds[emptySlotIndex] = itemId;
+                    }
+                }
+            }
+
+            for (int i = 0; i < state.SlotItemIds.Count; i++)
+            {
+                string itemId = state.SlotItemIds[i];
+                if (!string.IsNullOrWhiteSpace(itemId) && !state.OwnedItemIds.Contains(itemId))
+                {
+                    state.OwnedItemIds.Add(itemId);
+                }
+            }
+
+            RefreshSelectedHotbarItem(state);
+        }
+
+        private static void RefreshSelectedHotbarItem(InventoryState state)
+        {
+            if (!string.IsNullOrWhiteSpace(state.SelectedItemId) &&
+                IsItemInHotbar(state, state.SelectedItemId))
+            {
+                return;
+            }
+
+            state.SelectedItemId = FindFirstHotbarItem(state);
+        }
+
+        private static string FindFirstHotbarItem(InventoryState state)
+        {
+            for (int i = 0; i < HOTBAR_SLOT_COUNT; i++)
+            {
+                string itemId = state.SlotItemIds[i];
+                if (!string.IsNullOrWhiteSpace(itemId))
+                {
+                    return itemId;
+                }
+            }
+
+            return null;
+        }
+
+        private static int FindFirstEmptySlot(InventoryState state)
+        {
+            for (int i = 0; i < state.SlotItemIds.Count; i++)
+            {
+                if (string.IsNullOrWhiteSpace(state.SlotItemIds[i]))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static int FindSlotIndex(InventoryState state, string itemId)
+        {
+            for (int i = 0; i < state.SlotItemIds.Count; i++)
+            {
+                if (state.SlotItemIds[i] == itemId)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static void ClearItemFromSlots(InventoryState state, string itemId)
+        {
+            for (int i = 0; i < state.SlotItemIds.Count; i++)
+            {
+                if (state.SlotItemIds[i] == itemId)
+                {
+                    state.SlotItemIds[i] = string.Empty;
+                }
+            }
+        }
+
+        private static bool IsItemInHotbar(InventoryState state, string itemId)
+        {
+            for (int i = 0; i < HOTBAR_SLOT_COUNT; i++)
+            {
+                if (state.SlotItemIds[i] == itemId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsHotbarSlot(int slotIndex)
+        {
+            return slotIndex >= 0 && slotIndex < HOTBAR_SLOT_COUNT;
+        }
+
+        private static bool IsInventorySlot(int slotIndex)
+        {
+            return slotIndex >= 0 && slotIndex < MAX_SLOT_COUNT;
         }
     }
 }
