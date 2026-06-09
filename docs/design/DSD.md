@@ -603,6 +603,7 @@ sequenceDiagram
 **책임**
 
 - 플레이어별 개인 가방과 키 아이템 상태를 관리한다.
+- 인벤토리는 5개 hotbar 슬롯과 10개 storage 슬롯으로 분리한다.
 - 직접 아이템 공유를 금지하고, 아이템 사용은 대상 오브젝트와의 상호작용으로만 발생한다.
 - 체크포인트 복원을 위해 소지/소모 상태를 직렬화한다.
 
@@ -613,14 +614,15 @@ sequenceDiagram
 | `InventoryService` | Domain Service | 획득, 선택, 사용, 소모 규칙 |
 | `InventoryController` | Unity Component | 아이템 줍기 콜백과 UI 연결 |
 | `ItemDefinitionSO` | Data Asset | 아이템 ID, 표시명, 사용 가능 태그 |
-| `InventoryState` | Runtime State | 플레이어별 아이템 목록, 선택 아이템 |
+| `InventoryState` | Runtime State | 플레이어별 아이템 목록, 슬롯 배치, 선택 아이템 |
 
 **인터페이스**
 
 | Name | Input | Process | Output | Authority |
 | :--- | :--- | :--- | :--- | :--- |
 | `AcquireItem` | player id, item id | 중복/소지 제한 확인 | inventory changed | Host |
-| `SelectItem` | player id, item id | 소지 여부 확인 | selected item changed | Owner Client |
+| `SelectItem` | player id, item id | hotbar 배치와 소지 여부 확인 | selected item changed | Owner Client |
+| `MoveItem` | player id, from slot, to slot | 15칸 슬롯 안에서 이동/교환 | inventory changed | Owner Client |
 | `UseItemOnTarget` | player id, item id, target id | 대상 태그와 필요 조건 검증 | interaction request | Host |
 | `RestoreInventory` | checkpoint inventory state | 소지품 복원 | inventory changed | Host |
 
@@ -830,7 +832,7 @@ sequenceDiagram
 | 상태 | 필드 | 설명 |
 | :--- | :--- | :--- |
 | `PlayerRuntimeState` | `playerId`, `timelineRole`, `currentRoomId`, `position`, `isCrouching`, `isCaught` | 플레이어 복원과 UI 표시 기준 |
-| `InventoryState` | `playerId`, `ownedItemIds`, `selectedItemId`, `consumedItemIds` | 개인 가방 상태 |
+| `InventoryState` | `playerId`, `ownedItemIds`, `slotItemIds`, `selectedItemId`, `consumedItemIds` | 개인 가방 상태. `slotItemIds[0..4]`는 hotbar, `slotItemIds[5..14]`는 storage |
 | `CausalityState` | `appliedRuleIds`, `receiverStates`, `completedMajorIds` | 인과 결과와 진행 조건 |
 | `RoomVisitState` | `playerId`, `visitedRoomIds`, `currentRoomId` | 개인 미니맵과 체크포인트 |
 | `AlertState` | `roomId`, `alertLevel`, `expiresAtTick` | 경보 전파와 AI 상태 |
