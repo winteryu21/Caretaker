@@ -35,6 +35,11 @@ namespace Caretaker.Gameplay
         public ulong CurrentTalkerId => _currentTalkerId.Value;
 
         /// <summary>
+        /// 로컬 플레이어 기준 현재 무전기 상태를 반환한다.
+        /// </summary>
+        public RadioState LocalRadioState => GetLocalRadioState();
+
+        /// <summary>
         /// 현재 송신권이 비어 있는지 반환한다.
         /// </summary>
         public bool IsRadioIdle => _currentTalkerId.Value == NO_TALKER_ID;

@@ -17,21 +17,27 @@ namespace Caretaker.Presentation
     [DisallowMultipleComponent]
     public sealed class HudRuntimeBinder : MonoBehaviour
     {
+        private const float RADIO_REBIND_INTERVAL_SECONDS = 0.5f;
+
         [Header("HUD")]
         [SerializeField] private HudPresenter _hudPresenter;
         [SerializeField] private InventoryPresenter _inventoryPresenter;
 
         [Header("Runtime Sources")]
         [SerializeField] private LocalWorldPlayerSpawner _playerSpawner;
+        [SerializeField] private SessionRoleManager _roleManager;
         [SerializeField] private GameFlowManager _gameFlowManager;
         [SerializeField] private CausalityManager _causalityManager;
+        [SerializeField] private RadioNetworkBridge _radioNetworkBridge;
         [SerializeField] private bool _autoFindDependencies = true;
 
         private GameObject _currentPlayer;
         private InteractionProbe _interactionProbe;
         private InventoryController _inventoryController;
         private PlayerInputReader _playerInputReader;
+        private RadioNetworkBridge _subscribedRadioNetworkBridge;
         private string _lastPromptText = string.Empty;
+        private float _nextRadioResolveTime;
 
         private void Awake()
         {
@@ -44,10 +50,16 @@ namespace Caretaker.Presentation
 
             LocalWorldPlayerSpawner.OnCurrentPlayerChanged += HandleCurrentPlayerChanged;
 
+            if (_roleManager != null)
+            {
+                _roleManager.OnLocalRoleAssigned += HandleLocalRoleAssigned;
+            }
+
             if (_gameFlowManager != null)
             {
                 _gameFlowManager.OnPhaseChanged += HandlePhaseChanged;
-                HandlePhaseChanged(_gameFlowManager.CurrentPhase);
+                _gameFlowManager.OnObjectiveChanged += HandleObjectiveChanged;
+                RefreshObjectiveFromGameFlow();
             }
 
             if (_causalityManager != null)
@@ -55,6 +67,7 @@ namespace Caretaker.Presentation
                 _causalityManager.OnCausalityPulse += HandleCausalityPulse;
             }
 
+            BindRadioNetworkBridge(_radioNetworkBridge);
             BindCurrentPlayer(_playerSpawner != null ? _playerSpawner.CurrentPlayer : null);
         }
 
@@ -62,9 +75,15 @@ namespace Caretaker.Presentation
         {
             LocalWorldPlayerSpawner.OnCurrentPlayerChanged -= HandleCurrentPlayerChanged;
 
+            if (_roleManager != null)
+            {
+                _roleManager.OnLocalRoleAssigned -= HandleLocalRoleAssigned;
+            }
+
             if (_gameFlowManager != null)
             {
                 _gameFlowManager.OnPhaseChanged -= HandlePhaseChanged;
+                _gameFlowManager.OnObjectiveChanged -= HandleObjectiveChanged;
             }
 
             if (_causalityManager != null)
@@ -72,6 +91,7 @@ namespace Caretaker.Presentation
                 _causalityManager.OnCausalityPulse -= HandleCausalityPulse;
             }
 
+            UnbindRadioNetworkBridge();
             UnbindInventory();
             UnbindPlayerInput();
             _interactionProbe = null;
@@ -81,6 +101,7 @@ namespace Caretaker.Presentation
 
         private void Update()
         {
+            RefreshRadioBinding();
             RefreshInteractionPrompt();
         }
 
@@ -234,9 +255,19 @@ namespace Caretaker.Presentation
                 _gameFlowManager = FindAnyObjectByType<GameFlowManager>();
             }
 
+            if (_roleManager == null)
+            {
+                _roleManager = FindAnyObjectByType<SessionRoleManager>();
+            }
+
             if (_causalityManager == null)
             {
                 _causalityManager = FindAnyObjectByType<CausalityManager>();
+            }
+
+            if (_radioNetworkBridge == null)
+            {
+                _radioNetworkBridge = FindAnyObjectByType<RadioNetworkBridge>();
             }
         }
 
@@ -329,9 +360,29 @@ namespace Caretaker.Presentation
 
         private void HandlePhaseChanged(PhaseId phaseId)
         {
+            RefreshObjectiveFromGameFlow();
+        }
+
+        private void HandleObjectiveChanged(TimelineRole timelineRole, ObjectiveId objectiveId)
+        {
+            if (timelineRole != GetLocalTimelineRole())
+            {
+                return;
+            }
+
+            RefreshObjectiveFromGameFlow();
+        }
+
+        private void HandleLocalRoleAssigned(TimelineRole timelineRole)
+        {
+            RefreshObjectiveFromGameFlow();
+        }
+
+        private void HandleLocalRadioStateChanged(RadioState state, ulong talkerId)
+        {
             if (_hudPresenter != null)
             {
-                _hudPresenter.SetObjective(BuildObjectiveText(phaseId));
+                _hudPresenter.SetRadioState(state, talkerId);
             }
         }
 
@@ -341,6 +392,96 @@ namespace Caretaker.Presentation
             {
                 _hudPresenter.ShowCausalityPulse();
             }
+        }
+
+        private void RefreshObjectiveFromGameFlow()
+        {
+            if (_hudPresenter == null)
+            {
+                return;
+            }
+
+            TimelineRole localRole = GetLocalTimelineRole();
+            if (localRole == TimelineRole.None ||
+                _gameFlowManager == null ||
+                !_gameFlowManager.TryGetCurrentObjectiveDisplayText(localRole, out string objectiveText))
+            {
+                _hudPresenter.SetObjective("Objective: Stand by");
+                return;
+            }
+
+            _hudPresenter.SetObjective(objectiveText);
+        }
+
+        private TimelineRole GetLocalTimelineRole()
+        {
+            return _roleManager != null ? _roleManager.LocalTimelineRole : TimelineRole.None;
+        }
+
+        private void RefreshRadioBinding()
+        {
+            if (!_autoFindDependencies || _subscribedRadioNetworkBridge != null)
+            {
+                return;
+            }
+
+            if (Time.unscaledTime < _nextRadioResolveTime)
+            {
+                return;
+            }
+
+            _nextRadioResolveTime = Time.unscaledTime + RADIO_REBIND_INTERVAL_SECONDS;
+            BindRadioNetworkBridge(FindAnyObjectByType<RadioNetworkBridge>());
+        }
+
+        private void BindRadioNetworkBridge(RadioNetworkBridge radioNetworkBridge)
+        {
+            if (_subscribedRadioNetworkBridge == radioNetworkBridge)
+            {
+                RefreshRadioState();
+                return;
+            }
+
+            UnbindRadioNetworkBridge();
+            _radioNetworkBridge = radioNetworkBridge;
+            _subscribedRadioNetworkBridge = radioNetworkBridge;
+
+            if (_subscribedRadioNetworkBridge == null)
+            {
+                RefreshRadioState();
+                return;
+            }
+
+            _subscribedRadioNetworkBridge.OnLocalRadioStateChanged += HandleLocalRadioStateChanged;
+            RefreshRadioState();
+        }
+
+        private void UnbindRadioNetworkBridge()
+        {
+            if (_subscribedRadioNetworkBridge != null)
+            {
+                _subscribedRadioNetworkBridge.OnLocalRadioStateChanged -= HandleLocalRadioStateChanged;
+            }
+
+            _subscribedRadioNetworkBridge = null;
+        }
+
+        private void RefreshRadioState()
+        {
+            if (_hudPresenter == null)
+            {
+                return;
+            }
+
+            if (_subscribedRadioNetworkBridge == null)
+            {
+                _hudPresenter.SetRadioState(RadioState.Idle, RadioNetworkBridge.NO_TALKER_ID);
+                return;
+            }
+
+            _hudPresenter.SetRadioState(
+                _subscribedRadioNetworkBridge.LocalRadioState,
+                _subscribedRadioNetworkBridge.CurrentTalkerId);
         }
 
         private void RefreshInteractionPrompt()
