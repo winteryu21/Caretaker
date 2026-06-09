@@ -2120,6 +2120,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5120244640137388628, guid: 8c5a5bfe4ca1310488e41cdf966702ac, type: 3}
+      propertyPath: ConnectionData.Address
+      value: 0.0.0.0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5120244640137388628, guid: 8c5a5bfe4ca1310488e41cdf966702ac, type: 3}
+      propertyPath: ConnectionData.ServerListenAddress
+      value: 0.0.0.0
+      objectReference: {fileID: 0}
     - target: {fileID: 5272903178814492297, guid: 8c5a5bfe4ca1310488e41cdf966702ac, type: 3}
       propertyPath: m_Name
       value: NetworkManager
