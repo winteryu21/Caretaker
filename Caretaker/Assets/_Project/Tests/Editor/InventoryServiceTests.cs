@@ -75,6 +75,36 @@ namespace Caretaker.Tests.Editor
         }
 
         [Test]
+        public void MoveItem_ReordersOwnedItems()
+        {
+            InventoryService inventoryService = new();
+            inventoryService.AcquireItem(PLAYER_ID, "ITEM_1");
+            inventoryService.AcquireItem(PLAYER_ID, "ITEM_2");
+            inventoryService.AcquireItem(PLAYER_ID, "ITEM_3");
+
+            bool moved = inventoryService.MoveItem(PLAYER_ID, 0, 2);
+            InventoryState state = inventoryService.GetState(PLAYER_ID);
+
+            Assert.That(moved, Is.True);
+            Assert.That(state.OwnedItemIds[0], Is.EqualTo("ITEM_2"));
+            Assert.That(state.OwnedItemIds[1], Is.EqualTo("ITEM_3"));
+            Assert.That(state.OwnedItemIds[2], Is.EqualTo("ITEM_1"));
+            Assert.That(state.SelectedItemId, Is.EqualTo("ITEM_1"));
+        }
+
+        [Test]
+        public void MoveItem_RejectsEmptyOrOutOfRangeSlot()
+        {
+            InventoryService inventoryService = new();
+            inventoryService.AcquireItem(PLAYER_ID, "ITEM_1");
+
+            bool moved = inventoryService.MoveItem(PLAYER_ID, 0, 1);
+
+            Assert.That(moved, Is.False);
+            Assert.That(inventoryService.GetState(PLAYER_ID).OwnedItemIds[0], Is.EqualTo("ITEM_1"));
+        }
+
+        [Test]
         public void UseItem_SucceedsWhenRequiredItemMatches()
         {
             InventoryService inventoryService = new();

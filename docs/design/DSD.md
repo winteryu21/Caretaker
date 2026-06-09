@@ -785,7 +785,7 @@ sequenceDiagram
 | :--- | :--- | :--- |
 | `HudPresenter` | Unity Component | HUD 상태를 ViewModel로 렌더링 |
 | `InteractionPromptPresenter` | Unity Component | 근접/E키/클릭 프롬프트 표시 |
-| `InventoryPresenter` | Unity Component | 개인 인벤토리와 선택 아이템 표시 |
+| `InventoryPresenter` | Unity Component | 개인 인벤토리 HUD 5슬롯, 선택 아이템, 상세 팝업 표시 |
 | `MinimapPresenter` | Unity Component | 방문한 개인 룸만 표시 |
 | `ObjectivePresenter` | Unity Component | 현재 단기 목표와 체크포인트 알림 표시 |
 | `CausalityIndicatorPresenter` | Unity Component | 인과 변경 발생을 점멸/회전/파동 등 추상 UI로 표시 |
@@ -798,6 +798,8 @@ sequenceDiagram
 | `BuildHudViewModel` | local player state, allowed replicated state | 정보 격리 필터 적용 | HUD view model | Client local |
 | `ShowInteractionPrompt` | nearby interactable, selected item | 가능한 행동 라벨 결정 | prompt state | Client local |
 | `ShowCausalityPulse` | pulse event | 구체 상태 정보 없이 공통 인과 아이콘 애니메이션 표시 | pulse animation | Client local |
+
+`InventoryPresenter`는 현재 `InventoryService.MAX_SLOT_COUNT` 기준으로 실제 HUD 슬롯 5개를 표시한다. `I` 키 팝업은 상세 정보 패널과 함께 5개 실제 슬롯, 10개 예비 슬롯 영역을 보여주며, 예비 슬롯은 인벤토리 도메인 모델이 확장되기 전까지 비활성 표시로 유지한다.
 | `ShowCheckpointNotice` | checkpoint event | 알림 표시 | toast / banner | Client local |
 | `ShowConnectionWarning` | timeout/reconnect state | 네트워크 상태 표시 | warning modal | Client local |
 
@@ -821,7 +823,7 @@ sequenceDiagram
 | `CausalRuleSO` | `ruleId`, `triggerId`, `requiredRole`, `requiredItemId`, `conditions`, `receiverEffects`, `interactionWeight` | 시간 인과 |
 | `RoomGraphSO` | `roomId`, `timeline`, `adjacentRoomIds`, `pairedTimelineRoomId`, `spawnPointIds` | 룸, AI, 체크포인트 |
 | `EnemyTuningSO` | `enemyType`, `sightDistance`, `fovDegrees`, `chaseSpeed`, `loseSightSeconds`, `alertDuration` | AI / 경보 |
-| `ItemDefinitionSO` | `itemId`, `displayName`, `category`, `usableTargetTags`, `consumeOnUse` | 인벤토리 / 상호작용 |
+| `ItemDefinitionSO` | `itemId`, `displayName`, `description`, `icon`, `category`, `usableTargetTags`, `consumeOnUse` | 인벤토리 / 상호작용 |
 | `CheckpointDefinitionSO` | `checkpointId`, `phaseId`, `pastSpawnId`, `futureSpawnId`, `restorePolicy` | 게임 진행 |
 | `PhaseDefinitionSO` | `phaseId`, `requiredMajorIds`, `presentationMode`, `checkpointIds` | 게임 진행 / 스플릿뷰 |
 

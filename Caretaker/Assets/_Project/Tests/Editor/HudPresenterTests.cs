@@ -38,8 +38,33 @@ namespace Caretaker.Tests.Editor
             Assert.That(presenter.StatusArea, Is.Not.Null);
             Assert.That(prefab.GetComponent<HudRuntimeBinder>(), Is.Not.Null);
             Assert.That(prefab.GetComponent<ExaminePopupPresenter>(), Is.Not.Null);
+            Assert.That(prefab.GetComponentInChildren<InventoryPresenter>(true), Is.Not.Null);
             Assert.That(prefab.GetComponentInChildren<InteractionPromptPresenter>(true), Is.Not.Null);
             Assert.That(prefab.GetComponentInChildren<CausalityIndicatorPresenter>(true), Is.Not.Null);
+        }
+
+        [Test]
+        public void HudShellPrefab_InventoryStorageSlotsStayInsidePopupBottomLeft()
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(HUD_SHELL_PREFAB_PATH);
+
+            Assert.That(prefab, Is.Not.Null);
+
+            Transform storageSlots = prefab.transform.Find("InventoryPopupRoot/InventoryDialog/PopupStorageSlots");
+
+            Assert.That(storageSlots, Is.Not.Null);
+
+            RectTransform storageRect = storageSlots.GetComponent<RectTransform>();
+            GridLayoutGroup storageLayout = storageSlots.GetComponent<GridLayoutGroup>();
+
+            Assert.That(storageRect.anchorMin, Is.EqualTo(Vector2.zero));
+            Assert.That(storageRect.anchorMax, Is.EqualTo(Vector2.zero));
+            Assert.That(storageRect.pivot, Is.EqualTo(Vector2.zero));
+            Assert.That(storageRect.anchoredPosition, Is.EqualTo(new Vector2(28f, 28f)));
+            Assert.That(storageRect.sizeDelta, Is.EqualTo(new Vector2(500f, 176f)));
+            Assert.That(storageLayout.childAlignment, Is.EqualTo(TextAnchor.LowerLeft));
+            Assert.That(storageLayout.constraint, Is.EqualTo(GridLayoutGroup.Constraint.FixedColumnCount));
+            Assert.That(storageLayout.constraintCount, Is.EqualTo(5));
         }
 
         [Test]

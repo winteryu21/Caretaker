@@ -77,6 +77,27 @@ namespace Caretaker.Gameplay
         }
 
         /// <summary>
+        /// 보유 아이템 목록 안에서 슬롯 위치를 바꾼다.
+        /// </summary>
+        public bool MoveItem(ulong playerId, int fromSlotIndex, int toSlotIndex)
+        {
+            InventoryState state = GetOrCreateState(playerId);
+            if (fromSlotIndex < 0 ||
+                fromSlotIndex >= state.OwnedItemIds.Count ||
+                toSlotIndex < 0 ||
+                toSlotIndex >= state.OwnedItemIds.Count ||
+                fromSlotIndex == toSlotIndex)
+            {
+                return false;
+            }
+
+            string itemId = state.OwnedItemIds[fromSlotIndex];
+            state.OwnedItemIds.RemoveAt(fromSlotIndex);
+            state.OwnedItemIds.Insert(toSlotIndex, itemId);
+            return true;
+        }
+
+        /// <summary>
         /// 보유 아이템을 대상 요구 조건에 맞춰 사용하고, 필요하면 소모한다.
         /// </summary>
         public bool UseItem(ulong playerId, string itemId, string requiredItemId, bool consumable)

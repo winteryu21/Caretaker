@@ -149,6 +149,33 @@ namespace Caretaker.Gameplay
         }
 
         /// <summary>
+        /// 보유 아이템 슬롯 순서를 변경한다.
+        /// </summary>
+        public bool MoveSlot(int fromSlotIndex, int toSlotIndex)
+        {
+            if (!ApplyMoveSlot(fromSlotIndex, toSlotIndex))
+            {
+                return false;
+            }
+
+            if (ShouldMirrorToServer())
+            {
+                MoveSlotServerRpc(fromSlotIndex, toSlotIndex);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 아이템 ID에 해당하는 표시 데이터 조회를 시도한다.
+        /// </summary>
+        public bool TryGetItemDefinition(string itemId, out ItemDefinitionSO itemDefinition)
+        {
+            itemDefinition = GetItemDefinition(itemId);
+            return itemDefinition != null;
+        }
+
+        /// <summary>
         /// 선택된 아이템을 상호작용 대상에 사용해 본다.
         /// </summary>
         public bool UseSelectedItemOn(InteractableObject target)
@@ -245,6 +272,17 @@ namespace Caretaker.Gameplay
             return true;
         }
 
+        private bool ApplyMoveSlot(int fromSlotIndex, int toSlotIndex)
+        {
+            if (!_inventoryService.MoveItem(_playerId, fromSlotIndex, toSlotIndex))
+            {
+                return false;
+            }
+
+            NotifyInventoryChanged();
+            return true;
+        }
+
         private bool ApplyUseItem(string itemId, string requiredItemId, bool consumable)
         {
             if (!_inventoryService.UseItem(_playerId, itemId, requiredItemId, consumable))
@@ -271,6 +309,12 @@ namespace Caretaker.Gameplay
         private void SelectSlotServerRpc(int slotIndex)
         {
             SelectSlot(slotIndex);
+        }
+
+        [Rpc(SendTo.Server)]
+        private void MoveSlotServerRpc(int fromSlotIndex, int toSlotIndex)
+        {
+            MoveSlot(fromSlotIndex, toSlotIndex);
         }
 
         [Rpc(SendTo.Server)]
