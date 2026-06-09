@@ -420,6 +420,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c5b4e702cf5f634485faa77237f08d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.InventoryController
+  ShowTopMostFoldoutHeaderGroup: 1
   _playerId: 0
   _itemDefinitions:
   - {fileID: 11400000, guid: 650627872de7eaa4cba81700d4b740d1, type: 2}

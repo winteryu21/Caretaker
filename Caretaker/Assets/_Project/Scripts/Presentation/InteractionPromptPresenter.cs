@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 namespace Caretaker.Presentation
@@ -12,11 +13,30 @@ namespace Caretaker.Presentation
     /// </remarks>
     public class InteractionPromptPresenter : MonoBehaviour
     {
-        // 1. Serialize 필드
+        [SerializeField] private GameObject _root;
+        [SerializeField] private TMP_Text _promptText;
 
-        // 2. private 필드
+        private string _currentPrompt = string.Empty;
+        private bool _isVisible;
 
-        // 3. Unity 생명주기
+        /// <summary>현재 표시 중인 프롬프트 문구.</summary>
+        public string CurrentPrompt => _currentPrompt;
+
+        /// <summary>프롬프트 표시 여부.</summary>
+        public bool IsVisible => _isVisible;
+
+        private void Awake()
+        {
+            ResolveDefaultReferences();
+            Render();
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            ResolveDefaultReferences();
+        }
+#endif
 
         /// <summary>
         /// 상호작용 프롬프트를 표시한다.
@@ -24,7 +44,9 @@ namespace Caretaker.Presentation
         /// <param name="promptText">표시할 프롬프트 텍스트. (예: "E — 조사")</param>
         public void ShowPrompt(string promptText)
         {
-            throw new System.NotImplementedException();
+            _currentPrompt = promptText ?? string.Empty;
+            _isVisible = !string.IsNullOrWhiteSpace(_currentPrompt);
+            Render();
         }
 
         /// <summary>
@@ -32,9 +54,35 @@ namespace Caretaker.Presentation
         /// </summary>
         public void HidePrompt()
         {
-            throw new System.NotImplementedException();
+            _currentPrompt = string.Empty;
+            _isVisible = false;
+            Render();
         }
 
-        // private 메서드
+        private void ResolveDefaultReferences()
+        {
+            if (_root == null)
+            {
+                _root = gameObject;
+            }
+
+            if (_promptText == null)
+            {
+                _promptText = GetComponentInChildren<TMP_Text>(true);
+            }
+        }
+
+        private void Render()
+        {
+            if (_promptText != null)
+            {
+                _promptText.text = _currentPrompt;
+            }
+
+            if (_root != null)
+            {
+                _root.SetActive(_isVisible);
+            }
+        }
     }
 }

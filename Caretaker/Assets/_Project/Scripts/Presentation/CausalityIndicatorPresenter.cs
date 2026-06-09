@@ -1,3 +1,5 @@
+using System.Collections;
+
 using UnityEngine;
 
 namespace Caretaker.Presentation
@@ -12,20 +14,85 @@ namespace Caretaker.Presentation
     /// </remarks>
     public class CausalityIndicatorPresenter : MonoBehaviour
     {
-        // 1. Serialize 필드
+        private const float DEFAULT_VISIBLE_SECONDS = 1.5f;
 
-        // 2. private 필드
+        [SerializeField] private GameObject _root;
+        [SerializeField] private Animator _animator;
+        [SerializeField] private string _pulseTriggerName = "Pulse";
+        [SerializeField] private float _visibleSeconds = DEFAULT_VISIBLE_SECONDS;
 
-        // 3. Unity 생명주기
+        private Coroutine _hideRoutine;
+        private bool _isVisible;
+
+        /// <summary>인과 Pulse 표시 여부.</summary>
+        public bool IsVisible => _isVisible;
+
+        private void Awake()
+        {
+            ResolveDefaultReferences();
+            SetVisible(false);
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            ResolveDefaultReferences();
+            _visibleSeconds = Mathf.Max(0f, _visibleSeconds);
+        }
+#endif
 
         /// <summary>
         /// 인과 Pulse 애니메이션을 표시한다.
         /// </summary>
         public void ShowCausalityPulse()
         {
-            throw new System.NotImplementedException();
+            ResolveDefaultReferences();
+            SetVisible(true);
+
+            if (_animator != null && !string.IsNullOrWhiteSpace(_pulseTriggerName))
+            {
+                _animator.SetTrigger(_pulseTriggerName);
+            }
+
+            if (_hideRoutine != null)
+            {
+                StopCoroutine(_hideRoutine);
+            }
+
+            if (_visibleSeconds > 0f)
+            {
+                _hideRoutine = StartCoroutine(HideAfterDelay());
+            }
         }
 
-        // private 메서드
+        private void ResolveDefaultReferences()
+        {
+            if (_root == null)
+            {
+                _root = gameObject;
+            }
+
+            if (_animator == null)
+            {
+                _animator = GetComponentInChildren<Animator>(true);
+            }
+        }
+
+        private IEnumerator HideAfterDelay()
+        {
+            yield return new WaitForSeconds(_visibleSeconds);
+            _hideRoutine = null;
+            SetVisible(false);
+        }
+
+        private void SetVisible(bool isVisible)
+        {
+            _isVisible = isVisible;
+
+            if (_root != null)
+            {
+                _root.SetActive(isVisible);
+            }
+        }
     }
 }
