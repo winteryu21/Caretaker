@@ -10,12 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b77995b609b34f74ca1fdcd1c8232e64, type: 3}
-  m_Name: SO_ITEM_TOOL_DRIVER
+  m_Name: SO_ITEM_INGREDIENT_E
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.ItemDefinitionSO
-  _itemId: ITEM_TOOL_DRIVER
-  _displayName: "\uB4DC\uB77C\uC774\uBC84"
+  _itemId: ITEM_INGREDIENT_E
+  _displayName: 시약 재료E
+  _description: 시약 조합 실험에 사용하는 재료 E입니다.
   _icon: {fileID: 0}
-  _category: Tool
+  _category: Reagent
   _usableTargetTags:
-  - VentScrew
-  _consumable: 0
+  - ReagentMixer
+  _consumable: 1

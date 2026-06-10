@@ -153,6 +153,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 2.7
       objectReference: {fileID: 0}
+    - target: {fileID: 4314021240421253876, guid: a7ae1cbb60cc63643987139e4fb736f6, type: 3}
+      propertyPath: _interactionTypes
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 6391145943038542088, guid: a7ae1cbb60cc63643987139e4fb736f6, type: 3}
       propertyPath: m_LocalPosition.x
       value: -52.914093
@@ -192,6 +196,10 @@ PrefabInstance:
     - target: {fileID: 6391145943038542088, guid: a7ae1cbb60cc63643987139e4fb736f6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6655135659377857933, guid: a7ae1cbb60cc63643987139e4fb736f6, type: 3}
+      propertyPath: _interactionTypes
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -389,9 +397,17 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 314921774986500474}
     m_Modifications:
+    - target: {fileID: 29640481350206449, guid: a7e946ce4cd4f3649a9034e2dba7e89c, type: 3}
+      propertyPath: _interactionTypes
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 334170449313782568, guid: a7e946ce4cd4f3649a9034e2dba7e89c, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 334170449313782568, guid: a7e946ce4cd4f3649a9034e2dba7e89c, type: 3}
+      propertyPath: _interactionTypes
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 2684084677159663682, guid: a7e946ce4cd4f3649a9034e2dba7e89c, type: 3}
       propertyPath: m_Enabled
@@ -400,6 +416,10 @@ PrefabInstance:
     - target: {fileID: 3326286188963920781, guid: a7e946ce4cd4f3649a9034e2dba7e89c, type: 3}
       propertyPath: m_Enabled
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3326286188963920781, guid: a7e946ce4cd4f3649a9034e2dba7e89c, type: 3}
+      propertyPath: _interactionTypes
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 3804397591903432232, guid: a7e946ce4cd4f3649a9034e2dba7e89c, type: 3}
       propertyPath: m_Name

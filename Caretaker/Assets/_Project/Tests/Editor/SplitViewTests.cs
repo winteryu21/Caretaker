@@ -36,6 +36,44 @@ namespace Caretaker.Tests.Editor
             }
         }
 
+        [TestCase(9.9f, 5f, 0f, 10f, 0.02f, 5f)]
+        [TestCase(9.95f, 5f, 0f, 10f, 0.02f, 2.5f)]
+        [TestCase(0.05f, -5f, 0f, 10f, 0.02f, -2.5f)]
+        [TestCase(5f, -5f, 0f, 10f, 0.02f, -5f)]
+        [TestCase(10.1f, -2f, 0f, 10f, 0.02f, -2f)]
+        [TestCase(10.1f, 2f, 0f, 10f, 0.02f, 0f)]
+        [TestCase(-0.1f, 2f, 0f, 10f, 0.02f, 2f)]
+        [TestCase(-0.1f, -2f, 0f, 10f, 0.02f, 0f)]
+        public void PlayerMotor2D_ClampsPredictedMovementAtBounds(
+            float positionX,
+            float velocityX,
+            float minimumX,
+            float maximumX,
+            float deltaTime,
+            float expected)
+        {
+            float result = PlayerMotor2D.ClampHorizontalVelocity(
+                positionX,
+                velocityX,
+                minimumX,
+                maximumX,
+                deltaTime);
+
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void SplitViewManager_UsesNarrowerCameraForMaximumSeparation()
+        {
+            float separation = SplitViewManager.ResolveMaximumPlayerSeparation(
+                configuredSeparation: 7f,
+                localHalfWidth: 8f,
+                remoteHalfWidth: 5f,
+                boundaryPadding: 1f);
+
+            Assert.That(separation, Is.EqualTo(4f));
+        }
+
         [Test]
         public void RemoteTimelineView_UsesDirectCameraWithoutRenderTexture()
         {

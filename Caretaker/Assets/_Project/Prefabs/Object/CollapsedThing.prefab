@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3439180671050313941}
   - component: {fileID: 9058879796242008331}
-  - component: {fileID: 6382944159518165905}
+  - component: {fileID: 6788244783555595467}
   m_Layer: 0
   m_Name: CollapsedThing
   m_TagString: Untagged
@@ -92,8 +92,8 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!61 &6382944159518165905
-BoxCollider2D:
+--- !u!60 &6788244783555595467
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -136,5 +136,11 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 4.03125, y: 3.0625}
-  m_EdgeRadius: 0
+  m_Points:
+    m_Paths:
+    - - {x: -2.015625, y: 1.53125}
+      - {x: -2.015625, y: -1.53125}
+      - {x: 2.015625, y: -1.53125}
+      - {x: 2.015625, y: -1.4375}
+      - {x: -0.921875, y: 1.53125}
+  m_UseDelaunayMesh: 1

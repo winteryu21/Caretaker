@@ -98,9 +98,16 @@ namespace Caretaker.Core
                 _roleManager.OnLocalRoleAssigned += HandleLocalRoleAssigned;
                 _roleManager.OnPhaseAdvanceReadySubmitted += HandlePhaseAdvanceReadySubmitted;
                 _roleManager.OnPhaseTransitionReceived += HandlePhaseTransitionReceived;
+                _roleManager.OnPhaseRestartReceived += HandlePhaseRestartReceived;
+                _roleManager.OnPhaseRestartLoadReceived += HandlePhaseRestartLoadReceived;
                 _roleManager.OnMajorCompletedReceived += HandleMajorCompletedReceived;
                 _roleManager.OnObjectiveChangedReceived += HandleObjectiveChangedReceived;
                 _roleManager.OnGameResultReceived += HandleGameResultReceived;
+            }
+
+            if (_sceneLoader != null)
+            {
+                _sceneLoader.OnPhaseScenesUnloaded += HandlePhaseScenesUnloaded;
             }
         }
 
@@ -126,9 +133,16 @@ namespace Caretaker.Core
                 _roleManager.OnLocalRoleAssigned -= HandleLocalRoleAssigned;
                 _roleManager.OnPhaseAdvanceReadySubmitted -= HandlePhaseAdvanceReadySubmitted;
                 _roleManager.OnPhaseTransitionReceived -= HandlePhaseTransitionReceived;
+                _roleManager.OnPhaseRestartReceived -= HandlePhaseRestartReceived;
+                _roleManager.OnPhaseRestartLoadReceived -= HandlePhaseRestartLoadReceived;
                 _roleManager.OnMajorCompletedReceived -= HandleMajorCompletedReceived;
                 _roleManager.OnObjectiveChangedReceived -= HandleObjectiveChangedReceived;
                 _roleManager.OnGameResultReceived -= HandleGameResultReceived;
+            }
+
+            if (_sceneLoader != null)
+            {
+                _sceneLoader.OnPhaseScenesUnloaded -= HandlePhaseScenesUnloaded;
             }
         }
 
@@ -193,6 +207,26 @@ namespace Caretaker.Core
             }
 
             Debug.LogWarning($"Checkpoint rollback is not implemented yet. Reason={reason}", this);
+        }
+
+        /// <summary>Phase 3 포획 또는 타임아웃 발생 시 모든 클라이언트의 Phase 3을 재시작합니다.</summary>
+        /// <returns>재시작 요청을 전파했는지 여부.</returns>
+        public bool ReportEscapeFailure(string reason)
+        {
+            if (!IsHostAuthority() || _currentPhase != PhaseId.Phase3)
+            {
+                return false;
+            }
+
+            ResolveDependencies();
+            if (_roleManager == null)
+            {
+                Debug.LogWarning("Cannot restart Phase 3 without SessionRoleManager.", this);
+                return false;
+            }
+
+            Debug.LogWarning($"Phase 3 escape failed. Restarting Phase 3. Reason={reason}", this);
+            return _roleManager.BroadcastPhaseRestart(PhaseId.Phase3);
         }
 
         /// <summary>
@@ -394,6 +428,47 @@ namespace Caretaker.Core
             Debug.Log($"GameFlowManager received phase transition: target={targetPhase}", this);
             LoadLocalPhase(targetPhase);
             OnPhaseChanged?.Invoke(targetPhase);
+        }
+
+        private void HandlePhaseRestartReceived(PhaseId phaseId)
+        {
+            if (phaseId != PhaseId.Phase3 || _currentPhase != phaseId)
+            {
+                return;
+            }
+
+            ResolveDependencies();
+            if (_sceneLoader == null || _roleManager == null)
+            {
+                Debug.LogWarning("Cannot restart Phase 3 without SceneLoader and SessionRoleManager.", this);
+                return;
+            }
+
+            ResetPhaseAdvanceReadyFlags();
+            ResetExitReachedFlags();
+            _gameResult = GameResult.None;
+            if (!_sceneLoader.TryUnloadPhase(phaseId))
+            {
+                Debug.LogError($"Failed to start Phase restart unload: phase={phaseId}", this);
+            }
+        }
+
+        private void HandlePhaseScenesUnloaded(PhaseId phaseId)
+        {
+            if (phaseId == PhaseId.Phase3 && _currentPhase == phaseId)
+            {
+                _roleManager?.SubmitLocalPhaseRestartReady(phaseId);
+            }
+        }
+
+        private void HandlePhaseRestartLoadReceived(PhaseId phaseId)
+        {
+            if (phaseId != PhaseId.Phase3 || _currentPhase != phaseId)
+            {
+                return;
+            }
+
+            LoadLocalPhase(phaseId);
         }
 
         private void HandleMajorCompletedReceived(PhaseId phaseId, MajorId majorId)

@@ -18,6 +18,9 @@ namespace Caretaker.Presentation
         [SerializeField] private SceneLoader _sceneLoader;
         [SerializeField] private SessionRoleManager _roleManager;
         [SerializeField] private Camera _mainCamera;
+        [SerializeField] [Min(0f)] private float _maximumPlayerSeparation = 7f;
+        [SerializeField] [Min(0f)] private float _cameraBoundaryPadding = 1f;
+        [SerializeField] [Min(0.1f)] private float _referenceViewportAspect = 16f / 9f;
 
         private RemoteTimelineView _remoteTimelineView;
         private TimelineCameraRig _mainCameraRig;
@@ -108,7 +111,12 @@ namespace Caretaker.Presentation
             _mainCamera.transform.SetPositionAndRotation(
                 localTemplate.transform.position,
                 localTemplate.transform.rotation);
-            _mainCameraRig.Configure(_pastPlayer, _futurePlayer, localTemplate.transform.position);
+            _mainCameraRig.Configure(
+                _pastPlayer,
+                _futurePlayer,
+                localTemplate.transform.position,
+                true,
+                CalculateMaximumPlayerSeparation(localTemplate, remoteTemplate));
 
             _remoteTimelineView.Show(
                 remoteTemplate,
@@ -161,15 +169,35 @@ namespace Caretaker.Presentation
 
         private void HandleObservedPlayerDespawned(NetworkPlayerOwnerGate player)
         {
+            bool trackedPlayerDespawned = false;
             if (player != null && _pastPlayer == player.transform)
             {
                 _pastPlayer = null;
+                trackedPlayerDespawned = true;
             }
 
             if (player != null && _futurePlayer == player.transform)
             {
                 _futurePlayer = null;
+                trackedPlayerDespawned = true;
             }
+
+            if (trackedPlayerDespawned)
+            {
+                SuspendSplitViewForMissingPlayer();
+            }
+        }
+
+        private void SuspendSplitViewForMissingPlayer()
+        {
+            if (_mainCamera != null)
+            {
+                _mainCamera.rect = new Rect(0f, 0f, 1f, 1f);
+            }
+
+            _mainCameraRig?.StopFollowing();
+            _remoteTimelineView?.Hide();
+            _isSplitViewActive = false;
         }
 
         private void RefreshObservedPlayers()
@@ -276,6 +304,47 @@ namespace Caretaker.Presentation
             }
 
             return fallback;
+        }
+
+        private float CalculateMaximumPlayerSeparation(Camera localCamera, Camera remoteCamera)
+        {
+            float localHalfWidth = GetResolutionIndependentHalfWidth(
+                localCamera,
+                _referenceViewportAspect);
+            float remoteHalfWidth = GetResolutionIndependentHalfWidth(
+                remoteCamera,
+                _referenceViewportAspect);
+            return ResolveMaximumPlayerSeparation(
+                _maximumPlayerSeparation,
+                localHalfWidth,
+                remoteHalfWidth,
+                _cameraBoundaryPadding);
+        }
+
+        /// <summary>설정된 거리와 두 카메라 중 좁은 월드 범위를 기준으로 최대 간격을 계산합니다.</summary>
+        public static float ResolveMaximumPlayerSeparation(
+            float configuredSeparation,
+            float localHalfWidth,
+            float remoteHalfWidth,
+            float boundaryPadding)
+        {
+            float narrowestHalfWidth = Mathf.Min(localHalfWidth, remoteHalfWidth);
+            return Mathf.Max(
+                0f,
+                Mathf.Min(configuredSeparation, narrowestHalfWidth - boundaryPadding));
+        }
+
+        private static float GetResolutionIndependentHalfWidth(
+            Camera camera,
+            float referenceViewportAspect)
+        {
+            if (camera == null || !camera.orthographic)
+            {
+                return 8f;
+            }
+
+            // 실제 해상도 대신 공통 기준 aspect를 사용해 모든 클라이언트가 같은 경계를 갖습니다.
+            return camera.orthographicSize * Mathf.Max(0.1f, referenceViewportAspect);
         }
     }
 }
