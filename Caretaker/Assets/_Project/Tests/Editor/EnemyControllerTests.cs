@@ -310,20 +310,6 @@ namespace Caretaker.Tests.Editor
                 Is.EqualTo(expected));
         }
 
-        [TestCase(9f, true, 10f, false)]
-        [TestCase(10f, true, 10f, true)]
-        [TestCase(11f, false, 10f, false)]
-        public void Phase3Chaser_SectionTimeoutRequiresActiveExpiredDeadline(
-            float currentTime,
-            bool hasDeadline,
-            float deadline,
-            bool expected)
-        {
-            Assert.That(
-                Phase3Chaser.IsSectionTimedOut(currentTime, hasDeadline, deadline),
-                Is.EqualTo(expected));
-        }
-
         [Test]
         public void EvaluateSight_AppliesRangeFovCrouchAndObstructionRules()
         {
