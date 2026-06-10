@@ -1749,7 +1749,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.CausalTrigger
   _causalRule: {fileID: 11400000, guid: 91bfeaa7d1b08994c95e2045c20b84e9, type: 2}
-  _triggerId: CR_P3_Falling_Tile
+  _triggerId: CR_P3_FALLING_TILE
 --- !u!1001 &1808765280595171700
 PrefabInstance:
   m_ObjectHideFlags: 0

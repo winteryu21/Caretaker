@@ -44,13 +44,6 @@ namespace Caretaker.Editor
                 },
                 CausalRuleSO.InteractionWeight.Major),
             new(
-                "CR_P1_VENT_OPEN",
-                "CR_P1_VENT_OPEN",
-                "ITEM_TOOL_DRIVER",
-                Array.Empty<ConditionSeed>(),
-                new[] { new EffectSeed("RCV_P1_VENT_PATH", "pathState", "Open") },
-                CausalRuleSO.InteractionWeight.Minor),
-            new(
                 "CR_P1_SEC_HACK",
                 "CR_P1_SEC_HACK",
                 string.Empty,
@@ -64,6 +57,13 @@ namespace Caretaker.Editor
                 new[] { new ConditionSeed("blueprintSelection", "Correct") },
                 new[] { new EffectSeed("RCV_P2_BLUEPRINT_STATE", "blueprintState", "Identified") },
                 CausalRuleSO.InteractionWeight.Major),
+            new(
+                "CR_P2_STORAGE_OPEN",
+                "CR_P2_STORAGE_OPEN",
+                string.Empty,
+                Array.Empty<ConditionSeed>(),
+                new[] { new EffectSeed("RCV_P2_STORAGE_DOOR", "doorState", "Open") },
+                CausalRuleSO.InteractionWeight.Minor),
             new(
                 "CR_P2_VIRUS_PLANT",
                 "CR_P2_VIRUS_PLANT",
@@ -91,16 +91,109 @@ namespace Caretaker.Editor
                 string.Empty,
                 Array.Empty<ConditionSeed>(),
                 new[] { new EffectSeed("RCV_P3_HIGH_PLATFORM", "heightState", "Lowered") },
+                CausalRuleSO.InteractionWeight.Minor),
+            new(
+                "CR_P3_ELECTRIC_TRAP",
+                "CR_P3_ELECTRIC_TRAP",
+                string.Empty,
+                Array.Empty<ConditionSeed>(),
+                new[] { new EffectSeed("RCV_P3_ELECTRIC_TRAP", "trapState", "Disabled") },
+                CausalRuleSO.InteractionWeight.Minor),
+            new(
+                "CR_P3_FALLING_TILE",
+                "CR_P3_FALLING_TILE",
+                string.Empty,
+                Array.Empty<ConditionSeed>(),
+                new[] { new EffectSeed("RCV_TILE_1", "tileState", "Collapsed") },
                 CausalRuleSO.InteractionWeight.Minor)
         };
 
         private static readonly ItemSeed[] ITEM_SEEDS =
         {
-            new("ITEM_TOOL_DRIVER", "드라이버", "Tool", new[] { "VentScrew" }, false),
-            new("ITEM_CABLE", "전력 케이블", "Power", new[] { "BreakerPanel", "AuxPowerDevice" }, true),
-            new("ITEM_BATTERY", "예비 배터리", "Power", new[] { "AuxPowerDevice" }, true),
-            new("ITEM_KEY_CARD", "카드키", "Access", new[] { "CardReader" }, false),
-            new("ITEM_P3_TOOL", "(TBD) Phase 3 도구", "TBD", new[] { "Phase3Obstacle" }, false)
+            new(
+                "ITEM_MAP",
+                "연구동 지도",
+                "연구동 구조를 확인할 수 있는 지도입니다.",
+                "Navigation",
+                Array.Empty<string>(),
+                false),
+            new(
+                "ITEM_CABLE",
+                "전력 케이블",
+                "차단기 패널 연결에 사용하는 전력 케이블입니다.",
+                "Power",
+                new[] { "BreakerPanel" },
+                true),
+            new(
+                "ITEM_BATTERY",
+                "예비 배터리",
+                "보조 전력 장치에 연결하는 예비 배터리입니다.",
+                "Power",
+                new[] { "AuxPowerDevice" },
+                true),
+            new(
+                "ITEM_KEY_CARD",
+                "카드키",
+                "B동 2층 자료실 카드 리더에 사용하는 카드키입니다.",
+                "Access",
+                new[] { "CardReader" },
+                false),
+            new(
+                "ITEM_BLUEPRINT",
+                "청사진",
+                "입자 관련 장치를 식별하기 위한 청사진입니다.",
+                "Document",
+                Array.Empty<string>(),
+                false),
+            new(
+                "ITEM_INGREDIENT_A",
+                "시약 재료A",
+                "시약 조합 실험에 사용하는 재료 A입니다.",
+                "Reagent",
+                new[] { "ReagentMixer" },
+                true),
+            new(
+                "ITEM_INGREDIENT_B",
+                "시약 재료B",
+                "시약 조합 실험에 사용하는 재료 B입니다.",
+                "Reagent",
+                new[] { "ReagentMixer" },
+                true),
+            new(
+                "ITEM_INGREDIENT_C",
+                "시약 재료C",
+                "시약 조합 실험에 사용하는 재료 C입니다.",
+                "Reagent",
+                new[] { "ReagentMixer" },
+                true),
+            new(
+                "ITEM_INGREDIENT_D",
+                "시약 재료D",
+                "시약 조합 실험에 사용하는 재료 D입니다.",
+                "Reagent",
+                new[] { "ReagentMixer" },
+                true),
+            new(
+                "ITEM_INGREDIENT_E",
+                "시약 재료E",
+                "시약 조합 실험에 사용하는 재료 E입니다.",
+                "Reagent",
+                new[] { "ReagentMixer" },
+                true),
+            new(
+                "ITEM_PIM_PARTICLE",
+                "핌입자",
+                "미래 저장고에서 확보하는 핵심 입자 샘플입니다.",
+                "Sample",
+                Array.Empty<string>(),
+                false),
+            new(
+                "ITEM_P3_TOOL",
+                "(TBD)",
+                "Phase 3 장애물 처리에 사용할 예정인 임시 아이템입니다.",
+                "TBD",
+                new[] { "Phase3Obstacle" },
+                false)
         };
 
         private static readonly RoomBaseSeed[] ROOM_BASE_SEEDS =
@@ -191,6 +284,7 @@ namespace Caretaker.Editor
                     SerializedObject serializedObject = new(asset);
                     SetString(serializedObject, "_itemId", seed.ItemId);
                     SetString(serializedObject, "_displayName", seed.DisplayName);
+                    SetString(serializedObject, "_description", seed.Description);
                     SetString(serializedObject, "_category", seed.Category);
                     SetStringArray(serializedObject, "_usableTargetTags", seed.UsableTargetTags);
                     SetBool(serializedObject, "_consumable", seed.Consumable);
@@ -397,10 +491,17 @@ namespace Caretaker.Editor
 
         private readonly struct ItemSeed
         {
-            public ItemSeed(string itemId, string displayName, string category, IReadOnlyList<string> usableTargetTags, bool consumable)
+            public ItemSeed(
+                string itemId,
+                string displayName,
+                string description,
+                string category,
+                IReadOnlyList<string> usableTargetTags,
+                bool consumable)
             {
                 ItemId = itemId;
                 DisplayName = displayName;
+                Description = description;
                 Category = category;
                 UsableTargetTags = usableTargetTags;
                 Consumable = consumable;
@@ -408,6 +509,7 @@ namespace Caretaker.Editor
 
             public string ItemId { get; }
             public string DisplayName { get; }
+            public string Description { get; }
             public string Category { get; }
             public IReadOnlyList<string> UsableTargetTags { get; }
             public bool Consumable { get; }
