@@ -286,6 +286,45 @@ namespace Caretaker.Tests.Editor
         }
 
         [Test]
+        public void Phase3Chaser_UsesSharedConstantSpeedProgress()
+        {
+            float sharedX = Phase3Chaser.CalculateSharedX(
+                startX: -8f,
+                speed: 4f,
+                elapsedSeconds: 2.5f);
+
+            Assert.That(sharedX, Is.EqualTo(2f).Within(0.001f));
+        }
+
+        [TestCase(4.2f, 5f, 0.75f, false)]
+        [TestCase(4.25f, 5f, 0.75f, true)]
+        [TestCase(5f, 5f, 0.75f, true)]
+        public void Phase3Chaser_CapturesOnlyInsideConfiguredDistance(
+            float chaserX,
+            float playerX,
+            float captureDistance,
+            bool expected)
+        {
+            Assert.That(
+                Phase3Chaser.IsPlayerCaught(chaserX, playerX, captureDistance),
+                Is.EqualTo(expected));
+        }
+
+        [TestCase(9f, true, 10f, false)]
+        [TestCase(10f, true, 10f, true)]
+        [TestCase(11f, false, 10f, false)]
+        public void Phase3Chaser_SectionTimeoutRequiresActiveExpiredDeadline(
+            float currentTime,
+            bool hasDeadline,
+            float deadline,
+            bool expected)
+        {
+            Assert.That(
+                Phase3Chaser.IsSectionTimedOut(currentTime, hasDeadline, deadline),
+                Is.EqualTo(expected));
+        }
+
+        [Test]
         public void EvaluateSight_AppliesRangeFovCrouchAndObstructionRules()
         {
             EnemyPerception2D perception = CreatePerception(CreateTuning(1f, 0f, 10f, 45f, 4f, 10f), 0);

@@ -195,6 +195,23 @@ namespace Caretaker.Core
             Debug.LogWarning($"Checkpoint rollback is not implemented yet. Reason={reason}", this);
         }
 
+        /// <summary>Phase 3 포획 또는 타임아웃을 공동 탈출 실패로 확정합니다.</summary>
+        public void ReportEscapeFailure(string reason)
+        {
+            if (!IsHostAuthority() || _currentPhase != PhaseId.Phase3)
+            {
+                return;
+            }
+
+            if (!ApplyGameResult(GameResult.EscapeFail))
+            {
+                return;
+            }
+
+            Debug.LogWarning($"Phase 3 escape failed. Reason={reason}", this);
+            _roleManager?.BroadcastGameResult(GameResult.EscapeFail);
+        }
+
         /// <summary>
         /// 대상 Phase로 전환한다.
         /// </summary>
