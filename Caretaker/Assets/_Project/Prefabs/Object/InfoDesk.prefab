@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1075811830720493176}
   - component: {fileID: 3922530298622572133}
+  - component: {fileID: 8997375007923424804}
+  - component: {fileID: 8672973946902092476}
   m_Layer: 0
   m_Name: InfoDesk
   m_TagString: Untagged
@@ -91,3 +93,64 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!58 &8997375007923424804
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9085711225056245123}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 2.28125
+--- !u!114 &8672973946902092476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9085711225056245123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4ac8ac1e08dba1478b4f18934717a54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.InteractableObject
+  _itemId: {fileID: 0}
+  _interactionTypes: 2
+  _grantedItemId: {fileID: 11400000, guid: a61faaa625f4453d8e47e74693f52fe0, type: 2}
+  _requiredItemId: {fileID: 0}
+  _isDestroy: 0
+  _examineText: 
+  _examineImage: {fileID: 0}
+  _outlineBehaviours: []
+  _useFallbackGlow: 1
+  _fallbackGlowColor: {r: 0.35, g: 0.95, b: 1, a: 0.45}
+  _fallbackGlowScale: 1.08
+  _fallbackGlowSortingOrderOffset: 1
+  _highlightOnAwake: 0

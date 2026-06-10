@@ -50,7 +50,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3468909457371763050}
   m_Layer: 0
-  m_Name: StartPoint
+  m_Name: SceneStartPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -65,7 +65,7 @@ Transform:
   m_GameObject: {fileID: 4962809743237534145}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -97.57, y: -27.81, z: 0}
+  m_LocalPosition: {x: -97.67, y: -27.49, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -538,10 +538,14 @@ PrefabInstance:
       propertyPath: _interactionTypes
       value: 4
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8571615132809756157, guid: c89d73ac8dba5b24db5ae11230084920, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 964967656824230490, guid: c89d73ac8dba5b24db5ae11230084920, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4632386137002294457}
   m_SourcePrefab: {fileID: 100100000, guid: c89d73ac8dba5b24db5ae11230084920, type: 3}
 --- !u!4 &1362705937191396976 stripped
 Transform:
@@ -553,6 +557,27 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9058773810308031434, guid: c89d73ac8dba5b24db5ae11230084920, type: 3}
   m_PrefabInstance: {fileID: 6228517944207964474}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &6562981510236253024 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 964967656824230490, guid: c89d73ac8dba5b24db5ae11230084920, type: 3}
+  m_PrefabInstance: {fileID: 6228517944207964474}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4632386137002294457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6562981510236253024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8436190252964cca98847b7b753ce707, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.SceneTransitionOperateAction
+  _targetSceneName: Phase1_Past
+  _spawnPointName: ReverseSpawnPoint
+  _unloadActorScene: 0
+  _transitionManager: {fileID: 0}
 --- !u!4 &8901464018071415225 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3312536396177608835, guid: c89d73ac8dba5b24db5ae11230084920, type: 3}
