@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b77995b609b34f74ca1fdcd1c8232e64, type: 3}
+  m_Name: SO_ITEM_INGREDIENT_C
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.ItemDefinitionSO
+  _itemId: ITEM_INGREDIENT_C
+  _displayName: 시약 재료C
+  _description: 시약 조합 실험에 사용하는 재료 C입니다.
+  _icon: {fileID: 0}
+  _category: Reagent
+  _usableTargetTags:
+  - ReagentMixer
+  _consumable: 1
