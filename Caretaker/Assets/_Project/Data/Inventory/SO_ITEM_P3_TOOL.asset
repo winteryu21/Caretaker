@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: SO_ITEM_P3_TOOL
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.ItemDefinitionSO
   _itemId: ITEM_P3_TOOL
-  _displayName: "(TBD) Phase 3 \uB3C4\uAD6C"
+  _displayName: (TBD)
+  _description: Phase 3 장애물 처리에 사용할 예정인 임시 아이템입니다.
   _icon: {fileID: 0}
   _category: TBD
   _usableTargetTags:

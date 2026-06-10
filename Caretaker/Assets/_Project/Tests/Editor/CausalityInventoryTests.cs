@@ -16,7 +16,7 @@ namespace Caretaker.Tests.Editor
     public class CausalityInventoryTests
     {
         private const ulong PLAYER_ID = 42;
-        private const string REQUIRED_ITEM_ID = "ITEM_TOOL_DRIVER";
+        private const string REQUIRED_ITEM_ID = "ITEM_KEY_CARD";
 
         [Test]
         public void CausalityService_RejectsTriggerWhenRequiredItemIsMissing()
