@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using Unity.Netcode;
 using UnityEngine;
@@ -17,12 +18,17 @@ namespace Caretaker.Gameplay
     {
         public const ulong NO_TALKER_ID = ulong.MaxValue;
 
+        [SerializeField] private float _talkArbitrationWindowSeconds = 0.1f;
+
         private readonly NetworkVariable<ulong> _currentTalkerId = new(
             NO_TALKER_ID,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server);
 
         private readonly RadioService _radioService = new();
+        private readonly List<TalkRequest> _pendingTalkRequests = new();
+        private bool _isTalkArbitrationActive;
+        private double _talkArbitrationDeadline;
 
         /// <summary>
         /// 로컬 플레이어 기준 무전기 상태가 변경될 때 발생한다.
@@ -52,6 +58,7 @@ namespace Caretaker.Gameplay
             {
                 _radioService.Clear();
                 _currentTalkerId.Value = NO_TALKER_ID;
+                ClearPendingTalkRequests();
 
                 if (NetworkManager != null)
                 {
@@ -72,6 +79,21 @@ namespace Caretaker.Gameplay
             }
         }
 
+        private void Update()
+        {
+            if (!IsServer || !_isTalkArbitrationActive || !CanUseNetwork())
+            {
+                return;
+            }
+
+            if (GetServerTimeSeconds() < _talkArbitrationDeadline)
+            {
+                return;
+            }
+
+            ResolvePendingTalkRequests();
+        }
+
         /// <summary>
         /// 로컬 플레이어의 송신권 요청을 Host에 제출한다.
         /// </summary>
@@ -84,11 +106,11 @@ namespace Caretaker.Gameplay
 
             if (IsServer)
             {
-                ProcessTalkRequest(NetworkManager.LocalClientId);
+                QueueTalkRequest(NetworkManager.LocalClientId, GetServerTimeSeconds());
                 return;
             }
 
-            RequestTalkRpc();
+            RequestTalkRpc(GetServerTimeSeconds());
         }
 
         /// <summary>
@@ -111,9 +133,9 @@ namespace Caretaker.Gameplay
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-        private void RequestTalkRpc(RpcParams rpcParams = default)
+        private void RequestTalkRpc(double requestedServerTime, RpcParams rpcParams = default)
         {
-            ProcessTalkRequest(rpcParams.Receive.SenderClientId);
+            QueueTalkRequest(rpcParams.Receive.SenderClientId, requestedServerTime);
         }
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
@@ -122,22 +144,71 @@ namespace Caretaker.Gameplay
             ProcessTalkRelease(rpcParams.Receive.SenderClientId);
         }
 
-        private void ProcessTalkRequest(ulong clientId)
+        private void QueueTalkRequest(ulong clientId, double requestedServerTime)
         {
             if (!IsServer)
             {
                 return;
             }
 
-            bool wasGranted = _radioService.RequestTalk(clientId);
-            if (wasGranted)
+            if (!_radioService.IsIdle)
             {
-                _currentTalkerId.Value = clientId;
-                PublishLocalState();
+                bool isCurrentTalker = _radioService.CurrentTalkerId.HasValue
+                    && _radioService.CurrentTalkerId.Value == clientId;
+                if (!isCurrentTalker)
+                {
+                    SendTalkDenied(clientId);
+                }
+
                 return;
             }
 
-            SendTalkDenied(clientId);
+            double serverNow = GetServerTimeSeconds();
+            double clampedRequestTime = ClampRequestTime(requestedServerTime, serverNow);
+            AddOrUpdatePendingTalkRequest(clientId, clampedRequestTime);
+
+            if (!_isTalkArbitrationActive)
+            {
+                _isTalkArbitrationActive = true;
+                _talkArbitrationDeadline = serverNow + Mathf.Max(0f, _talkArbitrationWindowSeconds);
+            }
+        }
+
+        private void ResolvePendingTalkRequests()
+        {
+            if (!IsServer)
+            {
+                return;
+            }
+
+            if (_pendingTalkRequests.Count == 0)
+            {
+                _isTalkArbitrationActive = false;
+                return;
+            }
+
+            int winnerIndex = GetWinningPendingTalkRequestIndex();
+            ulong winnerClientId = _pendingTalkRequests[winnerIndex].ClientId;
+
+            bool wasGranted = _radioService.RequestTalk(winnerClientId);
+            if (wasGranted)
+            {
+                _currentTalkerId.Value = winnerClientId;
+                PublishLocalState();
+            }
+
+            for (int i = 0; i < _pendingTalkRequests.Count; i++)
+            {
+                ulong clientId = _pendingTalkRequests[i].ClientId;
+                if (clientId == winnerClientId)
+                {
+                    continue;
+                }
+
+                SendTalkDenied(clientId);
+            }
+
+            ClearPendingTalkRequests();
         }
 
         private void ProcessTalkRelease(ulong clientId)
@@ -146,6 +217,8 @@ namespace Caretaker.Gameplay
             {
                 return;
             }
+
+            RemovePendingTalkRequest(clientId);
 
             if (_radioService.ReleaseTalk(clientId))
             {
@@ -156,11 +229,88 @@ namespace Caretaker.Gameplay
 
         private void HandleClientDisconnected(ulong clientId)
         {
+            RemovePendingTalkRequest(clientId);
+
             if (_radioService.ForceReleaseIfOwnedBy(clientId))
             {
                 _currentTalkerId.Value = NO_TALKER_ID;
                 PublishLocalState();
             }
+        }
+
+        private void AddOrUpdatePendingTalkRequest(ulong clientId, double requestedServerTime)
+        {
+            for (int i = 0; i < _pendingTalkRequests.Count; i++)
+            {
+                if (_pendingTalkRequests[i].ClientId != clientId)
+                {
+                    continue;
+                }
+
+                if (requestedServerTime < _pendingTalkRequests[i].RequestedServerTime)
+                {
+                    _pendingTalkRequests[i] = new TalkRequest(clientId, requestedServerTime);
+                }
+
+                return;
+            }
+
+            _pendingTalkRequests.Add(new TalkRequest(clientId, requestedServerTime));
+        }
+
+        private void RemovePendingTalkRequest(ulong clientId)
+        {
+            for (int i = _pendingTalkRequests.Count - 1; i >= 0; i--)
+            {
+                if (_pendingTalkRequests[i].ClientId == clientId)
+                {
+                    _pendingTalkRequests.RemoveAt(i);
+                }
+            }
+
+            if (_pendingTalkRequests.Count == 0)
+            {
+                _isTalkArbitrationActive = false;
+            }
+        }
+
+        private int GetWinningPendingTalkRequestIndex()
+        {
+            int winnerIndex = 0;
+            TalkRequest winner = _pendingTalkRequests[0];
+
+            for (int i = 1; i < _pendingTalkRequests.Count; i++)
+            {
+                TalkRequest candidate = _pendingTalkRequests[i];
+                if (candidate.RequestedServerTime < winner.RequestedServerTime ||
+                    (Math.Abs(candidate.RequestedServerTime - winner.RequestedServerTime) <= double.Epsilon &&
+                     candidate.ClientId < winner.ClientId))
+                {
+                    winnerIndex = i;
+                    winner = candidate;
+                }
+            }
+
+            return winnerIndex;
+        }
+
+        private double ClampRequestTime(double requestedServerTime, double serverNow)
+        {
+            double maxPastOffset = Mathf.Max(0f, _talkArbitrationWindowSeconds);
+            double earliestAcceptedTime = serverNow - maxPastOffset;
+            if (requestedServerTime < earliestAcceptedTime)
+            {
+                return earliestAcceptedTime;
+            }
+
+            return requestedServerTime > serverNow ? serverNow : requestedServerTime;
+        }
+
+        private void ClearPendingTalkRequests()
+        {
+            _pendingTalkRequests.Clear();
+            _isTalkArbitrationActive = false;
+            _talkArbitrationDeadline = 0d;
         }
 
         private void HandleCurrentTalkerChanged(ulong previousTalkerId, ulong currentTalkerId)
@@ -208,6 +358,23 @@ namespace Caretaker.Gameplay
         private bool CanUseNetwork()
         {
             return NetworkManager != null && NetworkManager.IsListening && IsSpawned;
+        }
+
+        private double GetServerTimeSeconds()
+        {
+            return NetworkManager != null ? NetworkManager.ServerTime.Time : Time.unscaledTimeAsDouble;
+        }
+
+        private struct TalkRequest
+        {
+            public TalkRequest(ulong clientId, double requestedServerTime)
+            {
+                ClientId = clientId;
+                RequestedServerTime = requestedServerTime;
+            }
+
+            public ulong ClientId { get; }
+            public double RequestedServerTime { get; }
         }
     }
 }
