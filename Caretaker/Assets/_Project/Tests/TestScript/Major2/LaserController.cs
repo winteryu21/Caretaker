@@ -6,11 +6,19 @@ public class LaserController : MonoBehaviour
 
     [SerializeField] private Major2Puzzle puzzleUI;
 
-
+    //레이저 
     [SerializeField] private RectTransform laserContainer;
     [SerializeField] private RectTransform startPoint;
     [SerializeField] private RectTransform goalPoint;
     [SerializeField] private GameObject segmentPrefab;
+
+
+    //벽문 생성 해제
+    [SerializeField] private GameObject doorA1;
+    [SerializeField] private GameObject doorA2;
+
+    [SerializeField] private GameObject doorB1;
+    [SerializeField] private GameObject doorB2;
 
     [SerializeField] private float growSpeed = 200f;
 
@@ -21,7 +29,7 @@ public class LaserController : MonoBehaviour
     private readonly List<GameObject> segments = new();
 
 
-   
+
     private RectTransform currentSegment;
 
     private Vector2 currentPosition;
@@ -36,7 +44,7 @@ public class LaserController : MonoBehaviour
 
     private void Update()
     {
-       
+
         GrowCurrentSegment();
 
         if (HitWall())
@@ -93,7 +101,7 @@ public class LaserController : MonoBehaviour
 
     private void ChangeDirection(Vector2 newDirection)
     {
-        currentPosition =GetCurrentLaserTip();
+        currentPosition = GetCurrentLaserTip();
 
         direction = newDirection;
 
@@ -154,7 +162,7 @@ public class LaserController : MonoBehaviour
     {
         Vector2 laserTip = GetCurrentLaserTip();
 
-        float distance = Vector2.Distance(laserTip,goalPoint.anchoredPosition);
+        float distance = Vector2.Distance(laserTip, goalPoint.anchoredPosition);
 
         return distance < 15f;
     }
@@ -191,5 +199,5 @@ public class LaserController : MonoBehaviour
     }
 
 
-   
+
 }
