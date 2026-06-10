@@ -18551,6 +18551,10 @@ PrefabInstance:
       propertyPath: m_Tiles.Array.data[4139].second.m_TileObjectToInstantiateIndex
       value: 65535
       objectReference: {fileID: 0}
+    - target: {fileID: 5759446478945312252, guid: 53d21951076f7d240b7088e29e496371, type: 3}
+      propertyPath: _interactionTypes
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 5955447688313293051, guid: 53d21951076f7d240b7088e29e496371, type: 3}
       propertyPath: _destination
       value: 
@@ -18622,6 +18626,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4913283517662219020, guid: 6fe935b0a8df7a148a7965c02fd403c7, type: 3}
+      propertyPath: _interactionTypes
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 6145675959306398411, guid: 6fe935b0a8df7a148a7965c02fd403c7, type: 3}
       propertyPath: m_Name
       value: PastMainLobby
@@ -18630,6 +18638,10 @@ PrefabInstance:
       propertyPath: _destination
       value: 
       objectReference: {fileID: 6018068680906406174}
+    - target: {fileID: 7880653742099129749, guid: 6fe935b0a8df7a148a7965c02fd403c7, type: 3}
+      propertyPath: _interactionTypes
+      value: 4
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -18923,7 +18935,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.InteractableObject
   _itemId: {fileID: 0}
-  _interactionTypes: 5
+  _interactionTypes: 4
   _grantedItemId: {fileID: 0}
   _requiredItemId: {fileID: 0}
   _isDestroy: 0

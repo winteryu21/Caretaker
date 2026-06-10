@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b77995b609b34f74ca1fdcd1c8232e64, type: 3}
-  m_Name: SO_ITEM_CABLE
+  m_Name: SO_ITEM_INGREDIENT_D
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.ItemDefinitionSO
-  _itemId: ITEM_CABLE
-  _displayName: "\uC804\uB825 \uCF00\uC774\uBE14"
-  _description: 차단기 패널 연결에 사용하는 전력 케이블입니다.
+  _itemId: ITEM_INGREDIENT_D
+  _displayName: 시약 재료D
+  _description: 시약 조합 실험에 사용하는 재료 D입니다.
   _icon: {fileID: 0}
-  _category: Power
+  _category: Reagent
   _usableTargetTags:
-  - BreakerPanel
+  - ReagentMixer
   _consumable: 1
