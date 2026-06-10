@@ -256,9 +256,11 @@ namespace Caretaker.Gameplay
 
         private void ReportSharedFailure(string reason)
         {
-            s_failureReported = true;
             ResolveDependencies();
-            _gameFlowManager?.ReportEscapeFailure(reason);
+            if (_gameFlowManager != null && _gameFlowManager.ReportEscapeFailure(reason))
+            {
+                s_failureReported = true;
+            }
         }
 
         private static void ResetSharedChaseForMissingPlayer()

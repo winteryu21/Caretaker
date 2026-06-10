@@ -21,11 +21,13 @@ namespace Caretaker.Core
 
         private bool _isTransitioning;
         private bool _hasPendingPhaseRequest;
+        private bool _pendingForceReload;
         private PhaseId _pendingPhaseId;
         private TimelineRole _pendingTimelineRole;
 
         /// <summary>필요한 각 Phase 씬의 로드가 완료될 때 발생한다.</summary>
         public event Action<PhaseId, TimelineRole, string> OnPhaseSceneLoaded;
+        public event Action<PhaseId> OnPhaseScenesUnloaded;
 
         /// <summary>Phase와 시간대 역할에 해당하는 빌드 씬 이름을 반환한다.</summary>
         public static string GetPhaseSceneName(PhaseId phaseId, TimelineRole timelineRole)
@@ -56,9 +58,7 @@ namespace Caretaker.Core
         {
             if (_isTransitioning)
             {
-                _hasPendingPhaseRequest = true;
-                _pendingPhaseId = phaseId;
-                _pendingTimelineRole = timelineRole;
+                QueuePendingRequest(phaseId, timelineRole, false);
                 Debug.Log(
                     $"Phase scene transition is already running. Queued next load: phase={phaseId}, role={timelineRole}",
                     this);
@@ -78,11 +78,79 @@ namespace Caretaker.Core
             }
 
             Debug.Log($"Starting phase scene load: phase={phaseId}, role={timelineRole}", this);
-            StartCoroutine(LoadPhaseRoutine(phaseId, timelineRole));
+            StartCoroutine(LoadPhaseRoutine(phaseId, timelineRole, false));
             return true;
         }
 
-        private IEnumerator LoadPhaseRoutine(PhaseId phaseId, TimelineRole timelineRole)
+        /// <summary>
+        /// 현재 Phase 씬을 모두 내린 뒤 다시 로드한다.
+        /// </summary>
+        /// <returns>재시작 요청을 접수했는지 여부.</returns>
+        public bool TryReloadPhase(PhaseId phaseId, TimelineRole timelineRole)
+        {
+            if (timelineRole is not (TimelineRole.Past or TimelineRole.Future))
+            {
+                Debug.LogWarning("Cannot reload a phase scene before a timeline role is assigned.", this);
+                return false;
+            }
+
+            if (_isTransitioning)
+            {
+                QueuePendingRequest(phaseId, timelineRole, true);
+                Debug.Log(
+                    $"Phase scene transition is already running. Queued reload: phase={phaseId}, role={timelineRole}",
+                    this);
+                return true;
+            }
+
+            Debug.Log($"Starting phase scene reload: phase={phaseId}, role={timelineRole}", this);
+            StartCoroutine(LoadPhaseRoutine(phaseId, timelineRole, true));
+            return true;
+        }
+
+        /// <summary>현재 로드된 Phase 씬을 모두 언로드한다.</summary>
+        /// <returns>언로드 요청을 시작했는지 여부.</returns>
+        public bool TryUnloadPhase(PhaseId phaseId)
+        {
+            if (_isTransitioning)
+            {
+                Debug.LogWarning($"Cannot unload phase scenes during another transition: phase={phaseId}", this);
+                return false;
+            }
+
+            StartCoroutine(UnloadPhaseRoutine(phaseId));
+            return true;
+        }
+
+        private IEnumerator UnloadPhaseRoutine(PhaseId phaseId)
+        {
+            _isTransitioning = true;
+
+            string[] loadedSceneNames = new string[_loadedPhaseSceneNames.Count];
+            _loadedPhaseSceneNames.CopyTo(loadedSceneNames);
+            for (int i = 0; i < loadedSceneNames.Length; i++)
+            {
+                string sceneName = loadedSceneNames[i];
+                Scene loadedScene = SceneManager.GetSceneByName(sceneName);
+                if (loadedScene.isLoaded)
+                {
+                    Debug.Log($"Unloading phase scene for restart: {sceneName}", this);
+                    AsyncOperation unloadOperation = SceneManager.UnloadSceneAsync(loadedScene);
+                    if (unloadOperation != null)
+                    {
+                        yield return unloadOperation;
+                    }
+                }
+
+                _loadedPhaseSceneNames.Remove(sceneName);
+                _offsetPhaseSceneNames.Remove(sceneName);
+            }
+
+            _isTransitioning = false;
+            OnPhaseScenesUnloaded?.Invoke(phaseId);
+        }
+
+        private IEnumerator LoadPhaseRoutine(PhaseId phaseId, TimelineRole timelineRole, bool forceReload)
         {
             _isTransitioning = true;
 
@@ -93,7 +161,7 @@ namespace Caretaker.Core
             for (int i = 0; i < loadedSceneNames.Length; i++)
             {
                 string loadedSceneName = loadedSceneNames[i];
-                if (Contains(requiredSceneNames, loadedSceneName))
+                if (!forceReload && Contains(requiredSceneNames, loadedSceneName))
                 {
                     continue;
                 }
@@ -147,7 +215,27 @@ namespace Caretaker.Core
             }
 
             _hasPendingPhaseRequest = false;
+            bool forcePendingReload = _pendingForceReload;
+            _pendingForceReload = false;
+            if (forcePendingReload)
+            {
+                TryReloadPhase(_pendingPhaseId, _pendingTimelineRole);
+                yield break;
+            }
+
             TryLoadPhase(_pendingPhaseId, _pendingTimelineRole);
+        }
+
+        private void QueuePendingRequest(PhaseId phaseId, TimelineRole timelineRole, bool forceReload)
+        {
+            bool preserveForceReload = _hasPendingPhaseRequest
+                && _pendingForceReload
+                && _pendingPhaseId == phaseId
+                && _pendingTimelineRole == timelineRole;
+            _hasPendingPhaseRequest = true;
+            _pendingPhaseId = phaseId;
+            _pendingTimelineRole = timelineRole;
+            _pendingForceReload = forceReload || preserveForceReload;
         }
 
         private bool AreRequiredScenesLoaded(PhaseId phaseId, TimelineRole timelineRole)
