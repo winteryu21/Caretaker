@@ -113,7 +113,7 @@ GameObject:
   - component: {fileID: 699921817410106043}
   m_Layer: 0
   m_Name: NetworkPlayer
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -322,7 +322,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMotor2D
   _moveSpeed: 5
   _sprintSpeedMultiplier: 1.5
-  _jumpHeight: 2
+  _jumpHeight: 5
   _groundAcceleration: 40
   _groundDeceleration: 28
   _groundTurnSpeed: 48
