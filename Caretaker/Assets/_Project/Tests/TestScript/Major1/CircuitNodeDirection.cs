@@ -15,13 +15,6 @@ namespace Caretaker.Presentation
     {
         private const float MIN_DIRECTION_DISTANCE = 0.0001f;
 
-        public static CircuitNodeDirection GetNextClockwise(CircuitNodeDirection direction)
-        {
-            return direction == CircuitNodeDirection.Left
-                ? CircuitNodeDirection.Up
-                : (CircuitNodeDirection)((int)direction + 1);
-        }
-
         public static CircuitNodeDirection GetOpposite(CircuitNodeDirection direction)
         {
             return direction switch
