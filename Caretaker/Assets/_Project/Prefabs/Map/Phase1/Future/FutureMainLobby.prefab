@@ -11250,8 +11250,43 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6248249888689083889, guid: 3bb397fd259d5774ca8e017433910f7e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8202142521052196596}
   m_SourcePrefab: {fileID: 100100000, guid: 3bb397fd259d5774ca8e017433910f7e, type: 3}
+--- !u!1 &1778278347051455667 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6248249888689083889, guid: 3bb397fd259d5774ca8e017433910f7e, type: 3}
+  m_PrefabInstance: {fileID: 5628242343211204930}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8202142521052196596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1778278347051455667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3707e39893c2f048b08091a18cb0553, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.DarkVisionController
+  _mode: 0
+  _visionRadius: 2.5
+  _visionCenterOffset: {x: 0, y: 0.75}
+  _darkness: 1
+  _transitionSpeed: 5
+  _targetCamera: {fileID: 0}
+  _captureCurrentSizeAsNormal: 1
+  _normalOrthographicSize: 5
+  _restrictedOrthographicSize: 3
+  _restrictedCameraCenterOffset: {x: 0, y: 0.75}
+  _zoomSpeed: 4
+  _sortingLayerName: Default
+  _fogSortingOrder: 1000
+  _fogWorldSize: {x: 200, y: 200}
+  _effectZ: 0
 --- !u!4 &6046701695294177606 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2157712064735969284, guid: 3bb397fd259d5774ca8e017433910f7e, type: 3}
