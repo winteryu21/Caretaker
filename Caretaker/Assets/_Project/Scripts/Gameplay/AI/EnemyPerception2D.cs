@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Caretaker.Gameplay
 {
@@ -221,6 +222,7 @@ namespace Caretaker.Gameplay
             }
 
             _visionObject = new GameObject(VISION_OBJECT_NAME);
+            SceneManager.MoveGameObjectToScene(_visionObject, gameObject.scene);
             _visionObject.transform.SetParent(transform, false);
 
             MeshFilter meshFilter = _visionObject.AddComponent<MeshFilter>();
