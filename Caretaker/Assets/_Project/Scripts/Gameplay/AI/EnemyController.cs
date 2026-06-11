@@ -178,6 +178,11 @@ namespace Caretaker.Gameplay
                 deltaTime,
                 GetSearchDuration());
 
+            if (state != previousState && _perception != null)
+            {
+                _perception.SetVisionState(state);
+            }
+
             if (state == EnemyStateMachine.EnemyState.Alert && previousState != EnemyStateMachine.EnemyState.Alert)
             {
                 BeginRoomAlertSearch();
