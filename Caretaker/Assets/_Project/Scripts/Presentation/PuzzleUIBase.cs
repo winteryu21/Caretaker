@@ -51,6 +51,11 @@ namespace Caretaker.Presentation
         /// </summary>
         public bool IsSolved { get; private set; }
 
+        /// <summary>
+        /// 완료 트리거가 비어 있을 때 경고를 출력할지 반환한다.
+        /// </summary>
+        protected virtual bool WarnWhenSolvedTriggerMissing => true;
+
         private void Awake()
         {
             if (_panelRoot == null)
@@ -206,7 +211,11 @@ namespace Caretaker.Presentation
         {
             if (_solvedTrigger == null)
             {
-                Debug.LogWarning($"Puzzle '{name}' solved without a solved CausalTrigger.", this);
+                if (WarnWhenSolvedTriggerMissing)
+                {
+                    Debug.LogWarning($"Puzzle '{name}' solved without a solved CausalTrigger.", this);
+                }
+
                 return;
             }
 

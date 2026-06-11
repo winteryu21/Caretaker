@@ -148,6 +148,17 @@ namespace Caretaker.World
             Debug.Log($"Condition set: {conditionKey}={value}", this);
         }
 
+        /// <summary>
+        /// 퍼즐 정답 조건을 Host에 기록한 뒤 같은 요청자로 인과 트리거를 제출한다.
+        /// </summary>
+        /// <param name="triggerId">활성화할 트리거 ID.</param>
+        /// <param name="conditionKey">충족시킬 조건 키.</param>
+        /// <param name="conditionValue">조건 값.</param>
+        public void SubmitPuzzleSolvedTrigger(string triggerId, string conditionKey, string conditionValue)
+        {
+            SubmitPuzzleSolvedTriggerServerRpc(triggerId, conditionKey, conditionValue);
+        }
+
         // ── public: 상태 조회 ──
 
         /// <summary>
@@ -184,8 +195,27 @@ namespace Caretaker.World
         [Rpc(SendTo.Server, RequireOwnership = false)]
         public void SubmitTriggerServerRpc(string triggerId, RpcParams rpcParams = default)
         {
-            ulong senderClientId = rpcParams.Receive.SenderClientId;
+            SubmitTriggerOnServer(triggerId, rpcParams.Receive.SenderClientId);
+        }
 
+        [Rpc(SendTo.Server, RequireOwnership = false)]
+        private void SubmitPuzzleSolvedTriggerServerRpc(
+            string triggerId,
+            string conditionKey,
+            string conditionValue,
+            RpcParams rpcParams = default)
+        {
+            if (!string.IsNullOrWhiteSpace(conditionKey))
+            {
+                _service.SetConditionState(conditionKey, conditionValue);
+                Debug.Log($"Condition set via puzzle solve: {conditionKey}={conditionValue}", this);
+            }
+
+            SubmitTriggerOnServer(triggerId, rpcParams.Receive.SenderClientId);
+        }
+
+        private void SubmitTriggerOnServer(string triggerId, ulong senderClientId)
+        {
             // Host에서 역할 조회
             ResolveDependencies();
 

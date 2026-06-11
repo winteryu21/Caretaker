@@ -3,6 +3,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+using Caretaker.World;
+
 namespace Caretaker.Presentation
 {
     /// <summary>
@@ -12,6 +14,9 @@ namespace Caretaker.Presentation
     [DisallowMultipleComponent]
     public sealed class Major4PastComputerUI : PuzzleUIBase
     {
+        private const string SOLVED_TRIGGER_ID = "CR_P2_VIRUS_PLANT";
+        private const string SOLVED_CONDITION_KEY = "virusPuzzle";
+        private const string SOLVED_CONDITION_VALUE = "Solved";
         private static readonly WaitForSeconds BRIDGE_RESOLVE_INTERVAL = new(0.25f);
 
         [Header("Major 4")]
@@ -29,10 +34,13 @@ namespace Caretaker.Presentation
 
         [Header("Success")]
         [SerializeField] private bool _closeOnSolved = true;
+        [SerializeField] private bool _submitSolvedCausality = true;
 
         private readonly Image[] _cellButtonImages = new Image[Major4StoragePuzzleBridge.CELL_COUNT];
         private Coroutine _resolveBridgeRoutine;
         private int _selectedCellIndex = -1;
+
+        protected override bool WarnWhenSolvedTriggerMissing => false;
 
         private void OnValidate()
         {
@@ -66,6 +74,7 @@ namespace Caretaker.Presentation
         protected override void HandleSolved()
         {
             SetButtonsInteractable(false);
+            SubmitSolvedCausality();
 
             if (_closeOnSolved)
             {
@@ -202,6 +211,26 @@ namespace Caretaker.Presentation
             {
                 _openButton.interactable = interactable && _selectedCellIndex >= 0 && _bridge != null;
             }
+        }
+
+        private void SubmitSolvedCausality()
+        {
+            if (!_submitSolvedCausality)
+            {
+                return;
+            }
+
+            CausalityManager causalityManager = FindAnyObjectByType<CausalityManager>();
+            if (causalityManager == null)
+            {
+                Debug.LogWarning("Major4 solved but no CausalityManager was found.", this);
+                return;
+            }
+
+            causalityManager.SubmitPuzzleSolvedTrigger(
+                SOLVED_TRIGGER_ID,
+                SOLVED_CONDITION_KEY,
+                SOLVED_CONDITION_VALUE);
         }
 
         private void ResolveBridge()

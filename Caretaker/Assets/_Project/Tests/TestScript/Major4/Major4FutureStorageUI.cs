@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -28,21 +29,28 @@ namespace Caretaker.Presentation
         [SerializeField] private TMP_Text _openedTargetCountText;
         [SerializeField] private TMP_Text _remainingAttemptsText;
 
+        [Header("Success")]
+        [SerializeField] private bool _closeOnSolved = true;
+
+        private readonly List<Image> _openedCellImageBuffer = new(Major4StoragePuzzleBridge.CELL_COUNT);
         private Coroutine _resolveBridgeRoutine;
+
+        protected override bool WarnWhenSolvedTriggerMissing => false;
 
         private void OnValidate()
         {
-            if (_openedCellImages == null || _openedCellImages.Length != Major4StoragePuzzleBridge.CELL_COUNT)
-            {
-                System.Array.Resize(ref _openedCellImages, Major4StoragePuzzleBridge.CELL_COUNT);
-            }
+            NormalizeOpenedCellImages();
+            TryAutoBindOpenedCellImages(false);
         }
 
         private void OnEnable()
         {
+            NormalizeOpenedCellImages();
+            TryAutoBindOpenedCellImages(true);
             ResolveBridge();
             SubscribeToBridge();
             RefreshVisuals();
+            TryCompletePuzzle();
         }
 
         private void OnDisable()
@@ -60,6 +68,14 @@ namespace Caretaker.Presentation
         protected override bool IsCorrectSolution()
         {
             return _bridge != null && _bridge.IsSolved;
+        }
+
+        protected override void HandleSolved()
+        {
+            if (_closeOnSolved)
+            {
+                Close();
+            }
         }
 
         private void RefreshVisuals()
@@ -117,6 +133,70 @@ namespace Caretaker.Presentation
             {
                 _resolveBridgeRoutine = StartCoroutine(ResolveBridgeRoutine());
             }
+        }
+
+        private void NormalizeOpenedCellImages()
+        {
+            if (_openedCellImages == null || _openedCellImages.Length != Major4StoragePuzzleBridge.CELL_COUNT)
+            {
+                System.Array.Resize(ref _openedCellImages, Major4StoragePuzzleBridge.CELL_COUNT);
+            }
+        }
+
+        private void TryAutoBindOpenedCellImages(bool warnOnFailure)
+        {
+            if (HasCompleteOpenedCellImages())
+            {
+                return;
+            }
+
+            _openedCellImageBuffer.Clear();
+            Image[] childImages = GetComponentsInChildren<Image>(true);
+
+            for (int i = 0; i < childImages.Length; i++)
+            {
+                Image childImage = childImages[i];
+                if (childImage != null && childImage.gameObject.name.StartsWith("Cell_", System.StringComparison.Ordinal))
+                {
+                    _openedCellImageBuffer.Add(childImage);
+                }
+            }
+
+            if (_openedCellImageBuffer.Count != Major4StoragePuzzleBridge.CELL_COUNT)
+            {
+                if (warnOnFailure)
+                {
+                    Debug.LogWarning(
+                        $"Major4 future storage expected {Major4StoragePuzzleBridge.CELL_COUNT} opened cell images, " +
+                        $"but found {_openedCellImageBuffer.Count}.",
+                        this);
+                }
+
+                return;
+            }
+
+            for (int i = 0; i < Major4StoragePuzzleBridge.CELL_COUNT; i++)
+            {
+                _openedCellImages[i] = _openedCellImageBuffer[i];
+            }
+        }
+
+        private bool HasCompleteOpenedCellImages()
+        {
+            if (_openedCellImages == null || _openedCellImages.Length != Major4StoragePuzzleBridge.CELL_COUNT)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < _openedCellImages.Length; i++)
+            {
+                if (_openedCellImages[i] == null)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private IEnumerator ResolveBridgeRoutine()
