@@ -453,7 +453,7 @@ MonoBehaviour:
   _roleManager: {fileID: 0}
   _playerPrefab: {fileID: 8695379886725363112, guid: f762b58daac55b84299548a34f7f538a, type: 3}
   _defaultSpawnPosition: {x: 0, y: 1, z: 0}
-  _spawnPointName: SpawnPoint
+  _spawnPointName: SceneStartPoint
 --- !u!114 &2005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -487,7 +487,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Core.SceneTransitionManager
   _playerSpawner: {fileID: 2004}
-  _defaultSpawnPointName: SpawnPoint
+  _defaultSpawnPointName: SceneStartPoint
   _fallbackSpawnPosition: {x: 0, y: 1, z: 0}
 --- !u!1 &2100
 GameObject:

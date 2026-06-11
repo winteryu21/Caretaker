@@ -17,7 +17,7 @@ namespace Caretaker.Presentation
         private static readonly Rect BOTTOM_VIEWPORT = new(0f, 0f, 1f, 0.5f);
         private const string DIVIDER_CANVAS_NAME = "Split View Divider Canvas";
         private const string DIVIDER_IMAGE_NAME = "Split View Divider";
-        private const string SPAWN_POINT_NAME = "SpawnPoint";
+        private const string SPAWN_POINT_NAME = "SceneStartPoint";
 
         [SerializeField] private SceneLoader _sceneLoader;
         [SerializeField] private SessionRoleManager _roleManager;

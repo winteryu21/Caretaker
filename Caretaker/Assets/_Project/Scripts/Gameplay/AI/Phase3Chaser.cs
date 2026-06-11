@@ -12,7 +12,7 @@ namespace Caretaker.Gameplay
     [DisallowMultipleComponent]
     public sealed class Phase3Chaser : MonoBehaviour
     {
-        private const string SPAWN_POINT_NAME = "SpawnPoint";
+        private const string SPAWN_POINT_NAME = "SceneStartPoint";
 
         [SerializeField] [Min(0f)] private float _chaseSpeed = 4f;
         [SerializeField] [Min(0f)] private float _startDistance = 8f;

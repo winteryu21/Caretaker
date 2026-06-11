@@ -21,7 +21,7 @@ namespace Caretaker.Gameplay
     [DisallowMultipleComponent]
     public sealed class LocalWorldPlayerSpawner : MonoBehaviour
     {
-        private const string DEFAULT_SPAWN_POINT_NAME = "SpawnPoint";
+        private const string DEFAULT_SPAWN_POINT_NAME = "SceneStartPoint";
 
         [SerializeField] private SceneLoader _sceneLoader;
         [SerializeField] private SessionRoleManager _roleManager;

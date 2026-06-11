@@ -445,7 +445,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8828310126718083678}
   m_Layer: 0
-  m_Name: SpawnPoint
+  m_Name: SceneStartPoint
   m_TagString: Untagged
   m_Icon: {fileID: 5721338939258241955, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
@@ -877,6 +877,10 @@ MonoBehaviour:
   _destination: {fileID: 4489037355922926912}
   _targetRoomId: 
   _roomManager: {fileID: 0}
+  _useScreenFade: 1
+  _fadeOutSeconds: 0.1
+  _fadeHoldSeconds: 0.04
+  _fadeInSeconds: 0.16
 --- !u!1001 &2254264253346489060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6452,6 +6456,10 @@ MonoBehaviour:
   _destination: {fileID: 3800547778073527677}
   _targetRoomId: 
   _roomManager: {fileID: 0}
+  _useScreenFade: 1
+  _fadeOutSeconds: 0.1
+  _fadeHoldSeconds: 0.04
+  _fadeInSeconds: 0.16
 --- !u!4 &3602031986762218497 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8923826559418784923, guid: 543ac0c5ba1265349ac37c37ec540fb3, type: 3}
@@ -6553,6 +6561,10 @@ MonoBehaviour:
   _destination: {fileID: 1449859404224887325}
   _targetRoomId: 
   _roomManager: {fileID: 0}
+  _useScreenFade: 1
+  _fadeOutSeconds: 0.1
+  _fadeHoldSeconds: 0.04
+  _fadeInSeconds: 0.16
 --- !u!1001 &6482995539816761925
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11188,10 +11200,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Fortal
       objectReference: {fileID: 0}
-    - target: {fileID: 7439049104989717754, guid: 581131ad26067884cb9eebca192dfb37, type: 3}
-      propertyPath: _destination
-      value: 
-      objectReference: {fileID: 1665522877950699204}
     - target: {fileID: 7839891793369355635, guid: 581131ad26067884cb9eebca192dfb37, type: 3}
       propertyPath: m_LocalScale.y
       value: 8

@@ -16,7 +16,7 @@ namespace Caretaker.Core
     [DisallowMultipleComponent]
     public sealed class SceneTransitionManager : MonoBehaviour
     {
-        private const string DEFAULT_SPAWN_POINT_NAME = "SpawnPoint";
+        private const string DEFAULT_SPAWN_POINT_NAME = "SceneStartPoint";
 
         [SerializeField] private LocalWorldPlayerSpawner _playerSpawner;
         [SerializeField] private string _defaultSpawnPointName = DEFAULT_SPAWN_POINT_NAME;

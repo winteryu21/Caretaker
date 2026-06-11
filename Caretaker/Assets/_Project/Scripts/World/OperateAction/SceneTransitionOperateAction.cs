@@ -14,7 +14,7 @@ namespace Caretaker.World
     {
         [Header("Destination")]
         [SerializeField] private string _targetSceneName;
-        [SerializeField] private string _spawnPointName = "SpawnPoint";
+        [SerializeField] private string _spawnPointName = "SceneStartPoint";
         [SerializeField] private bool _unloadActorScene;
         [SerializeField] private SceneTransitionManager _transitionManager;
 
