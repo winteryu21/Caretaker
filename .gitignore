@@ -143,6 +143,11 @@ node_modules/
 npm-debug.log*
 
 # -----------------------
+# Unity MCP local package checkout
+# -----------------------
+[Cc]aretaker/[Pp]ackages/com.coplaydev.unity-mcp/
+
+# -----------------------
 # dotnet
 # -----------------------
 *.nupkg
