@@ -436,7 +436,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Core.PhaseDebugInput
   _gameFlowManager: {fileID: 2103}
-  _enableDebugInput: 1
+  _enableDebugInput: 0
 --- !u!114 &2004
 MonoBehaviour:
   m_ObjectHideFlags: 0

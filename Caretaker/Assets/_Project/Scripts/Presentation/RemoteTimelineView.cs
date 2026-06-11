@@ -32,6 +32,23 @@ namespace Caretaker.Presentation
             Transform futurePlayer,
             Rect viewport)
         {
+            if (templateCamera == null)
+            {
+                Show(templateCamera, pastPlayer, futurePlayer, viewport, Vector3.zero);
+                return;
+            }
+
+            Show(templateCamera, pastPlayer, futurePlayer, viewport, templateCamera.transform.position);
+        }
+
+        /// <summary>상대 시간대를 지정한 viewport와 카메라 기준 위치로 직접 렌더링한다.</summary>
+        public void Show(
+            Camera templateCamera,
+            Transform pastPlayer,
+            Transform futurePlayer,
+            Rect viewport,
+            Vector3 basePosition)
+        {
             if (_camera == null || templateCamera == null)
             {
                 Debug.LogWarning("RemoteTimelineView requires an initialized camera and template.", this);
@@ -43,9 +60,9 @@ namespace Caretaker.Presentation
             _camera.rect = viewport;
             _camera.depth = 0f;
             _camera.transform.SetPositionAndRotation(
-                templateCamera.transform.position,
+                basePosition,
                 templateCamera.transform.rotation);
-            _cameraRig.Configure(pastPlayer, futurePlayer, templateCamera.transform.position);
+            _cameraRig.Configure(pastPlayer, futurePlayer, basePosition);
             _camera.enabled = true;
         }
 

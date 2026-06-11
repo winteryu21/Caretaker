@@ -122,7 +122,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Core.NetworkSessionController
   _networkManager: {fileID: 350091922524053739}
   _roleManager: {fileID: 0}
+  _unityTransport: {fileID: 0}
   _connectionTimeoutSeconds: 10
   _useConnectionApproval: 1
+  _connectionAddress: 127.0.0.1
+  _connectionPort: 7777
+  _serverListenAddress: 0.0.0.0
   _autoStartGameWhenBothReady: 1
   _gameSceneName: Persistent
