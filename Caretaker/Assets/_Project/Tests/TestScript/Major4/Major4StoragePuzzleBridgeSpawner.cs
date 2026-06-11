@@ -71,11 +71,6 @@ namespace Caretaker.Presentation
             }
 
             Major4StoragePuzzleBridge bridge = Instantiate(_bridgePrefab);
-            if (_dontDestroySpawnedBridge)
-            {
-                DontDestroyOnLoad(bridge.gameObject);
-            }
-
             NetworkObject networkObject = bridge.GetComponent<NetworkObject>();
             if (networkObject == null)
             {
@@ -85,6 +80,13 @@ namespace Caretaker.Presentation
             }
 
             networkObject.Spawn();
+
+            if (_dontDestroySpawnedBridge)
+            {
+                DontDestroyOnLoad(bridge.gameObject);
+            }
+
+            Debug.Log("Major4 bridge spawned by server.", bridge);
         }
 
         private void CreateLocalBridge()

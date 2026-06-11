@@ -95,6 +95,9 @@ namespace Caretaker.Presentation
         public override void OnNetworkSpawn()
         {
             ActiveBridge = this;
+            Debug.Log(
+                $"Major4 bridge network spawned. IsServer={IsServer}, IsClient={IsClient}, IsHost={IsHost}, NetworkObjectId={NetworkObjectId}.",
+                this);
 
             if (IsServer)
             {
