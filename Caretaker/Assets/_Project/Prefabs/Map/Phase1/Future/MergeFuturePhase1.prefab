@@ -534,7 +534,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.InteractableObject
   _itemId: {fileID: 0}
-  _interactionTypes: 9
+  _interactionTypes: 13
   _grantedItemId: {fileID: 0}
   _requiredItemId: {fileID: 11400000, guid: 650627872de7eaa4cba81700d4b740d1, type: 2}
   _isDestroy: 0
@@ -604,7 +604,7 @@ MonoBehaviour:
   _interactionTypes: 2
   _grantedItemId: {fileID: 11400000, guid: 650627872de7eaa4cba81700d4b740d1, type: 2}
   _requiredItemId: {fileID: 0}
-  _isDestroy: 0
+  _isDestroy: 1
   _examineText: 
   _examineImage: {fileID: 0}
   _outlineBehaviours: []
