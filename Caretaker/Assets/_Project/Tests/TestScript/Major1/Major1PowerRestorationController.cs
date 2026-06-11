@@ -134,7 +134,9 @@ namespace Caretaker.Presentation
 
         private bool CanRestorePower()
         {
-            return _batteryInserted && _cableConnected && _futureSwitchSolved;
+            // Prototype: cable connection is temporarily optional.
+            // return _batteryInserted && _cableConnected && _futureSwitchSolved;
+            return _batteryInserted && _futureSwitchSolved;
         }
 
         private void SetCausalityCondition(string conditionKey, string conditionValue)

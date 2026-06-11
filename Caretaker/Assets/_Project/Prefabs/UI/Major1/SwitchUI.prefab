@@ -499,11 +499,11 @@ MonoBehaviour:
   _solvedTrigger: {fileID: 0}
   _solvedConditionKey: 
   _solvedConditionValue: 
-  puzzleManager: {fileID: 0}
-  switchImage1: {fileID: 824455172123983780}
-  switchImage2: {fileID: 4681087455312025082}
-  offSprite: {fileID: -8163277379077224856, guid: 298154339606aa5449c249aa83e94941, type: 3}
-  onSprite: {fileID: -6323927577793927498, guid: c55493a4d9d6c4f4c8a7b23e6a2c5855, type: 3}
+  _puzzleManager: {fileID: 0}
+  _switchImage1: {fileID: 824455172123983780}
+  _switchImage2: {fileID: 4681087455312025082}
+  _offSprite: {fileID: -8163277379077224856, guid: 298154339606aa5449c249aa83e94941, type: 3}
+  _onSprite: {fileID: -6323927577793927498, guid: c55493a4d9d6c4f4c8a7b23e6a2c5855, type: 3}
 --- !u!1 &8347991619154056229
 GameObject:
   m_ObjectHideFlags: 0

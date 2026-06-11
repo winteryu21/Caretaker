@@ -195,6 +195,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: M1PuzzleUI
       objectReference: {fileID: 0}
+    - target: {fileID: 3381963468951263685, guid: a44a3b4b6d3d30940a3513ca7be17caf, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

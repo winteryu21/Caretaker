@@ -386,7 +386,15 @@ namespace Caretaker.Presentation
                 return MAIN_NODE_NAME;
             }
 
-            return node.name.Trim();
+            string nodeName = node.name.Trim();
+            if (nodeName.Length == 2 &&
+                char.IsLetter(nodeName[0]) &&
+                char.IsDigit(nodeName[1]))
+            {
+                return $"{char.ToUpperInvariant(nodeName[0])}-{nodeName[1]}";
+            }
+
+            return nodeName;
         }
 
         private void HandleNodeDirectionChanged(CircuitPuzzleNodeUI node)
