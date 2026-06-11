@@ -293,6 +293,10 @@ PrefabInstance:
       propertyPath: _interactionTypes
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 3080072682571412739, guid: ca71985dcd618c247addc40eafdfdf13, type: 3}
+      propertyPath: _destination
+      value: 
+      objectReference: {fileID: 5142245066870793679}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -576,7 +580,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.SceneTransitionOperateAction
   _targetSceneName: Phase1_Past
   _spawnPointName: ReverseSpawnPoint
-  _unloadActorScene: 0
+  _unloadActorScene: 1
   _transitionManager: {fileID: 0}
 --- !u!4 &8901464018071415225 stripped
 Transform:
@@ -666,6 +670,10 @@ PrefabInstance:
       propertyPath: _destination
       value: 
       objectReference: {fileID: 5149705190079952508}
+    - target: {fileID: 2874024219662964712, guid: 41d381be90f998d40859eaf6a4762e65, type: 3}
+      propertyPath: _interactionTypes
+      value: 13
+      objectReference: {fileID: 0}
     - target: {fileID: 3804397591903432232, guid: 41d381be90f998d40859eaf6a4762e65, type: 3}
       propertyPath: m_Name
       value: PastSecondFloorHallwayB

@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,11 +12,13 @@ namespace Caretaker.Presentation
     [DisallowMultipleComponent]
     public sealed class Major4PastComputerUI : PuzzleUIBase
     {
+        private static readonly WaitForSeconds BRIDGE_RESOLVE_INTERVAL = new(0.25f);
+
         [Header("Major 4")]
-        [SerializeField] private Major4StoragePuzzleState _puzzleState;
+        [SerializeField] private Major4StoragePuzzleBridge _bridge;
 
         [Header("Controls")]
-        [SerializeField] private Button[] _cellButtons = new Button[Major4StoragePuzzleState.CELL_COUNT];
+        [SerializeField] private Button[] _cellButtons = new Button[Major4StoragePuzzleBridge.CELL_COUNT];
         [SerializeField] private Button _openButton;
         [SerializeField] private TMP_Text _selectedAddressText;
         [SerializeField] private TMP_Text _attemptsText;
@@ -27,14 +30,15 @@ namespace Caretaker.Presentation
         [Header("Success")]
         [SerializeField] private bool _closeOnSolved = true;
 
-        private readonly Image[] _cellButtonImages = new Image[Major4StoragePuzzleState.CELL_COUNT];
+        private readonly Image[] _cellButtonImages = new Image[Major4StoragePuzzleBridge.CELL_COUNT];
+        private Coroutine _resolveBridgeRoutine;
         private int _selectedCellIndex = -1;
 
         private void OnValidate()
         {
-            if (_cellButtons == null || _cellButtons.Length != Major4StoragePuzzleState.CELL_COUNT)
+            if (_cellButtons == null || _cellButtons.Length != Major4StoragePuzzleBridge.CELL_COUNT)
             {
-                System.Array.Resize(ref _cellButtons, Major4StoragePuzzleState.CELL_COUNT);
+                System.Array.Resize(ref _cellButtons, Major4StoragePuzzleBridge.CELL_COUNT);
             }
         }
 
@@ -42,28 +46,21 @@ namespace Caretaker.Presentation
         {
             CacheButtonImages();
             BindButtons();
-
-            if (_puzzleState != null)
-            {
-                _puzzleState.OnStateChanged += HandlePuzzleStateChanged;
-            }
-
+            ResolveBridge();
+            SubscribeToBridge();
             RefreshVisuals();
         }
 
         private void OnDisable()
         {
             UnbindButtons();
-
-            if (_puzzleState != null)
-            {
-                _puzzleState.OnStateChanged -= HandlePuzzleStateChanged;
-            }
+            StopResolveBridgeRoutine();
+            UnsubscribeFromBridge();
         }
 
         protected override bool IsCorrectSolution()
         {
-            return _puzzleState != null && _puzzleState.IsSolved;
+            return _bridge != null && _bridge.IsSolved;
         }
 
         protected override void HandleSolved()
@@ -127,19 +124,19 @@ namespace Caretaker.Presentation
 
         private void OpenSelectedCell()
         {
-            if (_puzzleState == null || _selectedCellIndex < 0 || IsSolved)
+            if (_bridge == null || _selectedCellIndex < 0 || IsSolved)
             {
                 return;
             }
 
-            _puzzleState.RequestOpenFromPastCell(_selectedCellIndex);
+            _bridge.RequestOpenPastCell(_selectedCellIndex);
         }
 
-        private void HandlePuzzleStateChanged(Major4StoragePuzzleState puzzleState)
+        private void HandleBridgeStateChanged(Major4StoragePuzzleBridge bridge)
         {
-            if (!puzzleState.IsSolved &&
-                puzzleState.AttemptsUsed == 0 &&
-                puzzleState.LastOpenedFutureCell < 0)
+            if (!bridge.IsSolved &&
+                bridge.AttemptsUsed == 0 &&
+                bridge.LastOpenedFutureCell < 0)
             {
                 _selectedCellIndex = -1;
             }
@@ -166,7 +163,7 @@ namespace Caretaker.Presentation
                 if (_cellButtonImages[i] != null)
                 {
                     bool isSelected = i == _selectedCellIndex;
-                    bool isOpened = _puzzleState != null && _puzzleState.IsPastCellOpened(i);
+                    bool isOpened = _bridge != null && _bridge.IsPastCellAttempted(i);
                     _cellButtonImages[i].color = isSelected || isOpened ? _selectedColor : _normalColor;
                 }
             }
@@ -178,14 +175,16 @@ namespace Caretaker.Presentation
                     : string.Empty;
             }
 
-            if (_attemptsText != null && _puzzleState != null)
+            if (_attemptsText != null)
             {
-                _attemptsText.text = $"{_puzzleState.RemainingAttempts}/{_puzzleState.MaxAttempts}";
+                _attemptsText.text = _bridge != null
+                    ? $"{_bridge.RemainingAttempts}/{_bridge.MaxAttempts}"
+                    : string.Empty;
             }
 
             if (_openButton != null)
             {
-                _openButton.interactable = !IsSolved && _selectedCellIndex >= 0;
+                _openButton.interactable = !IsSolved && _selectedCellIndex >= 0 && _bridge != null;
             }
         }
 
@@ -201,18 +200,80 @@ namespace Caretaker.Presentation
 
             if (_openButton != null)
             {
-                _openButton.interactable = interactable && _selectedCellIndex >= 0;
+                _openButton.interactable = interactable && _selectedCellIndex >= 0 && _bridge != null;
+            }
+        }
+
+        private void ResolveBridge()
+        {
+            if (_bridge != null)
+            {
+                return;
+            }
+
+            _bridge = Major4StoragePuzzleBridge.ActiveBridge;
+            if (_bridge == null)
+            {
+                _bridge = FindAnyObjectByType<Major4StoragePuzzleBridge>(FindObjectsInactive.Include);
+            }
+
+            if (_bridge == null && _resolveBridgeRoutine == null && isActiveAndEnabled)
+            {
+                _resolveBridgeRoutine = StartCoroutine(ResolveBridgeRoutine());
+            }
+        }
+
+        private IEnumerator ResolveBridgeRoutine()
+        {
+            while (_bridge == null)
+            {
+                yield return BRIDGE_RESOLVE_INTERVAL;
+                _bridge = Major4StoragePuzzleBridge.ActiveBridge;
+            }
+
+            _resolveBridgeRoutine = null;
+            SubscribeToBridge();
+            RefreshVisuals();
+        }
+
+        private void StopResolveBridgeRoutine()
+        {
+            if (_resolveBridgeRoutine == null)
+            {
+                return;
+            }
+
+            StopCoroutine(_resolveBridgeRoutine);
+            _resolveBridgeRoutine = null;
+        }
+
+        private void SubscribeToBridge()
+        {
+            if (_bridge == null)
+            {
+                return;
+            }
+
+            _bridge.OnStateChanged -= HandleBridgeStateChanged;
+            _bridge.OnStateChanged += HandleBridgeStateChanged;
+        }
+
+        private void UnsubscribeFromBridge()
+        {
+            if (_bridge != null)
+            {
+                _bridge.OnStateChanged -= HandleBridgeStateChanged;
             }
         }
 
         private static string GetPastAddressLabel(int cellIndex)
         {
-            int row = cellIndex / Major4StoragePuzzleState.GRID_SIZE;
-            int column = cellIndex % Major4StoragePuzzleState.GRID_SIZE;
-            int regionIndex = row / Major4StoragePuzzleState.REGION_SIZE * 2 + column / Major4StoragePuzzleState.REGION_SIZE;
+            int row = cellIndex / Major4StoragePuzzleBridge.GRID_SIZE;
+            int column = cellIndex % Major4StoragePuzzleBridge.GRID_SIZE;
+            int regionIndex = row / Major4StoragePuzzleBridge.REGION_SIZE * 2 + column / Major4StoragePuzzleBridge.REGION_SIZE;
             char regionLabel = (char)('A' + regionIndex);
-            char rowLabel = (char)('a' + row % Major4StoragePuzzleState.REGION_SIZE);
-            int columnLabel = column % Major4StoragePuzzleState.REGION_SIZE + 1;
+            char rowLabel = (char)('a' + row % Major4StoragePuzzleBridge.REGION_SIZE);
+            int columnLabel = column % Major4StoragePuzzleBridge.REGION_SIZE + 1;
 
             return $"{regionLabel}-{rowLabel}{columnLabel}";
         }
