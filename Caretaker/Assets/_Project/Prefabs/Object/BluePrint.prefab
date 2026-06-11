@@ -10,6 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2111800304823804637}
   - component: {fileID: 3331630718969010447}
+  - component: {fileID: -9065017167414172955}
+  - component: {fileID: 6464359503930709127}
+  - component: {fileID: -7445132097207214494}
   m_Layer: 0
   m_Name: BluePrint
   m_TagString: Untagged
@@ -91,3 +94,77 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!58 &-9065017167414172955
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3703097816198084965}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.5
+--- !u!114 &6464359503930709127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3703097816198084965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4ac8ac1e08dba1478b4f18934717a54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.InteractableObject
+  _itemId: {fileID: 0}
+  _interactionTypes: 4
+  _grantedItemId: {fileID: 0}
+  _requiredItemId: {fileID: 0}
+  _isDestroy: 0
+  _examineText: 
+  _examineImage: {fileID: 0}
+  _outlineBehaviours: []
+  _useFallbackGlow: 1
+  _fallbackGlowColor: {r: 0.35, g: 0.95, b: 1, a: 0.45}
+  _fallbackGlowScale: 1.08
+  _fallbackGlowSortingOrderOffset: 1
+  _highlightOnAwake: 0
+--- !u!114 &-7445132097207214494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3703097816198084965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb2578fda9f84ff9aaed4d5762a47e8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.PuzzleOperateAction
+  _puzzleUi: {fileID: 0}
