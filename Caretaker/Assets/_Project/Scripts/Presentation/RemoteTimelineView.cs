@@ -49,6 +49,24 @@ namespace Caretaker.Presentation
             Rect viewport,
             Vector3 basePosition)
         {
+            Show(
+                templateCamera,
+                pastPlayer,
+                futurePlayer,
+                null,
+                viewport,
+                basePosition);
+        }
+
+        /// <summary>Shows the remote camera while following one player's vertical movement.</summary>
+        public void Show(
+            Camera templateCamera,
+            Transform pastPlayer,
+            Transform futurePlayer,
+            Transform verticalFollowTarget,
+            Rect viewport,
+            Vector3 basePosition)
+        {
             if (_camera == null || templateCamera == null)
             {
                 Debug.LogWarning("RemoteTimelineView requires an initialized camera and template.", this);
@@ -62,7 +80,11 @@ namespace Caretaker.Presentation
             _camera.transform.SetPositionAndRotation(
                 basePosition,
                 templateCamera.transform.rotation);
-            _cameraRig.Configure(pastPlayer, futurePlayer, basePosition);
+            _cameraRig.Configure(
+                pastPlayer,
+                futurePlayer,
+                verticalFollowTarget,
+                basePosition);
             _camera.enabled = true;
         }
 

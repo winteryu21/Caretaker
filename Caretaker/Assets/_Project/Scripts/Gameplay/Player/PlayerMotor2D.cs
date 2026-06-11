@@ -77,6 +77,16 @@ public class PlayerMotor2D : MonoBehaviour
         _horizontalMinimumX = Mathf.Min(minimumX, maximumX);
         _horizontalMaximumX = Mathf.Max(minimumX, maximumX);
         _hasHorizontalBounds = true;
+
+        if (_rigidbody2D != null && _rigidbody2D.simulated)
+        {
+            Vector2 position = _rigidbody2D.position;
+            position.x = ClampHorizontalPosition(
+                position.x,
+                _horizontalMinimumX,
+                _horizontalMaximumX);
+            _rigidbody2D.position = position;
+        }
     }
 
     /// <summary>설정된 수평 이동 범위를 해제합니다.</summary>
@@ -120,6 +130,18 @@ public class PlayerMotor2D : MonoBehaviour
         }
 
         return velocityX;
+    }
+
+    /// <summary>현재 X 위치를 설정된 수평 경계 안으로 제한합니다.</summary>
+    public static float ClampHorizontalPosition(
+        float positionX,
+        float minimumX,
+        float maximumX)
+    {
+        return Mathf.Clamp(
+            positionX,
+            Mathf.Min(minimumX, maximumX),
+            Mathf.Max(minimumX, maximumX));
     }
 
     private void Awake()

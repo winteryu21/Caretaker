@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using Caretaker.Presentation;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
@@ -36,6 +38,42 @@ namespace Caretaker.Tests.Editor
             }
         }
 
+        [Test]
+        public void TimelineCameraRig_FollowsAssignedPlayerVertically()
+        {
+            GameObject cameraObject = new("Camera");
+            GameObject pastPlayer = new("PastPlayer");
+            GameObject futurePlayer = new("FuturePlayer");
+
+            try
+            {
+                pastPlayer.transform.position = new Vector3(12f, 3f, 0f);
+                futurePlayer.transform.position = new Vector3(8f, 20f, 0f);
+                TimelineCameraRig rig = cameraObject.AddComponent<TimelineCameraRig>();
+
+                rig.Configure(
+                    pastPlayer.transform,
+                    futurePlayer.transform,
+                    pastPlayer.transform,
+                    new Vector3(0f, 5f, -10f));
+
+                pastPlayer.transform.position = new Vector3(12f, 7f, 0f);
+                MethodInfo lateUpdate = typeof(TimelineCameraRig).GetMethod(
+                    "LateUpdate",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                lateUpdate.Invoke(rig, null);
+
+                Assert.That(cameraObject.transform.position.x, Is.EqualTo(8f));
+                Assert.That(cameraObject.transform.position.y, Is.EqualTo(9f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(pastPlayer);
+                Object.DestroyImmediate(futurePlayer);
+            }
+        }
+
         [TestCase(9.9f, 5f, 0f, 10f, 0.02f, 5f)]
         [TestCase(9.95f, 5f, 0f, 10f, 0.02f, 2.5f)]
         [TestCase(0.05f, -5f, 0f, 10f, 0.02f, -2.5f)]
@@ -60,6 +98,23 @@ namespace Caretaker.Tests.Editor
                 deltaTime);
 
             Assert.That(result, Is.EqualTo(expected).Within(0.0001f));
+        }
+
+        [TestCase(-2f, 0f, 10f, 0f)]
+        [TestCase(12f, 0f, 10f, 10f)]
+        [TestCase(4f, 0f, 10f, 4f)]
+        public void PlayerMotor2D_ClampsCurrentPositionAtBounds(
+            float positionX,
+            float minimumX,
+            float maximumX,
+            float expected)
+        {
+            float result = PlayerMotor2D.ClampHorizontalPosition(
+                positionX,
+                minimumX,
+                maximumX);
+
+            Assert.That(result, Is.EqualTo(expected));
         }
 
         [Test]
@@ -96,6 +151,17 @@ namespace Caretaker.Tests.Editor
                 boundaryPadding: 1f);
 
             Assert.That(separation, Is.EqualTo(3f));
+        }
+
+        [Test]
+        public void SplitViewManager_UsesActualScreenAspectForVisibleHalfWidth()
+        {
+            float halfWidth = SplitViewManager.ResolveVisibleHalfWidth(
+                orthographicSize: 5f,
+                screenAspect: 4f / 3f,
+                viewport: new Rect(0f, 0.5f, 1f, 0.5f));
+
+            Assert.That(halfWidth, Is.EqualTo(13.333333f).Within(0.001f));
         }
 
         [Test]

@@ -24,7 +24,6 @@ namespace Caretaker.Presentation
         [Tooltip("0이면 카메라 시야 안에서 움직일 수 있는 최대 간격을 자동으로 사용합니다.")]
         [SerializeField] [Min(0f)] private float _maximumPlayerSeparation = 7f;
         [SerializeField] [Min(0f)] private float _cameraBoundaryPadding = 1f;
-        [SerializeField] [Min(0.1f)] private float _referenceViewportAspect = 16f / 9f;
         [SerializeField] [Min(0f)] private float _dividerThicknessPixels = 16f;
         [SerializeField] private Color _dividerColor = Color.black;
 
@@ -114,6 +113,8 @@ namespace Caretaker.Presentation
 
             Rect localViewport = localRole == TimelineRole.Past ? TOP_VIEWPORT : BOTTOM_VIEWPORT;
             Rect remoteViewport = remoteRole == TimelineRole.Past ? TOP_VIEWPORT : BOTTOM_VIEWPORT;
+            Transform localPlayer = localRole == TimelineRole.Past ? _pastPlayer : _futurePlayer;
+            Transform remotePlayer = remoteRole == TimelineRole.Past ? _pastPlayer : _futurePlayer;
             Vector3 localBasePosition = ResolveCameraBasePosition(localTemplate, localRole);
             Vector3 remoteBasePosition = ResolveCameraBasePosition(remoteTemplate, remoteRole);
 
@@ -127,6 +128,7 @@ namespace Caretaker.Presentation
             _mainCameraRig.Configure(
                 _pastPlayer,
                 _futurePlayer,
+                localPlayer,
                 localBasePosition,
                 true,
                 CalculateMaximumPlayerSeparation(
@@ -139,6 +141,7 @@ namespace Caretaker.Presentation
                 remoteTemplate,
                 _pastPlayer,
                 _futurePlayer,
+                remotePlayer,
                 remoteViewport,
                 remoteBasePosition);
             ShowDivider();
@@ -415,12 +418,10 @@ namespace Caretaker.Presentation
         {
             float localHalfWidth = GetResolutionIndependentHalfWidth(
                 localCamera,
-                localViewport,
-                _referenceViewportAspect);
+                localViewport);
             float remoteHalfWidth = GetResolutionIndependentHalfWidth(
                 remoteCamera,
-                remoteViewport,
-                _referenceViewportAspect);
+                remoteViewport);
             return ResolveMaximumPlayerSeparation(
                 _maximumPlayerSeparation,
                 localHalfWidth,
@@ -468,21 +469,35 @@ namespace Caretaker.Presentation
 
         private static float GetResolutionIndependentHalfWidth(
             Camera camera,
-            Rect viewport,
-            float referenceViewportAspect)
+            Rect viewport)
         {
             if (camera == null || !camera.orthographic)
             {
                 return 8f;
             }
 
+            float screenAspect = Screen.height > 0
+                ? (float)Screen.width / Screen.height
+                : 16f / 9f;
+            return ResolveVisibleHalfWidth(
+                camera.orthographicSize,
+                screenAspect,
+                viewport);
+        }
+
+        /// <summary>실제 화면 비율과 viewport를 기준으로 직교 카메라의 가로 반경을 계산합니다.</summary>
+        public static float ResolveVisibleHalfWidth(
+            float orthographicSize,
+            float screenAspect,
+            Rect viewport)
+        {
             float viewportAspectMultiplier = viewport.height > 0f
                 ? viewport.width / viewport.height
                 : 1f;
 
-            // 실제 해상도 대신 공통 기준 aspect와 스플릿 viewport 비율을 사용해 모든 클라이언트가 같은 경계를 갖습니다.
-            return camera.orthographicSize
-                * Mathf.Max(0.1f, referenceViewportAspect)
+            // 현재 화면과 스플릿 viewport 비율을 함께 반영해 실제 가시 경계를 계산합니다.
+            return Mathf.Max(0f, orthographicSize)
+                * Mathf.Max(0.1f, screenAspect)
                 * Mathf.Max(0.1f, viewportAspectMultiplier);
         }
     }
