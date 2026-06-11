@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -20,6 +21,9 @@ namespace Caretaker.Gameplay
         private const float ARRIVAL_DISTANCE = 0.05f;
         private const float FACING_EPSILON = 0.001f;
         private const float PROGRESS_EPSILON = 0.005f;
+        private const float DEFAULT_TAKEDOWN_DISTANCE = 1.5f;
+        private const float DEFAULT_TAKEDOWN_DURATION = 0.6f;
+        private const float DEFAULT_TAKEDOWN_REAR_ANGLE = 90f;
 
         private enum EnemyMovementMode
         {
@@ -38,6 +42,10 @@ namespace Caretaker.Gameplay
         [SerializeField] [Min(0f)] private float _groundProbeForwardDistance = 0.15f;
         [SerializeField] [Min(0.01f)] private float _groundProbeDownDistance = 0.4f;
         [SerializeField] [Min(0.1f)] private float _stuckSkipSeconds = 1f;
+        [Header("Takedown")]
+        [SerializeField] [Min(0f)] private float _takedownDistance = DEFAULT_TAKEDOWN_DISTANCE;
+        [SerializeField] [Range(0f, 180f)] private float _takedownRearAngle = DEFAULT_TAKEDOWN_REAR_ANGLE;
+        [SerializeField] [Min(0f)] private float _takedownDuration = DEFAULT_TAKEDOWN_DURATION;
 
         private readonly RaycastHit2D[] _groundHits = new RaycastHit2D[4];
         private readonly EnemyStateMachine _stateMachine = new();
@@ -56,7 +64,14 @@ namespace Caretaker.Gameplay
         private float _facingSign = 1f;
         private float _searchDirectionSign = 1f;
         private AlertState _roomAlertState = AlertState.None;
+        private bool _initialColliderEnabled;
+        private bool _initialPerceptionEnabled;
+        private bool _initialRigidbodySimulated;
+        private bool _isTakedownStateCached;
         private bool _isSubscribedToRoomAlerts;
+        private bool _isBeingTakenDown;
+        private bool _requiresTakedownReset;
+        private PlayerController _takedownActor;
 
         /// <summary>
         /// 현재 순찰 이동이 목표로 삼는 Waypoint 인덱스.
@@ -78,6 +93,11 @@ namespace Caretaker.Gameplay
         /// </summary>
         public string RoomId => _roomId;
 
+        /// <summary>
+        /// 현재 처형 처리 중인지 반환합니다.
+        /// </summary>
+        public bool IsBeingTakenDown => _isBeingTakenDown;
+
         private void Awake()
         {
             EnsureComponentReferences();
@@ -86,10 +106,12 @@ namespace Caretaker.Gameplay
             ConfigureRigidbody();
             SyncPerceptionTuning();
             SyncPerceptionFacing();
+            CacheTakedownComponentState();
         }
 
         private void OnEnable()
         {
+            RestoreAfterTakedown();
             LocalWorldPlayerSpawner.OnCurrentPlayerChanged += HandleCurrentPlayerChanged;
             SubscribeRoomAlerts();
             TryBindCurrentPlayer();
@@ -99,6 +121,13 @@ namespace Caretaker.Gameplay
         {
             LocalWorldPlayerSpawner.OnCurrentPlayerChanged -= HandleCurrentPlayerChanged;
             UnsubscribeRoomAlerts();
+
+            if (_isBeingTakenDown && _takedownActor != null)
+            {
+                _takedownActor.SetInputBlocked(false);
+            }
+
+            _takedownActor = null;
         }
 
         private void OnValidate()
@@ -113,6 +142,11 @@ namespace Caretaker.Gameplay
 
         private void FixedUpdate()
         {
+            if (_isBeingTakenDown)
+            {
+                return;
+            }
+
             TickEnemy(Time.fixedDeltaTime);
         }
 
@@ -160,6 +194,57 @@ namespace Caretaker.Gameplay
         public void ApplyRoomAlert(AlertState alertState)
         {
             _roomAlertState = alertState;
+        }
+
+        /// <summary>
+        /// 지정된 위치의 플레이어가 이 적을 처형할 수 있는지 반환합니다.
+        /// </summary>
+        /// <param name="playerPosition">플레이어의 월드 위치입니다.</param>
+        public bool CanBeTakenDownBy(Vector2 playerPosition)
+        {
+            if (_isBeingTakenDown ||
+                !isActiveAndEnabled ||
+                _stateMachine.CurrentState == EnemyStateMachine.EnemyState.Chase)
+            {
+                return false;
+            }
+
+            EnsureComponentReferences();
+            Vector2 closestPoint = _collider2D != null
+                ? _collider2D.ClosestPoint(playerPosition)
+                : (Vector2)transform.position;
+            if (Vector2.Distance(playerPosition, closestPoint) > _takedownDistance)
+            {
+                return false;
+            }
+
+            Vector2 toPlayer = playerPosition - (Vector2)transform.position;
+            if (toPlayer.sqrMagnitude <= FACING_EPSILON * FACING_EPSILON)
+            {
+                return false;
+            }
+
+            Vector2 facingDirection = _perception != null
+                ? _perception.FacingDirection
+                : Vector2.right * _facingSign;
+            float minimumRearAngle = 180f - (_takedownRearAngle * 0.5f);
+            return Vector2.Angle(facingDirection, toPlayer) >= minimumRearAngle;
+        }
+
+        /// <summary>
+        /// 로컬 처형을 시작하고 설정된 지연 시간 후 적을 비활성화합니다.
+        /// </summary>
+        /// <param name="actor">처형을 수행하는 플레이어입니다.</param>
+        /// <returns>처형이 시작되었으면 true입니다.</returns>
+        public bool BeginTakedown(PlayerController actor)
+        {
+            if (actor == null || !CanBeTakenDownBy(actor.transform.position))
+            {
+                return false;
+            }
+
+            StartCoroutine(TakedownRoutine(actor));
+            return true;
         }
 
         private void TickEnemy(float deltaTime)
@@ -222,6 +307,96 @@ namespace Caretaker.Gameplay
             }
 
             return canSeePlayer;
+        }
+
+        private IEnumerator TakedownRoutine(PlayerController actor)
+        {
+            _isBeingTakenDown = true;
+            _takedownActor = actor;
+            actor.SetInputBlocked(true);
+            StopPatrolMovement();
+
+            if (_rigidbody2D != null)
+            {
+                _rigidbody2D.simulated = false;
+            }
+
+            if (_collider2D != null)
+            {
+                _collider2D.enabled = false;
+            }
+
+            if (_perception != null)
+            {
+                _perception.SetVisionDisplayEnabled(false);
+                _perception.enabled = false;
+            }
+
+            if (_takedownDuration > 0f)
+            {
+                yield return new WaitForSeconds(_takedownDuration);
+            }
+
+            if (actor != null)
+            {
+                actor.SetInputBlocked(false);
+            }
+
+            _takedownActor = null;
+            _requiresTakedownReset = true;
+            gameObject.SetActive(false);
+        }
+
+        private void CacheTakedownComponentState()
+        {
+            if (_isTakedownStateCached)
+            {
+                return;
+            }
+
+            _initialColliderEnabled = _collider2D == null || _collider2D.enabled;
+            _initialPerceptionEnabled = _perception == null || _perception.enabled;
+            _initialRigidbodySimulated = _rigidbody2D == null || _rigidbody2D.simulated;
+            _isTakedownStateCached = true;
+        }
+
+        private void RestoreAfterTakedown()
+        {
+            if (!_requiresTakedownReset)
+            {
+                return;
+            }
+
+            EnsureComponentReferences();
+            CacheTakedownComponentState();
+
+            _isBeingTakenDown = false;
+            _requiresTakedownReset = false;
+            _takedownActor = null;
+            _stateMachine.Reset();
+            _waitTimeRemaining = 0f;
+            ResetWaypointProgressTimer();
+
+            if (_rigidbody2D != null)
+            {
+                _rigidbody2D.simulated = _initialRigidbodySimulated;
+                _rigidbody2D.linearVelocity = Vector2.zero;
+                _rigidbody2D.angularVelocity = 0f;
+            }
+
+            if (_collider2D != null)
+            {
+                _collider2D.enabled = _initialColliderEnabled;
+            }
+
+            if (_perception != null)
+            {
+                _perception.enabled = _initialPerceptionEnabled;
+                _perception.SetVisionDisplayEnabled(true);
+                _perception.SetVisionState(EnemyStateMachine.EnemyState.Patrol);
+                SyncPerceptionTuning();
+                SyncPerceptionFacing();
+            }
         }
 
         private void TickChase(float deltaTime)

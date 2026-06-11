@@ -86,6 +86,9 @@ namespace Caretaker.Tests.Editor
                 HudRuntimeBinder.BuildPromptText(null, null, string.Empty),
                 Is.Empty);
             Assert.That(
+                HudRuntimeBinder.BuildTakedownPromptText(),
+                Is.EqualTo("F - Takedown"));
+            Assert.That(
                 HudRuntimeBinder.BuildObjectiveText(PhaseId.Phase1),
                 Is.EqualTo("Objective: Restore facility power"));
         }
