@@ -76,9 +76,8 @@ namespace Caretaker.Presentation
         private void Update()
         {
             if (!_useSpriteClickFallback ||
-                HasUiClickTarget() ||
                 Mouse.current == null ||
-                !Mouse.current.leftButton.wasPressedThisFrame ||
+                !Mouse.current.leftButton.wasReleasedThisFrame ||
                 !CanHandleClick())
             {
                 return;
@@ -168,13 +167,6 @@ namespace Caretaker.Presentation
             {
                 _nodeImage = GetComponentInChildren<Image>(true);
             }
-        }
-
-        private bool HasUiClickTarget()
-        {
-            return _nodeImage != null &&
-                _nodeImage.raycastTarget &&
-                _nodeImage.isActiveAndEnabled;
         }
 
         private void HandleClickIfAllowed()
