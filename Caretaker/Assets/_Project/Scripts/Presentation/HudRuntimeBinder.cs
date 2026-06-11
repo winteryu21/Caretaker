@@ -138,6 +138,14 @@ namespace Caretaker.Presentation
         }
 
         /// <summary>
+        /// 전투 처형이 가능할 때 표시할 안내 문구를 생성합니다.
+        /// </summary>
+        public static string BuildTakedownPromptText()
+        {
+            return "F - Takedown";
+        }
+
+        /// <summary>
         /// 현재 hover/근접 상호작용 대상에서 가능한 입력 프롬프트를 구성한다.
         /// </summary>
         public static string BuildPromptText(
@@ -519,6 +527,11 @@ namespace Caretaker.Presentation
                 : string.Empty;
             if (_playerInputReader != null && _playerInputReader.ControlMode == PlayerControlMode.Combat)
             {
+                if (_interactionProbe.CurrentTakedownTarget != null)
+                {
+                    return BuildTakedownPromptText();
+                }
+
                 return BuildPromptText(
                     null,
                     _interactionProbe.ProximityTarget,

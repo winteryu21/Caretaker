@@ -32,6 +32,7 @@ namespace Caretaker.Gameplay
 
         private Vector2 _facingDirection = Vector2.right;
         private EnemyStateMachine.EnemyState _visionState = EnemyStateMachine.EnemyState.Patrol;
+        private bool _isVisionDisplayEnabled = true;
         private GameObject _visionObject;
         private Material _visionMaterial;
         private Mesh _visionMesh;
@@ -105,9 +106,9 @@ namespace Caretaker.Gameplay
         }
 
         /// <summary>
-        /// Changes the vision area color to match the enemy's current behavior state.
+        /// 적의 현재 행동 상태에 맞게 시야 영역 색상을 변경합니다.
         /// </summary>
-        /// <param name="state">Current enemy behavior state.</param>
+        /// <param name="state">현재 적 행동 상태입니다.</param>
         public void SetVisionState(EnemyStateMachine.EnemyState state)
         {
             if (_visionState == state)
@@ -117,6 +118,16 @@ namespace Caretaker.Gameplay
 
             _visionState = state;
             RefreshVisionColor();
+        }
+
+        /// <summary>
+        /// Inspector 설정은 유지하면서 런타임 시야 영역 표시 여부를 변경합니다.
+        /// </summary>
+        /// <param name="isEnabled">시야 영역을 렌더링하려면 true입니다.</param>
+        public void SetVisionDisplayEnabled(bool isEnabled)
+        {
+            _isVisionDisplayEnabled = isEnabled;
+            RefreshVisionArea();
         }
 
         /// <summary>
@@ -242,7 +253,11 @@ namespace Caretaker.Gameplay
                 return;
             }
 
-            bool shouldShow = _showVisionArea && _tuning != null && _tuning.SightDistance > 0f;
+            bool shouldShow =
+                _isVisionDisplayEnabled &&
+                _showVisionArea &&
+                _tuning != null &&
+                _tuning.SightDistance > 0f;
             _visionObject.SetActive(shouldShow);
             if (!shouldShow)
             {

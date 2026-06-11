@@ -30,6 +30,7 @@ namespace Caretaker.Gameplay
         private InputAction _moveAction;
         private PlayerInput _playerInput;
         private InputAction _sprintAction;
+        private InputAction _takedownAction;
         private PlayerControlMode _controlMode = PlayerControlMode.Normal;
         private bool _isCombatAimPressed;
         private bool _jumpPressedThisFrame;
@@ -61,6 +62,11 @@ namespace Caretaker.Gameplay
         /// 전투 모드에서 우클릭 조준 유지 상태가 바뀌었을 때 발생합니다.
         /// </summary>
         public event Action<bool> OnCombatAimChanged;
+
+        /// <summary>
+        /// 플레이어가 전투 모드에서 처형을 요청했을 때 발생합니다.
+        /// </summary>
+        public event Action OnTakedownRequested;
 
         /// <summary>
         /// 현재 마우스 입력 해석 모드입니다.
@@ -104,6 +110,7 @@ namespace Caretaker.Gameplay
             _sprintAction = _playerInput.actions["Sprint"];
             _clickAction = _playerInput.actions["Attack"];
             _interactAction = _playerInput.actions["Interact"];
+            _takedownAction = _playerInput.actions["Takedown"];
         }
 
         private void OnEnable()
@@ -111,6 +118,7 @@ namespace Caretaker.Gameplay
             _jumpAction.performed += HandleJumpPerformed;
             _clickAction.performed += HandleClickPerformed;
             _interactAction.performed += HandleInteractPerformed;
+            _takedownAction.performed += HandleTakedownPerformed;
         }
 
         private void OnDisable()
@@ -118,6 +126,7 @@ namespace Caretaker.Gameplay
             _jumpAction.performed -= HandleJumpPerformed;
             _clickAction.performed -= HandleClickPerformed;
             _interactAction.performed -= HandleInteractPerformed;
+            _takedownAction.performed -= HandleTakedownPerformed;
             SetCombatAimPressed(false);
         }
 
@@ -170,6 +179,14 @@ namespace Caretaker.Gameplay
         {
             var request = new InteractionRequest(InteractionType.Operate, Vector2.zero);
             OnInteractionRequested?.Invoke(request);
+        }
+
+        private void HandleTakedownPerformed(InputAction.CallbackContext context)
+        {
+            if (_controlMode == PlayerControlMode.Combat)
+            {
+                OnTakedownRequested?.Invoke();
+            }
         }
 
         private void HandleUseItemInput()

@@ -16,6 +16,7 @@ namespace Caretaker.Gameplay
     public class InteractionProbe : MonoBehaviour
     {
         private const float DEFAULT_INTERACTION_RADIUS = 1f;
+        private const float DEFAULT_TAKEDOWN_RADIUS = 1.5f;
         private const int MAX_NEARBY_RESULTS = 16;
         private const int MAX_RAYCAST_RESULTS = 16;
 
@@ -23,6 +24,7 @@ namespace Caretaker.Gameplay
         [SerializeField] private Camera _worldCamera;
         [SerializeField] private LayerMask _interactableLayers = Physics2D.DefaultRaycastLayers;
         [SerializeField] private float _interactionRadius = DEFAULT_INTERACTION_RADIUS;
+        [SerializeField] private float _takedownRadius = DEFAULT_TAKEDOWN_RADIUS;
 
         private readonly Collider2D[] _nearbyResults = new Collider2D[MAX_NEARBY_RESULTS];
         private readonly RaycastHit2D[] _raycastResults = new RaycastHit2D[MAX_RAYCAST_RESULTS];
@@ -30,7 +32,9 @@ namespace Caretaker.Gameplay
         private readonly InteractableObject[] _nearbyTargets = new InteractableObject[MAX_NEARBY_RESULTS];
 
         private ContactFilter2D _interactableContactFilter;
+        private EnemyController _currentTakedownTarget;
         private InteractableObject _hoverTarget;
+        private PlayerInputReader _inputReader;
         private InteractableObject _proximityTarget;
         private int _highlightedTargetCount;
         private int _nearbyTargetCount;
@@ -63,9 +67,15 @@ namespace Caretaker.Gameplay
         /// </summary>
         public float InteractionRadius => _interactionRadius;
 
+        /// <summary>
+        /// 현재 전투 처형 조건을 만족하는 가장 가까운 적입니다.
+        /// </summary>
+        public EnemyController CurrentTakedownTarget => _currentTakedownTarget;
+
         private void Awake()
         {
             RefreshInteractableContactFilter();
+            _inputReader = GetComponent<PlayerInputReader>();
 
             if (_worldCamera == null)
             {
@@ -90,6 +100,7 @@ namespace Caretaker.Gameplay
             ClearHighlights();
             _hoverTarget = null;
             _proximityTarget = null;
+            _currentTakedownTarget = null;
             _hoverInteractionType = InteractionType.None;
             _proximityInteractionType = InteractionType.None;
         }
@@ -99,14 +110,16 @@ namespace Caretaker.Gameplay
             _nearbyTargetCount = 0;
             _proximityTarget = null;
             _proximityInteractionType = InteractionType.None;
+            _currentTakedownTarget = null;
 
             int hitCount = Physics2D.OverlapCircle(
                 transform.position,
-                _interactionRadius,
+                Mathf.Max(_interactionRadius, _takedownRadius),
                 _interactableContactFilter,
                 _nearbyResults);
 
             float closestDistance = float.PositiveInfinity;
+            float closestTakedownDistance = float.PositiveInfinity;
 
             for (int i = 0; i < hitCount; i++)
             {
@@ -114,6 +127,20 @@ namespace Caretaker.Gameplay
                 if (nearbyCollider == null)
                 {
                     continue;
+                }
+
+                if (_inputReader != null &&
+                    _inputReader.ControlMode == PlayerControlMode.Combat &&
+                    nearbyCollider.GetComponentInParent<EnemyController>() is EnemyController enemyController &&
+                    enemyController.CanBeTakenDownBy(transform.position))
+                {
+                    Vector2 closestPoint = nearbyCollider.ClosestPoint(transform.position);
+                    float takedownDistance = Vector2.Distance(transform.position, closestPoint);
+                    if (takedownDistance < closestTakedownDistance)
+                    {
+                        _currentTakedownTarget = enemyController;
+                        closestTakedownDistance = takedownDistance;
+                    }
                 }
 
                 if (!nearbyCollider.TryGetComponent(out InteractableObject interactableObject))
