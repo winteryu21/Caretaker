@@ -209,7 +209,10 @@ namespace Caretaker.Gameplay
 
         private void CreateVisionArea()
         {
-            if (_visionObject != null)
+            if (_visionObject != null ||
+                !Application.isPlaying ||
+                !gameObject.scene.IsValid() ||
+                !gameObject.scene.isLoaded)
             {
                 return;
             }
