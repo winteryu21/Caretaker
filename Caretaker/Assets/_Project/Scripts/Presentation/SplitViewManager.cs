@@ -3,6 +3,7 @@ using Caretaker.Gameplay;
 using Caretaker.Shared;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Caretaker.Presentation
 {
@@ -14,16 +15,24 @@ namespace Caretaker.Presentation
     {
         private static readonly Rect TOP_VIEWPORT = new(0f, 0.5f, 1f, 0.5f);
         private static readonly Rect BOTTOM_VIEWPORT = new(0f, 0f, 1f, 0.5f);
+        private const string DIVIDER_CANVAS_NAME = "Split View Divider Canvas";
+        private const string DIVIDER_IMAGE_NAME = "Split View Divider";
 
         [SerializeField] private SceneLoader _sceneLoader;
         [SerializeField] private SessionRoleManager _roleManager;
         [SerializeField] private Camera _mainCamera;
+        [Tooltip("0이면 카메라 시야 안에서 움직일 수 있는 최대 간격을 자동으로 사용합니다.")]
         [SerializeField] [Min(0f)] private float _maximumPlayerSeparation = 7f;
         [SerializeField] [Min(0f)] private float _cameraBoundaryPadding = 1f;
         [SerializeField] [Min(0.1f)] private float _referenceViewportAspect = 16f / 9f;
+        [SerializeField] [Min(0f)] private float _dividerThicknessPixels = 16f;
+        [SerializeField] private Color _dividerColor = Color.black;
 
         private RemoteTimelineView _remoteTimelineView;
         private TimelineCameraRig _mainCameraRig;
+        private GameObject _dividerCanvasObject;
+        private RectTransform _dividerRect;
+        private Image _dividerImage;
         private Transform _pastPlayer;
         private Transform _futurePlayer;
         private bool _futureSceneLoaded;
@@ -37,12 +46,14 @@ namespace Caretaker.Presentation
         {
             ResolveDependencies();
             EnsureCameraComponents();
+            EnsureDividerComponents();
         }
 
         private void OnEnable()
         {
             ResolveDependencies();
             EnsureCameraComponents();
+            EnsureDividerComponents();
 
             if (_sceneLoader != null)
             {
@@ -79,13 +90,13 @@ namespace Caretaker.Presentation
                 || _pastPlayer == null
                 || _futurePlayer == null
                 || _mainCamera == null
-                || _roleManager == null
+                || !HasTimelineRoleSource()
                 || _remoteTimelineView == null)
             {
                 return;
             }
 
-            TimelineRole localRole = _roleManager.LocalTimelineRole;
+            TimelineRole localRole = ResolveLocalTimelineRole();
             if (localRole is not (TimelineRole.Past or TimelineRole.Future))
             {
                 return;
@@ -103,26 +114,34 @@ namespace Caretaker.Presentation
 
             Rect localViewport = localRole == TimelineRole.Past ? TOP_VIEWPORT : BOTTOM_VIEWPORT;
             Rect remoteViewport = remoteRole == TimelineRole.Past ? TOP_VIEWPORT : BOTTOM_VIEWPORT;
+            Vector3 localBasePosition = ResolveCameraBasePosition(localTemplate, localRole);
+            Vector3 remoteBasePosition = ResolveCameraBasePosition(remoteTemplate, remoteRole);
 
             _mainCamera.CopyFrom(localTemplate);
             _mainCamera.targetTexture = null;
             _mainCamera.rect = localViewport;
             _mainCamera.depth = -1f;
             _mainCamera.transform.SetPositionAndRotation(
-                localTemplate.transform.position,
+                localBasePosition,
                 localTemplate.transform.rotation);
             _mainCameraRig.Configure(
                 _pastPlayer,
                 _futurePlayer,
-                localTemplate.transform.position,
+                localBasePosition,
                 true,
-                CalculateMaximumPlayerSeparation(localTemplate, remoteTemplate));
+                CalculateMaximumPlayerSeparation(
+                    localTemplate,
+                    localViewport,
+                    remoteTemplate,
+                    remoteViewport));
 
             _remoteTimelineView.Show(
                 remoteTemplate,
                 _pastPlayer,
                 _futurePlayer,
-                remoteViewport);
+                remoteViewport,
+                remoteBasePosition);
+            ShowDivider();
             _isSplitViewActive = true;
         }
 
@@ -136,6 +155,7 @@ namespace Caretaker.Presentation
 
             _mainCameraRig?.StopFollowing();
             _remoteTimelineView?.Hide();
+            HideDivider();
             _isSplitViewActive = false;
             _pastSceneLoaded = false;
             _futureSceneLoaded = false;
@@ -197,12 +217,14 @@ namespace Caretaker.Presentation
 
             _mainCameraRig?.StopFollowing();
             _remoteTimelineView?.Hide();
+            HideDivider();
             _isSplitViewActive = false;
         }
 
         private void RefreshObservedPlayers()
         {
-            NetworkPlayerOwnerGate[] players = FindObjectsByType<NetworkPlayerOwnerGate>(FindObjectsSortMode.None);
+            NetworkPlayerOwnerGate[] players =
+                FindObjectsByType<NetworkPlayerOwnerGate>(FindObjectsInactive.Include);
             for (int i = 0; i < players.Length; i++)
             {
                 RegisterObservedPlayer(players[i]);
@@ -234,6 +256,30 @@ namespace Caretaker.Presentation
             {
                 _futurePlayer = player.transform;
             }
+        }
+
+        private TimelineRole ResolveLocalTimelineRole()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (Phase3DebugBootstrap.IsOfflineSandboxActive)
+            {
+                return Phase3DebugBootstrap.OfflineSandboxLocalRole;
+            }
+#endif
+
+            return _roleManager != null ? _roleManager.LocalTimelineRole : TimelineRole.None;
+        }
+
+        private bool HasTimelineRoleSource()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (Phase3DebugBootstrap.IsOfflineSandboxActive)
+            {
+                return true;
+            }
+#endif
+
+            return _roleManager != null;
         }
 
         private void ResolveDependencies()
@@ -280,6 +326,61 @@ namespace Caretaker.Presentation
             _remoteTimelineView.Initialize();
         }
 
+        private void EnsureDividerComponents()
+        {
+            if (_dividerCanvasObject == null)
+            {
+                _dividerCanvasObject = new GameObject(DIVIDER_CANVAS_NAME);
+                _dividerCanvasObject.transform.SetParent(transform, false);
+
+                Canvas canvas = _dividerCanvasObject.AddComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.sortingOrder = short.MaxValue;
+            }
+
+            if (_dividerImage == null)
+            {
+                GameObject dividerObject = new(DIVIDER_IMAGE_NAME);
+                dividerObject.transform.SetParent(_dividerCanvasObject.transform, false);
+                _dividerRect = dividerObject.AddComponent<RectTransform>();
+                _dividerImage = dividerObject.AddComponent<Image>();
+                _dividerImage.raycastTarget = false;
+            }
+
+            RefreshDividerStyle();
+            _dividerCanvasObject.SetActive(false);
+        }
+
+        private void ShowDivider()
+        {
+            EnsureDividerComponents();
+            RefreshDividerStyle();
+            _dividerCanvasObject.SetActive(true);
+        }
+
+        private void HideDivider()
+        {
+            if (_dividerCanvasObject != null)
+            {
+                _dividerCanvasObject.SetActive(false);
+            }
+        }
+
+        private void RefreshDividerStyle()
+        {
+            if (_dividerRect == null || _dividerImage == null)
+            {
+                return;
+            }
+
+            _dividerRect.anchorMin = new Vector2(0f, 0.5f);
+            _dividerRect.anchorMax = new Vector2(1f, 0.5f);
+            _dividerRect.pivot = new Vector2(0.5f, 0.5f);
+            _dividerRect.anchoredPosition = Vector2.zero;
+            _dividerRect.sizeDelta = new Vector2(0f, _dividerThicknessPixels);
+            _dividerImage.color = _dividerColor;
+        }
+
         private static Camera FindSceneCamera(string sceneName)
         {
             Scene scene = SceneManager.GetSceneByName(sceneName);
@@ -306,19 +407,43 @@ namespace Caretaker.Presentation
             return fallback;
         }
 
-        private float CalculateMaximumPlayerSeparation(Camera localCamera, Camera remoteCamera)
+        private float CalculateMaximumPlayerSeparation(
+            Camera localCamera,
+            Rect localViewport,
+            Camera remoteCamera,
+            Rect remoteViewport)
         {
             float localHalfWidth = GetResolutionIndependentHalfWidth(
                 localCamera,
+                localViewport,
                 _referenceViewportAspect);
             float remoteHalfWidth = GetResolutionIndependentHalfWidth(
                 remoteCamera,
+                remoteViewport,
                 _referenceViewportAspect);
             return ResolveMaximumPlayerSeparation(
                 _maximumPlayerSeparation,
                 localHalfWidth,
                 remoteHalfWidth,
                 _cameraBoundaryPadding);
+        }
+
+        private Vector3 ResolveCameraBasePosition(Camera templateCamera, TimelineRole timelineRole)
+        {
+            Vector3 basePosition = templateCamera.transform.position;
+            Transform player = timelineRole == TimelineRole.Past ? _pastPlayer : _futurePlayer;
+            if (player == null || !templateCamera.orthographic)
+            {
+                return basePosition;
+            }
+
+            float verticalDistance = Mathf.Abs(player.position.y - basePosition.y);
+            if (verticalDistance > templateCamera.orthographicSize)
+            {
+                basePosition.y = player.position.y;
+            }
+
+            return basePosition;
         }
 
         /// <summary>설정된 거리와 두 카메라 중 좁은 월드 범위를 기준으로 최대 간격을 계산합니다.</summary>
@@ -329,13 +454,21 @@ namespace Caretaker.Presentation
             float boundaryPadding)
         {
             float narrowestHalfWidth = Mathf.Min(localHalfWidth, remoteHalfWidth);
-            return Mathf.Max(
+            float visibleSeparation = Mathf.Max(
                 0f,
-                Mathf.Min(configuredSeparation, narrowestHalfWidth - boundaryPadding));
+                narrowestHalfWidth - boundaryPadding);
+
+            if (configuredSeparation <= 0f)
+            {
+                return visibleSeparation;
+            }
+
+            return Mathf.Min(configuredSeparation, visibleSeparation);
         }
 
         private static float GetResolutionIndependentHalfWidth(
             Camera camera,
+            Rect viewport,
             float referenceViewportAspect)
         {
             if (camera == null || !camera.orthographic)
@@ -343,8 +476,14 @@ namespace Caretaker.Presentation
                 return 8f;
             }
 
-            // 실제 해상도 대신 공통 기준 aspect를 사용해 모든 클라이언트가 같은 경계를 갖습니다.
-            return camera.orthographicSize * Mathf.Max(0.1f, referenceViewportAspect);
+            float viewportAspectMultiplier = viewport.height > 0f
+                ? viewport.width / viewport.height
+                : 1f;
+
+            // 실제 해상도 대신 공통 기준 aspect와 스플릿 viewport 비율을 사용해 모든 클라이언트가 같은 경계를 갖습니다.
+            return camera.orthographicSize
+                * Mathf.Max(0.1f, referenceViewportAspect)
+                * Mathf.Max(0.1f, viewportAspectMultiplier);
         }
     }
 }

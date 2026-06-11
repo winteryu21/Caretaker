@@ -340,6 +340,63 @@ namespace Caretaker.Tests.Editor
             Object.DestroyImmediate(perception.gameObject);
         }
 
+        [Test]
+        public void CanBeTakenDownBy_RequiresRangeAndRearAngle()
+        {
+            EnemyController controller = CreateController(Vector3.zero, CreateTuning(1f, 0f));
+            controller.GetComponent<EnemyPerception2D>().SetFacingDirection(Vector2.right);
+            Physics2D.SyncTransforms();
+
+            Assert.That(controller.CanBeTakenDownBy(new Vector2(-1.5f, 0f)), Is.True);
+            Assert.That(controller.CanBeTakenDownBy(new Vector2(1f, 0f)), Is.False);
+            Assert.That(controller.CanBeTakenDownBy(new Vector2(0f, 1f)), Is.False);
+            Assert.That(controller.CanBeTakenDownBy(new Vector2(-2.1f, 0f)), Is.False);
+
+            DestroyController(controller);
+        }
+
+        [Test]
+        public void CanBeTakenDownBy_ReturnsFalseWhileChasing()
+        {
+            EnemyController controller = CreateController(Vector3.zero, CreateTuning(1f, 0f));
+            controller.GetComponent<EnemyPerception2D>().SetFacingDirection(Vector2.right);
+            EnemyStateMachine stateMachine = GetStateMachine(controller);
+            stateMachine.TickState(true, 0.1f, 10f);
+
+            Assert.That(controller.CurrentState, Is.EqualTo(EnemyStateMachine.EnemyState.Chase));
+            Assert.That(controller.CanBeTakenDownBy(new Vector2(-1f, 0f)), Is.False);
+
+            DestroyController(controller);
+        }
+
+        [Test]
+        public void ReactivateAfterTakedown_RestoresEnemyComponentsAndState()
+        {
+            EnemyController controller = CreateController(Vector3.zero, CreateTuning(1f, 0f));
+            EnemyPerception2D perception = controller.GetComponent<EnemyPerception2D>();
+            Collider2D enemyCollider = controller.GetComponent<Collider2D>();
+            Rigidbody2D body = controller.GetComponent<Rigidbody2D>();
+
+            SetPrivateField(controller, "_isBeingTakenDown", true);
+            SetPrivateField(controller, "_requiresTakedownReset", true);
+            enemyCollider.enabled = false;
+            body.simulated = false;
+            perception.enabled = false;
+
+            controller.gameObject.SetActive(false);
+            controller.gameObject.SetActive(true);
+
+            Assert.That(controller.IsBeingTakenDown, Is.False);
+            Assert.That(controller.CurrentState, Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+            Assert.That(enemyCollider.enabled, Is.True);
+            Assert.That(body.simulated, Is.True);
+            Assert.That(perception.enabled, Is.True);
+            Vector2 rearPosition = (Vector2)controller.transform.position - perception.FacingDirection;
+            Assert.That(controller.CanBeTakenDownBy(rearPosition), Is.True);
+
+            DestroyController(controller);
+        }
+
         private static EnemyController CreateController(
             Vector3 position,
             EnemyTuningSO tuning,
@@ -434,6 +491,18 @@ namespace Caretaker.Tests.Editor
         {
             FieldInfo fieldInfo = typeof(EnemyController).GetField("_targetPlayer", INSTANCE_PRIVATE);
             return (PlayerMotor2D)fieldInfo.GetValue(enemy);
+        }
+
+        private static EnemyStateMachine GetStateMachine(EnemyController enemy)
+        {
+            FieldInfo fieldInfo = typeof(EnemyController).GetField("_stateMachine", INSTANCE_PRIVATE);
+            return (EnemyStateMachine)fieldInfo.GetValue(enemy);
+        }
+
+        private static void SetPrivateField<T>(EnemyController enemy, string fieldName, T value)
+        {
+            FieldInfo fieldInfo = typeof(EnemyController).GetField(fieldName, INSTANCE_PRIVATE);
+            fieldInfo.SetValue(enemy, value);
         }
 
         private static Transform CreateWaypoint(string name, Vector3 position)

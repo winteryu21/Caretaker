@@ -240,12 +240,51 @@ namespace Caretaker.Core
                 return;
             }
 
-            _currentPhase = targetPhase;
-            ResetPhaseAdvanceReadyFlags();
-            ResetExitReachedFlags();
+            ApplyPhaseTransitionState(targetPhase);
             _roleManager?.BroadcastPhaseTransition(targetPhase);
             UpdateObjectivesForAllRoles();
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// 개발자 도구에서 Phase를 강제로 전환한다.
+        /// </summary>
+        /// <param name="targetPhase">전환할 Phase.</param>
+        /// <returns>전환 요청이 처리되었으면 true.</returns>
+        public bool TryDebugTransitionPhase(PhaseId targetPhase)
+        {
+            if (IsHostAuthority())
+            {
+                ApplyPhaseTransitionState(targetPhase);
+                UpdateObjectivesForAllRoles();
+
+                if (_roleManager != null && _roleManager.IsSpawned)
+                {
+                    _roleManager.BroadcastPhaseTransition(targetPhase);
+                }
+                else
+                {
+                    LoadLocalPhaseForDebug(targetPhase);
+                    OnPhaseChanged?.Invoke(targetPhase);
+                }
+
+                return true;
+            }
+
+            if (IsNetworkSessionActive())
+            {
+                Debug.LogWarning("Developer phase transition requires Host authority.", this);
+                return false;
+            }
+
+            ApplyPhaseTransitionState(targetPhase);
+            UpdateObjectivesForAllRoles();
+            LoadLocalPhaseForDebug(targetPhase);
+            OnPhaseChanged?.Invoke(targetPhase);
+            Debug.Log($"Developer phase transition applied locally: phase={targetPhase}", this);
+            return true;
+        }
+#endif
 
         /// <summary>
         /// 로컬 플레이어가 기능검증용 Phase 전환 준비를 완료했음을 Host에 제출한다.
@@ -405,6 +444,14 @@ namespace Caretaker.Core
         {
             _pastExitReached = false;
             _futureExitReached = false;
+        }
+
+        private void ApplyPhaseTransitionState(PhaseId targetPhase)
+        {
+            _currentPhase = targetPhase;
+            ResetPhaseAdvanceReadyFlags();
+            ResetExitReachedFlags();
+            _gameResult = GameResult.None;
         }
 
         private void HandleLocalRoleAssigned(TimelineRole role)
@@ -618,6 +665,33 @@ namespace Caretaker.Core
             _sceneLoader.TryLoadPhase(phaseId, _roleManager.LocalTimelineRole);
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private void LoadLocalPhaseForDebug(PhaseId phaseId)
+        {
+            ResolveDependencies();
+
+            if (_sceneLoader == null)
+            {
+                Debug.LogWarning("GameFlowManager requires SceneLoader to load debug phase scenes.", this);
+                return;
+            }
+
+            TimelineRole timelineRole = _roleManager != null
+                ? _roleManager.LocalTimelineRole
+                : TimelineRole.None;
+            if (timelineRole is not (TimelineRole.Past or TimelineRole.Future))
+            {
+                timelineRole = TimelineRole.Past;
+                Debug.Log("Developer phase transition is using Past as the local debug timeline role.", this);
+            }
+
+            Debug.Log(
+                $"GameFlowManager loading debug phase: phase={phaseId}, role={timelineRole}",
+                this);
+            _sceneLoader.TryLoadPhase(phaseId, timelineRole);
+        }
+#endif
+
         private void ResolveDependencies()
         {
             if (_sceneLoader == null)
@@ -635,6 +709,12 @@ namespace Caretaker.Core
         {
             return Unity.Netcode.NetworkManager.Singleton != null
                 && Unity.Netcode.NetworkManager.Singleton.IsServer;
+        }
+
+        private static bool IsNetworkSessionActive()
+        {
+            return Unity.Netcode.NetworkManager.Singleton != null
+                && Unity.Netcode.NetworkManager.Singleton.IsListening;
         }
     }
 }

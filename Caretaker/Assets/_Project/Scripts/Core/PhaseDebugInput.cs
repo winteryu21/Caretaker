@@ -11,7 +11,7 @@ namespace Caretaker.Core
     public sealed class PhaseDebugInput : MonoBehaviour
     {
         [SerializeField] private GameFlowManager _gameFlowManager;
-        [SerializeField] private bool _enableDebugInput = true;
+        [SerializeField] private bool _enableDebugInput;
 
         private void Awake()
         {

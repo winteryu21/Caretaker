@@ -29,7 +29,7 @@ namespace Caretaker.Gameplay
         [SerializeField, Range(0.1f, 2f)] private float _playbackGain = 0.5f;
         [SerializeField, Min(0)] private int _minimumBufferedFrames = DEFAULT_MIN_BUFFERED_FRAMES;
         [SerializeField] private bool _autoStartSilentPlayback = true;
-        [SerializeField] private bool _showDebugOverlay = true;
+        [SerializeField] private bool _showDebugOverlay = false;
         [SerializeField] private Vector2 _debugPanelPosition = new(16f, 220f);
 
         private AudioClip _microphoneClip;
