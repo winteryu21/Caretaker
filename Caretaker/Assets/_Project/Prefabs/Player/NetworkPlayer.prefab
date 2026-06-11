@@ -322,7 +322,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMotor2D
   _moveSpeed: 5
   _sprintSpeedMultiplier: 1.5
-  _jumpHeight: 5
+  _jumpHeight: 6
   _groundAcceleration: 40
   _groundDeceleration: 28
   _groundTurnSpeed: 48

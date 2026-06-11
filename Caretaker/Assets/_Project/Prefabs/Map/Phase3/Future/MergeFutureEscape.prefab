@@ -21548,6 +21548,10 @@ PrefabInstance:
       propertyPath: m_Tiles.Array.data[4403].second.m_TileObjectToInstantiateIndex
       value: 65535
       objectReference: {fileID: 0}
+    - target: {fileID: 8989760037057120618, guid: 72275b287a42a7d44b7962f8701f7f34, type: 3}
+      propertyPath: m_Name
+      value: SceneStartPoint
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
