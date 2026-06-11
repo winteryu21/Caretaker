@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 428e7cb171b9cfa4bbf4b1a9a60114ee, type: 3}
   m_Name: SO_CR_P3_FALLING_TILE
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.CausalRuleSO
-  _ruleId: CR_P3_Falling_Tile
-  _triggerId: CR_P3_Falling_Tile
+  _ruleId: CR_P3_FALLING_TILE
+  _triggerId: CR_P3_FALLING_TILE
   _requiredRole: 1
   _requiredItemId: 
   _conditions: []
   _receiverEffects:
   - _receiverId: RCV_TILE_1
-    _stateKey: Collasped
-    _stateValue: false
+    _stateKey: tileState
+    _stateValue: Collapsed
   _interactionWeight: 0

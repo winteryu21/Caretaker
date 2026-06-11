@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.ItemDefinitionSO
   _itemId: ITEM_CABLE
   _displayName: "\uC804\uB825 \uCF00\uC774\uBE14"
+  _description: 차단기 패널 연결에 사용하는 전력 케이블입니다.
   _icon: {fileID: 0}
   _category: Power
   _usableTargetTags:
   - BreakerPanel
-  - AuxPowerDevice
   _consumable: 1

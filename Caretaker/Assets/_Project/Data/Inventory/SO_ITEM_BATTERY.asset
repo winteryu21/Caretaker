@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.ItemDefinitionSO
   _itemId: ITEM_BATTERY
   _displayName: "\uC608\uBE44 \uBC30\uD130\uB9AC"
+  _description: 보조 전력 장치에 연결하는 예비 배터리입니다.
   _icon: {fileID: 0}
   _category: Power
   _usableTargetTags:

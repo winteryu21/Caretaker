@@ -157,7 +157,7 @@ namespace Caretaker.Gameplay
                         continue;
                     }
 
-                    if (player.ClientId == NetworkManager.LocalClientId)
+                    if (player.ClientId == NetworkManager.Singleton.LocalClientId)
                     {
                         _loadedPhaseSceneName = sceneName;
                     }

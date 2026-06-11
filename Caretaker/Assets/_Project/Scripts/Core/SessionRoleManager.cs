@@ -13,6 +13,10 @@ namespace Caretaker.Core
         [SerializeField] private bool _persistAcrossScenes = true;
 
         private readonly Dictionary<ulong, PlayerSessionData> _players = new();
+        private readonly HashSet<ulong> _phaseRestartReadyClientIds = new();
+
+        private PhaseId _restartingPhase = PhaseId.Phase1;
+        private bool _isPhaseRestartPending;
 
         public event Action<PlayerSessionData> OnPlayerRegistered;
         public event Action<ulong> OnPlayerUnregistered;
@@ -22,6 +26,8 @@ namespace Caretaker.Core
         public event Action<NetworkSessionStatus> OnSessionStatusReceived;
         public event Action<ulong> OnPhaseAdvanceReadySubmitted;
         public event Action<PhaseId> OnPhaseTransitionReceived;
+        public event Action<PhaseId> OnPhaseRestartReceived;
+        public event Action<PhaseId> OnPhaseRestartLoadReceived;
         public event Action<PhaseId, MajorId> OnMajorCompletedReceived;
         public event Action<TimelineRole, ObjectiveId> OnObjectiveChangedReceived;
         public event Action<GameResult> OnGameResultReceived;
@@ -68,12 +74,16 @@ namespace Caretaker.Core
                 return;
             }
 
+            _phaseRestartReadyClientIds.Remove(clientId);
             OnPlayerUnregistered?.Invoke(clientId);
+            TryCompletePhaseRestart();
         }
 
         public void Clear()
         {
             _players.Clear();
+            _phaseRestartReadyClientIds.Clear();
+            _isPhaseRestartPending = false;
             LocalTimelineRole = TimelineRole.None;
         }
 
@@ -162,6 +172,45 @@ namespace Caretaker.Core
         }
 
         /// <summary>
+        /// Host가 요청한 Phase 재시작을 모든 클라이언트에 전파한다.
+        /// </summary>
+        /// <returns>재시작 RPC를 전파했는지 여부.</returns>
+        public bool BroadcastPhaseRestart(PhaseId phaseId)
+        {
+            if (!IsServer || !IsSpawned)
+            {
+                Debug.LogWarning(
+                    $"Cannot broadcast phase restart. isServer={IsServer}, isSpawned={IsSpawned}, phase={phaseId}",
+                    this);
+                return false;
+            }
+
+            _phaseRestartReadyClientIds.Clear();
+            _restartingPhase = phaseId;
+            _isPhaseRestartPending = true;
+            Debug.Log($"SessionRoleManager broadcasting phase restart: phase={phaseId}", this);
+            ReceivePhaseRestartClientRpc(phaseId);
+            return true;
+        }
+
+        /// <summary>로컬 클라이언트의 Phase 씬 언로드 완료를 Host에 제출한다.</summary>
+        public void SubmitLocalPhaseRestartReady(PhaseId phaseId)
+        {
+            if (NetworkManager == null || !NetworkManager.IsListening)
+            {
+                return;
+            }
+
+            if (IsServer)
+            {
+                NotifyPhaseRestartReady(NetworkManager.LocalClientId, phaseId);
+                return;
+            }
+
+            SubmitPhaseRestartReadyRpc(phaseId);
+        }
+
+        /// <summary>
         /// Host가 확정한 Major 완료를 모든 클라이언트에 전파한다.
         /// </summary>
         /// <param name="phaseId">완료가 발생한 Phase.</param>
@@ -225,6 +274,12 @@ namespace Caretaker.Core
         private void SubmitPhaseAdvanceReadyRpc(RpcParams rpcParams = default)
         {
             NotifyPhaseAdvanceReady(rpcParams.Receive.SenderClientId);
+        }
+
+        [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
+        private void SubmitPhaseRestartReadyRpc(PhaseId phaseId, RpcParams rpcParams = default)
+        {
+            NotifyPhaseRestartReady(rpcParams.Receive.SenderClientId, phaseId);
         }
 
         private void SetReady(ulong clientId, bool isReady)
@@ -371,11 +426,55 @@ namespace Caretaker.Core
             OnPhaseAdvanceReadySubmitted?.Invoke(clientId);
         }
 
+        private void NotifyPhaseRestartReady(ulong clientId, PhaseId phaseId)
+        {
+            if (!IsServer
+                || !_isPhaseRestartPending
+                || phaseId != _restartingPhase
+                || !_players.ContainsKey(clientId)
+                || !_phaseRestartReadyClientIds.Add(clientId))
+            {
+                return;
+            }
+
+            TryCompletePhaseRestart();
+        }
+
+        private void TryCompletePhaseRestart()
+        {
+            if (!_isPhaseRestartPending
+                || _players.Count == 0
+                || _phaseRestartReadyClientIds.Count < _players.Count)
+            {
+                return;
+            }
+
+            PhaseId phaseId = _restartingPhase;
+            _isPhaseRestartPending = false;
+            _phaseRestartReadyClientIds.Clear();
+            Debug.Log($"All clients are ready to reload phase: phase={phaseId}", this);
+            ReceivePhaseRestartLoadClientRpc(phaseId);
+        }
+
         [ClientRpc]
         private void ReceivePhaseTransitionClientRpc(PhaseId targetPhase)
         {
             Debug.Log($"SessionRoleManager received phase transition RPC: target={targetPhase}", this);
             OnPhaseTransitionReceived?.Invoke(targetPhase);
+        }
+
+        [ClientRpc]
+        private void ReceivePhaseRestartClientRpc(PhaseId phaseId)
+        {
+            Debug.Log($"SessionRoleManager received phase restart RPC: phase={phaseId}", this);
+            OnPhaseRestartReceived?.Invoke(phaseId);
+        }
+
+        [ClientRpc]
+        private void ReceivePhaseRestartLoadClientRpc(PhaseId phaseId)
+        {
+            Debug.Log($"SessionRoleManager received phase restart load RPC: phase={phaseId}", this);
+            OnPhaseRestartLoadReceived?.Invoke(phaseId);
         }
 
         [ClientRpc]

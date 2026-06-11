@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 
 using Caretaker.Shared;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -15,10 +18,14 @@ namespace Caretaker.Core
         [Header("Dependencies")]
         [SerializeField] private NetworkManager _networkManager;
         [SerializeField] private SessionRoleManager _roleManager;
+        [SerializeField] private UnityTransport _unityTransport;
 
         [Header("Session")]
         [SerializeField] private float _connectionTimeoutSeconds = 10f;
         [SerializeField] private bool _useConnectionApproval = true;
+        [SerializeField] private string _connectionAddress = "127.0.0.1";
+        [SerializeField] private ushort _connectionPort = 7777;
+        [SerializeField] private string _serverListenAddress = "0.0.0.0";
 
         [Header("Game Start")]
         [SerializeField] private bool _autoStartGameWhenBothReady = true;
@@ -35,6 +42,9 @@ namespace Caretaker.Core
         public NetworkSessionStatus Status { get; private set; } = NetworkSessionStatus.Offline;
         public float ConnectionTimeoutSeconds => _connectionTimeoutSeconds;
         public string GameSceneName => _gameSceneName;
+        public string ConnectionAddress => _connectionAddress;
+        public ushort ConnectionPort => _connectionPort;
+        public string ServerListenAddress => _serverListenAddress;
 
         private void Awake()
         {
@@ -60,6 +70,7 @@ namespace Caretaker.Core
             }
 
             ConfigureConnectionApproval();
+            ConfigureTransportForHost();
             RegisterCallbacks();
 
             bool started = _networkManager.StartHost();
@@ -79,6 +90,7 @@ namespace Caretaker.Core
             }
 
             ConfigureConnectionApproval();
+            ConfigureTransportForClient();
             RegisterCallbacks();
 
             bool started = _networkManager.StartClient();
@@ -144,6 +156,63 @@ namespace Caretaker.Core
             TryStartGameSceneLoad();
         }
 
+        /// <summary>
+        /// Sets the Host address used by client connections.
+        /// </summary>
+        /// <param name="connectionAddress">Host LAN IP address or hostname.</param>
+        public void SetConnectionAddress(string connectionAddress)
+        {
+            if (string.IsNullOrWhiteSpace(connectionAddress))
+            {
+                Debug.LogWarning("Connection address cannot be empty.", this);
+                return;
+            }
+
+            _connectionAddress = connectionAddress.Trim();
+        }
+
+        /// <summary>
+        /// Sets the UDP port used by host and client transport.
+        /// </summary>
+        /// <param name="connectionPort">Connection port.</param>
+        public void SetConnectionPort(ushort connectionPort)
+        {
+            _connectionPort = connectionPort;
+        }
+
+        /// <summary>
+        /// Returns a non-loopback local IPv4 address when available.
+        /// </summary>
+        /// <returns>LAN IPv4 address, or 127.0.0.1 as fallback.</returns>
+        public string GetLocalLanAddress()
+        {
+            try
+            {
+                IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (IPAddress address in hostEntry.AddressList)
+                {
+                    if (address.AddressFamily != AddressFamily.InterNetwork)
+                    {
+                        continue;
+                    }
+
+                    string value = address.ToString();
+                    if (IPAddress.IsLoopback(address) || value.StartsWith("169.254.", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    return value;
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"Failed to resolve local LAN address: {exception.Message}", this);
+            }
+
+            return "127.0.0.1";
+        }
+
         public void MarkInGame()
         {
             if (_networkManager == null || !_networkManager.IsServer)
@@ -182,10 +251,44 @@ namespace Caretaker.Core
                     : FindAnyObjectByType<NetworkManager>();
             }
 
+            if (_unityTransport == null && _networkManager != null)
+            {
+                _unityTransport = _networkManager.GetComponent<UnityTransport>();
+            }
+
             if (_roleManager == null)
             {
                 _roleManager = FindAnyObjectByType<SessionRoleManager>();
             }
+        }
+
+        private void ConfigureTransportForHost()
+        {
+            ResolveDependencies();
+            if (_unityTransport == null)
+            {
+                Debug.LogWarning("NetworkSessionController requires UnityTransport to configure host connection data.", this);
+                return;
+            }
+
+            _connectionAddress = GetLocalLanAddress();
+            _unityTransport.SetConnectionData(_connectionAddress, _connectionPort, _serverListenAddress);
+            Debug.Log(
+                $"Host transport configured. address={_connectionAddress}, port={_connectionPort}, listen={_serverListenAddress}",
+                this);
+        }
+
+        private void ConfigureTransportForClient()
+        {
+            ResolveDependencies();
+            if (_unityTransport == null)
+            {
+                Debug.LogWarning("NetworkSessionController requires UnityTransport to configure client connection data.", this);
+                return;
+            }
+
+            _unityTransport.SetConnectionData(_connectionAddress, _connectionPort);
+            Debug.Log($"Client transport configured. address={_connectionAddress}, port={_connectionPort}", this);
         }
 
         private void ConfigureConnectionApproval()
