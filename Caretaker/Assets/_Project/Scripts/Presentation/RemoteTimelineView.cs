@@ -72,6 +72,30 @@ namespace Caretaker.Presentation
             float pastProgressOriginX,
             float futureProgressOriginX)
         {
+            Show(
+                templateCamera,
+                pastPlayer,
+                futurePlayer,
+                null,
+                viewport,
+                basePosition,
+                cameraTimelineRole,
+                pastProgressOriginX,
+                futureProgressOriginX);
+        }
+
+        /// <summary>상대 시간대를 지정한 viewport와 시간대별 진행도 기준, 세로 추적 대상으로 직접 렌더링한다.</summary>
+        public void Show(
+            Camera templateCamera,
+            Transform pastPlayer,
+            Transform futurePlayer,
+            Transform verticalFollowTarget,
+            Rect viewport,
+            Vector3 basePosition,
+            TimelineRole cameraTimelineRole,
+            float pastProgressOriginX,
+            float futureProgressOriginX)
+        {
             if (_camera == null || templateCamera == null)
             {
                 Debug.LogWarning("RemoteTimelineView requires an initialized camera and template.", this);
@@ -88,6 +112,7 @@ namespace Caretaker.Presentation
             _cameraRig.Configure(
                 pastPlayer,
                 futurePlayer,
+                verticalFollowTarget,
                 basePosition,
                 false,
                 0f,

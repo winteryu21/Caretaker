@@ -106,6 +106,8 @@ namespace Caretaker.Presentation
             TimelineRole remoteRole = localRole == TimelineRole.Past
                 ? TimelineRole.Future
                 : TimelineRole.Past;
+            Transform localPlayer = localRole == TimelineRole.Past ? _pastPlayer : _futurePlayer;
+            Transform remotePlayer = remoteRole == TimelineRole.Past ? _pastPlayer : _futurePlayer;
             Camera localTemplate = FindSceneCamera(SceneLoader.GetPhaseSceneName(PhaseId.Phase3, localRole));
             Camera remoteTemplate = FindSceneCamera(SceneLoader.GetPhaseSceneName(PhaseId.Phase3, remoteRole));
             if (localTemplate == null || remoteTemplate == null)
@@ -130,6 +132,7 @@ namespace Caretaker.Presentation
             _mainCameraRig.Configure(
                 _pastPlayer,
                 _futurePlayer,
+                localPlayer,
                 localBasePosition,
                 true,
                 CalculateMaximumPlayerSeparation(
@@ -145,6 +148,7 @@ namespace Caretaker.Presentation
                 remoteTemplate,
                 _pastPlayer,
                 _futurePlayer,
+                remotePlayer,
                 remoteViewport,
                 remoteBasePosition,
                 remoteRole,

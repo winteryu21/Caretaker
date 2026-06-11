@@ -11,6 +11,7 @@ namespace Caretaker.Presentation
     {
         [SerializeField] private Transform _pastPlayer;
         [SerializeField] private Transform _futurePlayer;
+        [SerializeField] private Transform _verticalFollowTarget;
 
         private Vector3 _basePosition;
         private TimelineRole _cameraTimelineRole;
@@ -19,6 +20,7 @@ namespace Caretaker.Presentation
         private float _futureProgressOriginX;
         private float _maximumPlayerSeparation;
         private float _pastProgressOriginX;
+        private float _verticalOffset;
         private bool _controlsPlayerSpacing;
         private bool _isFollowing;
 
@@ -33,14 +35,42 @@ namespace Caretaker.Presentation
             float pastProgressOriginX = 0f,
             float futureProgressOriginX = 0f)
         {
+            Configure(
+                pastPlayer,
+                futurePlayer,
+                null,
+                basePosition,
+                controlsPlayerSpacing,
+                maximumPlayerSeparation,
+                cameraTimelineRole,
+                pastProgressOriginX,
+                futureProgressOriginX);
+        }
+
+        /// <summary>두 플레이어와 현재 시간대 카메라의 기준 위치, 세로 추적 대상을 설정합니다.</summary>
+        public void Configure(
+            Transform pastPlayer,
+            Transform futurePlayer,
+            Transform verticalFollowTarget,
+            Vector3 basePosition,
+            bool controlsPlayerSpacing = false,
+            float maximumPlayerSeparation = 0f,
+            TimelineRole cameraTimelineRole = TimelineRole.None,
+            float pastProgressOriginX = 0f,
+            float futureProgressOriginX = 0f)
+        {
             _pastPlayer = pastPlayer;
             _futurePlayer = futurePlayer;
+            _verticalFollowTarget = verticalFollowTarget;
             _basePosition = basePosition;
             _controlsPlayerSpacing = controlsPlayerSpacing;
             _maximumPlayerSeparation = Mathf.Max(0f, maximumPlayerSeparation);
             _cameraTimelineRole = cameraTimelineRole;
             _pastProgressOriginX = pastProgressOriginX;
             _futureProgressOriginX = futureProgressOriginX;
+            _verticalOffset = _verticalFollowTarget != null
+                ? _basePosition.y - _verticalFollowTarget.position.y
+                : 0f;
             _pastMotor = _pastPlayer != null ? _pastPlayer.GetComponent<PlayerMotor2D>() : null;
             _futureMotor = _futurePlayer != null ? _futurePlayer.GetComponent<PlayerMotor2D>() : null;
             _isFollowing = true;
@@ -60,11 +90,18 @@ namespace Caretaker.Presentation
             _controlsPlayerSpacing = false;
             _pastPlayer = null;
             _futurePlayer = null;
+            _verticalFollowTarget = null;
             _pastMotor = null;
             _futureMotor = null;
             _cameraTimelineRole = TimelineRole.None;
             _pastProgressOriginX = 0f;
             _futureProgressOriginX = 0f;
+            _verticalOffset = 0f;
+        }
+
+        private void FixedUpdate()
+        {
+            ApplyPlayerSpacingBounds();
         }
 
         private void LateUpdate()
@@ -82,7 +119,7 @@ namespace Caretaker.Presentation
             float sharedProgressX = ResolveSharedProgressX();
             transform.position = new Vector3(
                 ResolveCameraWorldX(sharedProgressX),
-                _basePosition.y,
+                ResolveCameraWorldY(),
                 _basePosition.z);
 
             ApplyPlayerSpacingBounds();
@@ -109,7 +146,7 @@ namespace Caretaker.Presentation
 
         private void ApplyPlayerSpacingBounds()
         {
-            if (!_controlsPlayerSpacing)
+            if (!_controlsPlayerSpacing || _pastPlayer == null || _futurePlayer == null)
             {
                 return;
             }
@@ -155,6 +192,13 @@ namespace Caretaker.Presentation
             return timelineRole == TimelineRole.Future
                 ? _futureProgressOriginX
                 : _pastProgressOriginX;
+        }
+
+        private float ResolveCameraWorldY()
+        {
+            return _verticalFollowTarget != null
+                ? _verticalFollowTarget.position.y + _verticalOffset
+                : _basePosition.y;
         }
     }
 }
