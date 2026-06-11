@@ -17,6 +17,7 @@ namespace Caretaker.Presentation
         private static readonly Rect BOTTOM_VIEWPORT = new(0f, 0f, 1f, 0.5f);
         private const string DIVIDER_CANVAS_NAME = "Split View Divider Canvas";
         private const string DIVIDER_IMAGE_NAME = "Split View Divider";
+        private const string SPAWN_POINT_NAME = "SpawnPoint";
 
         [SerializeField] private SceneLoader _sceneLoader;
         [SerializeField] private SessionRoleManager _roleManager;
@@ -112,6 +113,8 @@ namespace Caretaker.Presentation
                 return;
             }
 
+            float pastProgressOriginX = ResolveTimelineProgressOriginX(TimelineRole.Past, _pastPlayer);
+            float futureProgressOriginX = ResolveTimelineProgressOriginX(TimelineRole.Future, _futurePlayer);
             Rect localViewport = localRole == TimelineRole.Past ? TOP_VIEWPORT : BOTTOM_VIEWPORT;
             Rect remoteViewport = remoteRole == TimelineRole.Past ? TOP_VIEWPORT : BOTTOM_VIEWPORT;
             Vector3 localBasePosition = ResolveCameraBasePosition(localTemplate, localRole);
@@ -133,14 +136,20 @@ namespace Caretaker.Presentation
                     localTemplate,
                     localViewport,
                     remoteTemplate,
-                    remoteViewport));
+                    remoteViewport),
+                localRole,
+                pastProgressOriginX,
+                futureProgressOriginX);
 
             _remoteTimelineView.Show(
                 remoteTemplate,
                 _pastPlayer,
                 _futurePlayer,
                 remoteViewport,
-                remoteBasePosition);
+                remoteBasePosition,
+                remoteRole,
+                pastProgressOriginX,
+                futureProgressOriginX);
             ShowDivider();
             _isSplitViewActive = true;
         }
@@ -405,6 +414,42 @@ namespace Caretaker.Presentation
             }
 
             return fallback;
+        }
+
+        private static float ResolveTimelineProgressOriginX(TimelineRole timelineRole, Transform fallbackPlayer)
+        {
+            Scene scene = SceneManager.GetSceneByName(SceneLoader.GetPhaseSceneName(PhaseId.Phase3, timelineRole));
+            if (TryFindSpawnPoint(scene, out Transform spawnPoint))
+            {
+                return spawnPoint.position.x;
+            }
+
+            return fallbackPlayer != null ? fallbackPlayer.position.x : 0f;
+        }
+
+        private static bool TryFindSpawnPoint(Scene scene, out Transform spawnPoint)
+        {
+            spawnPoint = null;
+            if (!scene.IsValid() || !scene.isLoaded)
+            {
+                return false;
+            }
+
+            GameObject[] rootObjects = scene.GetRootGameObjects();
+            for (int i = 0; i < rootObjects.Length; i++)
+            {
+                Transform[] transforms = rootObjects[i].GetComponentsInChildren<Transform>(true);
+                for (int j = 0; j < transforms.Length; j++)
+                {
+                    if (transforms[j].name == SPAWN_POINT_NAME)
+                    {
+                        spawnPoint = transforms[j];
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private float CalculateMaximumPlayerSeparation(

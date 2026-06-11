@@ -1,3 +1,4 @@
+using Caretaker.Shared;
 using UnityEngine;
 
 namespace Caretaker.Presentation
@@ -49,6 +50,28 @@ namespace Caretaker.Presentation
             Rect viewport,
             Vector3 basePosition)
         {
+            Show(
+                templateCamera,
+                pastPlayer,
+                futurePlayer,
+                viewport,
+                basePosition,
+                TimelineRole.None,
+                0f,
+                0f);
+        }
+
+        /// <summary>상대 시간대를 지정한 viewport와 시간대별 진행도 기준으로 직접 렌더링한다.</summary>
+        public void Show(
+            Camera templateCamera,
+            Transform pastPlayer,
+            Transform futurePlayer,
+            Rect viewport,
+            Vector3 basePosition,
+            TimelineRole cameraTimelineRole,
+            float pastProgressOriginX,
+            float futureProgressOriginX)
+        {
             if (_camera == null || templateCamera == null)
             {
                 Debug.LogWarning("RemoteTimelineView requires an initialized camera and template.", this);
@@ -62,7 +85,15 @@ namespace Caretaker.Presentation
             _camera.transform.SetPositionAndRotation(
                 basePosition,
                 templateCamera.transform.rotation);
-            _cameraRig.Configure(pastPlayer, futurePlayer, basePosition);
+            _cameraRig.Configure(
+                pastPlayer,
+                futurePlayer,
+                basePosition,
+                false,
+                0f,
+                cameraTimelineRole,
+                pastProgressOriginX,
+                futureProgressOriginX);
             _camera.enabled = true;
         }
 

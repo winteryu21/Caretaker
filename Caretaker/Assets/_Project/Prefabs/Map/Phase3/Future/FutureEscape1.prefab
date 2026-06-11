@@ -46654,6 +46654,7 @@ Transform:
   - {fileID: 1744367332568463458}
   - {fileID: 7560298450126455247}
   - {fileID: 2270496612668453862}
+  - {fileID: 5691520613923790509}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!156049354 &5024531296976234370
@@ -46734,38 +46735,10 @@ Tilemap:
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
   m_AnimatedTiles: {}
-  m_TileAssetArray:
-  - serializedVersion: 2
-    m_RefCount: 1
-    m_Data: {fileID: 11400000, guid: b7522f1aba0d6bb45afe89ecc0358ef9, type: 2}
-  m_TileSpriteArray:
-  - serializedVersion: 2
-    m_RefCount: 1
-    m_Data: {fileID: 916213637132702330, guid: 0ce8ad50a43327241b3dfdb8bc075c01, type: 3}
-  m_TileMatrixArray:
-  - serializedVersion: 2
-    m_RefCount: 1
-    m_Data:
-      e00: 1
-      e01: 0
-      e02: 0
-      e03: 0
-      e10: 0
-      e11: 1
-      e12: 0
-      e13: 0
-      e20: 0
-      e21: 0
-      e22: 1
-      e23: 0
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-  m_TileColorArray:
-  - serializedVersion: 2
-    m_RefCount: 1
-    m_Data: {r: 1, g: 1, b: 1, a: 1}
+  m_TileAssetArray: [{serializedVersion: 2, m_RefCount: 1, m_Data: {fileID: 11400000, guid: b7522f1aba0d6bb45afe89ecc0358ef9, type: 2}}]
+  m_TileSpriteArray: [{serializedVersion: 2, m_RefCount: 1, m_Data: {fileID: 916213637132702330, guid: 0ce8ad50a43327241b3dfdb8bc075c01, type: 3}}]
+  m_TileMatrixArray: [{serializedVersion: 2, m_RefCount: 1, m_Data: {e00: 1, e01: 0, e02: 0, e03: 0, e10: 0, e11: 1, e12: 0, e13: 0, e20: 0, e21: 0, e22: 1, e23: 0, e30: 0, e31: 0, e32: 0, e33: 1}}]
+  m_TileColorArray: [{serializedVersion: 2, m_RefCount: 1, m_Data: {r: 1, g: 1, b: 1, a: 1}}]
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -48406,6 +48379,37 @@ MonoBehaviour:
   _showSuccessEffect: 1
   _successEffectColor: {r: 0.2, g: 1, b: 0.85, a: 1}
   _successEffectScale: 1
+--- !u!1 &8989760037057120618
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5691520613923790509}
+  m_Layer: 0
+  m_Name: SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5691520613923790509
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8989760037057120618}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4, y: -8.6, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4267696871735280199}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &9022360814025367922
 GameObject:
   m_ObjectHideFlags: 0

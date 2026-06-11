@@ -1,4 +1,5 @@
 using Caretaker.Presentation;
+using Caretaker.Shared;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -26,6 +27,43 @@ namespace Caretaker.Tests.Editor
                     new Vector3(0f, 1002f, -10f));
 
                 Assert.That(cameraObject.transform.position.x, Is.EqualTo(8f));
+                Assert.That(cameraObject.transform.position.y, Is.EqualTo(1002f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(pastPlayer);
+                Object.DestroyImmediate(futurePlayer);
+            }
+        }
+
+        [TestCase(TimelineRole.Past, -80.3f)]
+        [TestCase(TimelineRole.Future, -23f)]
+        public void TimelineCameraRig_UsesTimelineOriginsForCameraProgress(
+            TimelineRole cameraTimelineRole,
+            float expectedCameraX)
+        {
+            GameObject cameraObject = new("Camera");
+            GameObject pastPlayer = new("PastPlayer");
+            GameObject futurePlayer = new("FuturePlayer");
+
+            try
+            {
+                pastPlayer.transform.position = new Vector3(-77.3f, 0f, 0f);
+                futurePlayer.transform.position = new Vector3(-23f, 1000f, 0f);
+                TimelineCameraRig rig = cameraObject.AddComponent<TimelineCameraRig>();
+
+                rig.Configure(
+                    pastPlayer.transform,
+                    futurePlayer.transform,
+                    new Vector3(0f, 1002f, -10f),
+                    false,
+                    0f,
+                    cameraTimelineRole,
+                    -83.3f,
+                    -26f);
+
+                Assert.That(cameraObject.transform.position.x, Is.EqualTo(expectedCameraX).Within(0.001f));
                 Assert.That(cameraObject.transform.position.y, Is.EqualTo(1002f));
             }
             finally
