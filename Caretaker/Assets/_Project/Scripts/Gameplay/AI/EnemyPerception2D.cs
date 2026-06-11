@@ -22,13 +22,16 @@ namespace Caretaker.Gameplay
 
         [Header("Vision Display")]
         [SerializeField] private bool _showVisionArea = true;
-        [SerializeField] private Color _visionColor = new(1f, 0f, 0f, 0.25f);
+        [SerializeField] private Color _patrolVisionColor = new(0f, 0.4f, 1f, 0.25f);
+        [SerializeField] private Color _chaseVisionColor = new(1f, 0f, 0f, 0.25f);
+        [SerializeField] private Color _searchVisionColor = new(1f, 0.45f, 0f, 0.25f);
         [SerializeField] [Range(3, 64)] private int _visionSegments = 24;
         [SerializeField] private int _visionSortingOrder = -1;
 
         private readonly RaycastHit2D[] _obstructionHits = new RaycastHit2D[8];
 
         private Vector2 _facingDirection = Vector2.right;
+        private EnemyStateMachine.EnemyState _visionState = EnemyStateMachine.EnemyState.Patrol;
         private GameObject _visionObject;
         private Material _visionMaterial;
         private Mesh _visionMesh;
@@ -99,6 +102,21 @@ namespace Caretaker.Gameplay
 
             _facingDirection = normalizedDirection;
             RefreshVisionArea();
+        }
+
+        /// <summary>
+        /// Changes the vision area color to match the enemy's current behavior state.
+        /// </summary>
+        /// <param name="state">Current enemy behavior state.</param>
+        public void SetVisionState(EnemyStateMachine.EnemyState state)
+        {
+            if (_visionState == state)
+            {
+                return;
+            }
+
+            _visionState = state;
+            RefreshVisionColor();
         }
 
         /// <summary>
@@ -207,7 +225,7 @@ namespace Caretaker.Gameplay
             _visionMaterial = new Material(shader)
             {
                 name = $"{name} Vision Material",
-                color = _visionColor
+                color = GetVisionColor()
             };
             _visionRenderer.sharedMaterial = _visionMaterial;
         }
@@ -231,9 +249,28 @@ namespace Caretaker.Gameplay
                 return;
             }
 
-            _visionMaterial.color = _visionColor;
+            RefreshVisionColor();
             _visionRenderer.sortingOrder = _visionSortingOrder;
             BuildVisionMesh();
+        }
+
+        private void RefreshVisionColor()
+        {
+            if (_visionMaterial != null)
+            {
+                _visionMaterial.color = GetVisionColor();
+            }
+        }
+
+        private Color GetVisionColor()
+        {
+            return _visionState switch
+            {
+                EnemyStateMachine.EnemyState.Chase => _chaseVisionColor,
+                EnemyStateMachine.EnemyState.Search => _searchVisionColor,
+                EnemyStateMachine.EnemyState.Alert => _searchVisionColor,
+                _ => _patrolVisionColor
+            };
         }
 
         private void BuildVisionMesh()
