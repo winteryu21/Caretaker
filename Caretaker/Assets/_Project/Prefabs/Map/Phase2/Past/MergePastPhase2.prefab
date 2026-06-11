@@ -331,6 +331,10 @@ MonoBehaviour:
   _destination: {fileID: 6826296507393755307}
   _targetRoomId: 
   _roomManager: {fileID: 0}
+  _useScreenFade: 1
+  _fadeOutSeconds: 0.1
+  _fadeHoldSeconds: 0.04
+  _fadeInSeconds: 0.16
 --- !u!4 &3561642910150874550 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3793612473714798005, guid: 0c838d4d91323d347884d38bb6419306, type: 3}
@@ -1159,11 +1163,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5907073065922950572, guid: 98b8f21b399717b40bea8eb7f9433c6f, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -739.3146
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5907073065922950572, guid: 98b8f21b399717b40bea8eb7f9433c6f, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -595.8769
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5907073065922950572, guid: 98b8f21b399717b40bea8eb7f9433c6f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
