@@ -1,7 +1,7 @@
 using UnityEngine;
-using UnityEngine.Events;
 
 using Caretaker.Gameplay;
+using Caretaker.Presentation;
 using Caretaker.Shared;
 
 namespace Caretaker.World
@@ -14,16 +14,12 @@ namespace Caretaker.World
     public sealed class PuzzleOperateAction : MonoBehaviour, IOperateAction
     {
         [Header("Puzzle")]
-        [SerializeField] private GameObject _puzzleRoot;
-
-        [Header("Events")]
-        [SerializeField] private UnityEvent _onPuzzleOpened;
-        [SerializeField] private UnityEvent _onPuzzleClosed;
+        [SerializeField] private PuzzleUIBase _puzzleUi;
 
         /// <summary>
         /// 퍼즐 화면이 현재 열려 있는지 반환합니다.
         /// </summary>
-        public bool IsOpen => _puzzleRoot != null && _puzzleRoot.activeSelf;
+        public bool IsOpen => _puzzleUi != null && _puzzleUi.IsOpen;
 
         private void Awake()
         {
@@ -47,13 +43,12 @@ namespace Caretaker.World
         /// <returns>이번 요청으로 퍼즐 화면이 열렸는지 여부입니다.</returns>
         public bool Execute(PlayerController actor)
         {
-            if (_puzzleRoot == null || _puzzleRoot.activeSelf)
+            if (_puzzleUi == null || _puzzleUi.IsOpen)
             {
                 return false;
             }
 
-            _puzzleRoot.SetActive(true);
-            _onPuzzleOpened?.Invoke();
+            _puzzleUi.Open();
             return true;
         }
 
@@ -62,13 +57,12 @@ namespace Caretaker.World
         /// </summary>
         public void Close()
         {
-            if (_puzzleRoot == null || !_puzzleRoot.activeSelf)
+            if (_puzzleUi == null || !_puzzleUi.IsOpen)
             {
                 return;
             }
 
-            _puzzleRoot.SetActive(false);
-            _onPuzzleClosed?.Invoke();
+            _puzzleUi.Close();
         }
 
         private void EnsureOperateInteractionType()

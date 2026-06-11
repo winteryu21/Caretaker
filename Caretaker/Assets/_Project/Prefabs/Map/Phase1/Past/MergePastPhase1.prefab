@@ -842,7 +842,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.SceneTransitionOperateAction
   _targetSceneName: Phase2_Past
   _spawnPointName: SceneStartPoint
-  _unloadActorScene: 0
+  _unloadActorScene: 1
   _transitionManager: {fileID: 0}
 --- !u!1001 &6559923174276113597
 PrefabInstance:
