@@ -50,8 +50,11 @@ public class PlayerMotor2D : MonoBehaviour
     private Rigidbody2D _rigidbody2D;
 
     private float _coyoteTimeRemaining;
+    private float _horizontalMaximumX;
+    private float _horizontalMinimumX;
     private float _jumpBufferRemaining;
     private float _jumpAirTime;
+    private bool _hasHorizontalBounds;
     private bool _isCrouching;
     private bool _isJumpGravityActive;
     private bool _isJumpGroundedLockActive;
@@ -67,6 +70,57 @@ public class PlayerMotor2D : MonoBehaviour
     /// 플레이어가 현재 웅크리고 있는지 여부.
     /// </summary>
     public bool IsCrouching => _isCrouching;
+
+    /// <summary>현재 이동 속도는 유지하면서 플레이어의 수평 이동 범위를 제한합니다.</summary>
+    public void SetHorizontalBounds(float minimumX, float maximumX)
+    {
+        _horizontalMinimumX = Mathf.Min(minimumX, maximumX);
+        _horizontalMaximumX = Mathf.Max(minimumX, maximumX);
+        _hasHorizontalBounds = true;
+    }
+
+    /// <summary>설정된 수평 이동 범위를 해제합니다.</summary>
+    public void ClearHorizontalBounds()
+    {
+        _hasHorizontalBounds = false;
+    }
+
+    /// <summary>다음 물리 프레임에 경계를 넘지 않도록 수평 속도를 제한합니다.</summary>
+    public static float ClampHorizontalVelocity(
+        float positionX,
+        float velocityX,
+        float minimumX,
+        float maximumX,
+        float deltaTime)
+    {
+        if (deltaTime <= 0f)
+        {
+            return 0f;
+        }
+
+        if (positionX < minimumX)
+        {
+            return velocityX > 0f ? velocityX : 0f;
+        }
+
+        if (positionX > maximumX)
+        {
+            return velocityX < 0f ? velocityX : 0f;
+        }
+
+        float predictedX = positionX + (velocityX * deltaTime);
+        if (predictedX < minimumX)
+        {
+            return (minimumX - positionX) / deltaTime;
+        }
+
+        if (predictedX > maximumX)
+        {
+            return (maximumX - positionX) / deltaTime;
+        }
+
+        return velocityX;
+    }
 
     private void Awake()
     {
@@ -275,6 +329,15 @@ public class PlayerMotor2D : MonoBehaviour
         float acceleration = GetHorizontalAcceleration(velocity.x, targetSpeed);
 
         velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, acceleration * Time.fixedDeltaTime);
+        if (_hasHorizontalBounds)
+        {
+            velocity.x = ClampHorizontalVelocity(
+                _rigidbody2D.position.x,
+                velocity.x,
+                _horizontalMinimumX,
+                _horizontalMaximumX,
+                Time.fixedDeltaTime);
+        }
         _rigidbody2D.linearVelocity = velocity;
     }
 

@@ -35,6 +35,7 @@ namespace Caretaker.World
         private GameFlowManager _gameFlowManager;
         private SessionRoleManager _roleManager;
         private SceneLoader _sceneLoader;
+        private CausalityState _phase3RestartState;
 
         // ── 이벤트 ──
         /// <summary>
@@ -66,6 +67,11 @@ namespace Caretaker.World
                 _sceneLoader.OnPhaseSceneLoaded += HandlePhaseSceneLoaded;
             }
 
+            if (_roleManager != null)
+            {
+                _roleManager.OnPhaseRestartReceived += HandlePhaseRestartReceived;
+            }
+
             if (IsServer)
             {
                 RebuildReceiverRegistry();
@@ -79,6 +85,11 @@ namespace Caretaker.World
             if (_sceneLoader != null)
             {
                 _sceneLoader.OnPhaseSceneLoaded -= HandlePhaseSceneLoaded;
+            }
+
+            if (_roleManager != null)
+            {
+                _roleManager.OnPhaseRestartReceived -= HandlePhaseRestartReceived;
             }
 
             base.OnNetworkDespawn();
@@ -347,11 +358,32 @@ namespace Caretaker.World
 
         private void HandlePhaseSceneLoaded(PhaseId phaseId, TimelineRole role, string sceneName)
         {
-            if (IsServer)
+            if (!IsServer)
             {
-                // 1프레임 뒤에 재수집 — 새 씬의 MonoBehaviour.OnEnable()이 먼저 실행되도록
-                StartCoroutine(RebuildReceiverRegistryDelayed());
+                return;
             }
+
+            if (phaseId == PhaseId.Phase3)
+            {
+                _phase3RestartState ??= _service.GetCurrentState();
+            }
+            else
+            {
+                _phase3RestartState = null;
+            }
+
+            // 새 씬의 OnEnable이 완료된 다음 Receiver 목록을 다시 구성한다.
+            StartCoroutine(RebuildReceiverRegistryDelayed());
+        }
+
+        private void HandlePhaseRestartReceived(PhaseId phaseId)
+        {
+            if (!IsServer || phaseId != PhaseId.Phase3 || _phase3RestartState == null)
+            {
+                return;
+            }
+
+            _service.ResetToState(_phase3RestartState);
         }
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
