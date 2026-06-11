@@ -341,6 +341,20 @@ namespace Caretaker.Tests.Editor
         }
 
         [Test]
+        public void CreateVisionArea_DoesNotCreateRuntimeResourcesInEditMode()
+        {
+            EnemyPerception2D perception = CreatePerception(CreateTuning(1f, 0f), 0);
+            MethodInfo methodInfo = typeof(EnemyPerception2D).GetMethod(
+                "CreateVisionArea",
+                INSTANCE_PRIVATE);
+
+            Assert.DoesNotThrow(() => methodInfo.Invoke(perception, null));
+            Assert.That(perception.transform.Find("VisionArea"), Is.Null);
+
+            Object.DestroyImmediate(perception.gameObject);
+        }
+
+        [Test]
         public void CanBeTakenDownBy_RequiresRangeAndRearAngle()
         {
             EnemyController controller = CreateController(Vector3.zero, CreateTuning(1f, 0f));

@@ -113,6 +113,8 @@ namespace Caretaker.Presentation
                 return;
             }
 
+            EnsureEventSystem();
+
             if (_titleText != null)
             {
                 _titleText.text = title ?? string.Empty;
