@@ -10,7 +10,7 @@ namespace Caretaker.Presentation
     /// </summary>
     [AddComponentMenu("Caretaker/Puzzle/Major 4 Future Storage UI")]
     [DisallowMultipleComponent]
-    public sealed class Major4FutureStorageUI : MonoBehaviour
+    public sealed class Major4FutureStorageUI : PuzzleUIBase
     {
         private static readonly WaitForSeconds BRIDGE_RESOLVE_INTERVAL = new(0.25f);
 
@@ -54,6 +54,12 @@ namespace Caretaker.Presentation
         private void HandleBridgeStateChanged(Major4StoragePuzzleBridge bridge)
         {
             RefreshVisuals();
+            TryCompletePuzzle();
+        }
+
+        protected override bool IsCorrectSolution()
+        {
+            return _bridge != null && _bridge.IsSolved;
         }
 
         private void RefreshVisuals()

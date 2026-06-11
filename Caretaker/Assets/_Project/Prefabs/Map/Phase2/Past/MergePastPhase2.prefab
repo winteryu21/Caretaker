@@ -302,6 +302,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ca71985dcd618c247addc40eafdfdf13, type: 3}
+--- !u!4 &1661825982967232540 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4092961400779487391, guid: ca71985dcd618c247addc40eafdfdf13, type: 3}
+  m_PrefabInstance: {fileID: 3441563032992219267}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3496175104698270033 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2253501736646132178, guid: ca71985dcd618c247addc40eafdfdf13, type: 3}
@@ -439,6 +444,10 @@ PrefabInstance:
       propertyPath: _destination
       value: 
       objectReference: {fileID: 3561642910150874550}
+    - target: {fileID: 2908122625342965742, guid: 64a9194cecc1d874db0c2006084846cf, type: 3}
+      propertyPath: m_Color.a
+      value: 0.22352941
+      objectReference: {fileID: 0}
     - target: {fileID: 3064510110920673547, guid: 64a9194cecc1d874db0c2006084846cf, type: 3}
       propertyPath: m_Name
       value: PastSkyBridge
@@ -459,11 +468,24 @@ PrefabInstance:
       propertyPath: _destination
       value: 
       objectReference: {fileID: 1237129255629233410}
+    - target: {fileID: 5492180886740671771, guid: 64a9194cecc1d874db0c2006084846cf, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 82.91
+      objectReference: {fileID: 0}
+    - target: {fileID: 5492180886740671771, guid: 64a9194cecc1d874db0c2006084846cf, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.62
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 64a9194cecc1d874db0c2006084846cf, type: 3}
+--- !u!4 &838273555591306107 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5492180886740671771, guid: 64a9194cecc1d874db0c2006084846cf, type: 3}
+  m_PrefabInstance: {fileID: 5159436535401121376}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &5029514204024561196 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 168441556664834124, guid: 64a9194cecc1d874db0c2006084846cf, type: 3}
@@ -718,6 +740,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4909695257551676643, guid: 41d381be90f998d40859eaf6a4762e65, type: 3}
+      propertyPath: _destination
+      value: 
+      objectReference: {fileID: 838273555591306107}
     - target: {fileID: 6176129444280772827, guid: 41d381be90f998d40859eaf6a4762e65, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -756,7 +782,7 @@ PrefabInstance:
     - target: {fileID: 2684084677159663682, guid: a7e946ce4cd4f3649a9034e2dba7e89c, type: 3}
       propertyPath: _destination
       value: 
-      objectReference: {fileID: 5142245066870793679}
+      objectReference: {fileID: 1661825982967232540}
     - target: {fileID: 3326286188963920781, guid: a7e946ce4cd4f3649a9034e2dba7e89c, type: 3}
       propertyPath: _interactionTypes
       value: 4
