@@ -38,6 +38,7 @@ namespace Caretaker.Gameplay
         [SerializeField] private Transform[] _patrolWaypoints;
         [SerializeField] private PlayerMotor2D _targetPlayer;
         [SerializeField] private LayerMask _groundLayers = Physics2D.DefaultRaycastLayers;
+        [SerializeField] [Min(0f)] private float _patrolDetectionDelay = 0.5f;
         [SerializeField] [Min(0f)] private float _searchPatrolRadius = 1.5f;
         [SerializeField] [Min(0f)] private float _groundProbeForwardDistance = 0.15f;
         [SerializeField] [Min(0.01f)] private float _groundProbeDownDistance = 0.4f;
@@ -59,6 +60,7 @@ namespace Caretaker.Gameplay
         private Vector2 _lastKnownPlayerPosition;
         private int _currentPatrolWaypointIndex;
         private float _lastDistanceToWaypoint = float.PositiveInfinity;
+        private float _patrolDetectionTime;
         private float _timeWithoutWaypointProgress;
         private float _waitTimeRemaining;
         private float _facingSign = 1f;
@@ -257,8 +259,9 @@ namespace Caretaker.Gameplay
 
             EnemyStateMachine.EnemyState previousState = _stateMachine.CurrentState;
             bool canSeePlayer = TryEvaluateTargetSight();
+            bool canStartChase = ResolvePatrolDetection(canSeePlayer, deltaTime);
             EnemyStateMachine.EnemyState state = _stateMachine.TickState(
-                canSeePlayer,
+                canStartChase,
                 _roomAlertState == AlertState.Alert,
                 deltaTime,
                 GetSearchDuration());
@@ -307,6 +310,24 @@ namespace Caretaker.Gameplay
             }
 
             return canSeePlayer;
+        }
+
+        private bool ResolvePatrolDetection(bool canSeePlayer, float deltaTime)
+        {
+            if (_stateMachine.CurrentState != EnemyStateMachine.EnemyState.Patrol)
+            {
+                _patrolDetectionTime = 0f;
+                return canSeePlayer;
+            }
+
+            if (!canSeePlayer)
+            {
+                _patrolDetectionTime = 0f;
+                return false;
+            }
+
+            _patrolDetectionTime += deltaTime;
+            return _patrolDetectionTime >= _patrolDetectionDelay;
         }
 
         private IEnumerator TakedownRoutine(PlayerController actor)
@@ -374,6 +395,7 @@ namespace Caretaker.Gameplay
             _requiresTakedownReset = false;
             _takedownActor = null;
             _stateMachine.Reset();
+            _patrolDetectionTime = 0f;
             _waitTimeRemaining = 0f;
             ResetWaypointProgressTimer();
 
@@ -407,9 +429,19 @@ namespace Caretaker.Gameplay
                 return;
             }
 
-            Vector2 targetPosition = _targetPlayer.transform.position;
+            Vector2 targetPosition = ResolveChaseTargetPosition();
             _lastKnownPlayerPosition = targetPosition;
             MoveToward(targetPosition, deltaTime, Mathf.Max(0f, _tuning.ChaseSpeed));
+        }
+
+        private Vector2 ResolveChaseTargetPosition()
+        {
+            if (_movementMode == EnemyMovementMode.Flying && _targetCollider != null)
+            {
+                return _targetCollider.bounds.center;
+            }
+
+            return _targetPlayer.transform.position;
         }
 
         private void BeginSearch()
