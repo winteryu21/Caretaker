@@ -39,6 +39,9 @@ public class PlayerMotor2D : MonoBehaviour
     [Header("Ground Check")]
     [SerializeField] private LayerMask _groundLayers = Physics2D.DefaultRaycastLayers;
 
+    [Header("Visual Smoothing")]
+    [SerializeField] private bool _enableRigidbodyInterpolation = true;
+
     private readonly RaycastHit2D[] _groundHits = new RaycastHit2D[4];
 
     private Vector2 _crouchingColliderOffset;
@@ -458,6 +461,9 @@ public class PlayerMotor2D : MonoBehaviour
         if (_rigidbody2D != null)
         {
             _rigidbody2D.constraints |= RigidbodyConstraints2D.FreezeRotation;
+            _rigidbody2D.interpolation = _enableRigidbodyInterpolation
+                ? RigidbodyInterpolation2D.Interpolate
+                : RigidbodyInterpolation2D.None;
         }
     }
 }

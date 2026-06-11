@@ -1,6 +1,9 @@
+using System.Collections;
+
 using UnityEngine;
 
 using Caretaker.Gameplay;
+using Caretaker.Presentation;
 using Caretaker.Shared;
 
 namespace Caretaker.World
@@ -16,6 +19,14 @@ namespace Caretaker.World
         [SerializeField] private Transform _destination;
         [SerializeField] private string _targetRoomId;
         [SerializeField] private RoomManager _roomManager;
+
+        [Header("Screen Fade")]
+        [SerializeField] private bool _useScreenFade = true;
+        [SerializeField] [Min(0f)] private float _fadeOutSeconds = 0.1f;
+        [SerializeField] [Min(0f)] private float _fadeHoldSeconds = 0.04f;
+        [SerializeField] [Min(0f)] private float _fadeInSeconds = 0.16f;
+
+        private bool _isTransitioning;
 
         private void Awake()
         {
@@ -45,6 +56,11 @@ namespace Caretaker.World
         /// <returns>목표 위치로 이동했으면 true입니다.</returns>
         public bool Execute(PlayerController actor)
         {
+            if (_isTransitioning)
+            {
+                return false;
+            }
+
             if (actor == null)
             {
                 Debug.LogWarning("Room transition failed: actor is missing.", this);
@@ -57,6 +73,31 @@ namespace Caretaker.World
                 return false;
             }
 
+            StartCoroutine(TransitionActorRoutine(actor));
+            return true;
+        }
+
+        private IEnumerator TransitionActorRoutine(PlayerController actor)
+        {
+            _isTransitioning = true;
+            actor.SetInputBlocked(true);
+
+            if (_useScreenFade)
+            {
+                yield return ScreenFadePresenter.GetOrCreate().FadeOut(_fadeOutSeconds);
+            }
+
+            if (actor == null || _destination == null)
+            {
+                if (_useScreenFade)
+                {
+                    yield return ScreenFadePresenter.GetOrCreate().FadeIn(_fadeInSeconds);
+                }
+
+                _isTransitioning = false;
+                yield break;
+            }
+
             Vector3 destinationPosition = _destination.position;
             if (actor.TryGetComponent(out Rigidbody2D rigidbody2D))
             {
@@ -67,7 +108,19 @@ namespace Caretaker.World
             actor.transform.position = destinationPosition;
             Physics2D.SyncTransforms();
             ReportRoomEnter(actor);
-            return true;
+
+            if (_useScreenFade && _fadeHoldSeconds > 0f)
+            {
+                yield return new WaitForSecondsRealtime(_fadeHoldSeconds);
+            }
+
+            if (_useScreenFade)
+            {
+                yield return ScreenFadePresenter.GetOrCreate().FadeIn(_fadeInSeconds);
+            }
+
+            actor.SetInputBlocked(false);
+            _isTransitioning = false;
         }
 
         private void EnsureOperateInteractionType()
