@@ -124,7 +124,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e169ff50e81144fe97204bb1d91f3ce9, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.PlayerDistanceDebrisFallTrigger
   _debrisRoot: {fileID: 6360119707274741121}
   _distanceOrigin: {fileID: 5202719134061492097}
@@ -1348,7 +1348,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e65a96005d02f43aacb35528ee1018, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.CausalReceiver
   _causalRule: {fileID: 11400000, guid: 7f8d1c2b3e4a4f8aa0c6d5e9b1234567, type: 2}
   _receiverEffectIndex: 0
@@ -1360,6 +1360,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _debugColorFeedback: 1
+  _showSuccessEffect: 1
+  _successEffectColor: {r: 0.2, g: 1, b: 0.85, a: 1}
+  _successEffectScale: 1
 --- !u!114 &5845799941098788931
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1370,7 +1373,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6a79c147eb9f4f0e99e7d9453725be9f, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.CausalPlatformStateAction
   _targetRoot: {fileID: 1886527439073052927}
   _startRemoved: 0
@@ -46650,7 +46653,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e169ff50e81144fe97204bb1d91f3ce9, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.PlayerDistanceDebrisFallTrigger
   _debrisRoot: {fileID: 9022360814025367922}
   _distanceOrigin: {fileID: 4924985851580972213}
@@ -47378,7 +47381,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6a79c147eb9f4f0e99e7d9453725be9f, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.CausalPlatformStateAction
   _targetRoot: {fileID: 3498537128091978356}
   _startRemoved: 0
@@ -47398,11 +47401,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e65a96005d02f43aacb35528ee1018, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.CausalReceiver
   _causalRule: {fileID: 0}
   _receiverEffectIndex: 0
-  _receiverId: 
+  _receiverId:
   _onActivated:
     m_PersistentCalls:
       m_Calls: []
@@ -47410,6 +47413,9 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _debugColorFeedback: 1
+  _showSuccessEffect: 1
+  _successEffectColor: {r: 0.2, g: 1, b: 0.85, a: 1}
+  _successEffectScale: 1
 --- !u!1 &3790944699217264380
 GameObject:
   m_ObjectHideFlags: 0
@@ -47448,6 +47454,7 @@ Transform:
   - {fileID: 1744367332568463458}
   - {fileID: 7560298450126455247}
   - {fileID: 2270496612668453862}
+  - {fileID: 5691520613923790509}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!156049354 &5024531296976234370
@@ -48301,7 +48308,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 56257687b91cb4d489be2f4c52ef4f6e, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.MoveTile
   moveDirection: 1
   moveDistance: 36
@@ -48579,7 +48586,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8ecf6742dd269164aba10b6a7769e43b, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.MoveTileAction
   targetTile: {fileID: 0}
   moveAxis: 0
@@ -48632,14 +48639,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d4ac8ac1e08dba1478b4f18934717a54, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.InteractableObject
   _itemId: {fileID: 0}
   _interactionTypes: 4
   _grantedItemId: {fileID: 0}
   _requiredItemId: {fileID: 0}
   _isDestroy: 0
-  _examineText: 
+  _examineText:
   _examineImage: {fileID: 0}
   _outlineBehaviours: []
   _useFallbackGlow: 1
@@ -48657,7 +48664,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8ecf6742dd269164aba10b6a7769e43b, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.MoveTileAction
   targetTile: {fileID: 4870080475327407777}
   moveAxis: 1
@@ -49147,7 +49154,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41e65a96005d02f43aacb35528ee1018, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.CausalReceiver
   _causalRule: {fileID: 11400000, guid: 7f8d1c2b3e4a4f8aa0c6d5e9b1234567, type: 2}
   _receiverEffectIndex: 0
@@ -49159,6 +49166,40 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   _debugColorFeedback: 1
+  _showSuccessEffect: 1
+  _successEffectColor: {r: 0.2, g: 1, b: 0.85, a: 1}
+  _successEffectScale: 1
+--- !u!1 &8989760037057120618
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5691520613923790509}
+  m_Layer: 0
+  m_Name: SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5691520613923790509
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8989760037057120618}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4, y: -8.6, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4267696871735280199}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &9022360814025367922
 GameObject:
   m_ObjectHideFlags: 0

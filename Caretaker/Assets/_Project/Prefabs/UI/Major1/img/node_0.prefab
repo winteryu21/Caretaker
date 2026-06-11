@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7602717665745214351}
   - component: {fileID: 289802276592627540}
+  - component: {fileID: 6033163561156161348}
   m_Layer: 0
   m_Name: node_0
   m_TagString: Untagged
@@ -17,21 +18,25 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7602717665745214351
-Transform:
+--- !u!224 &7602717665745214351
+RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8870892295045030717}
-  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -143.4998, y: -70.4973, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.4669, y: 0.4617, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -143.4998, y: -70.4973}
+  m_SizeDelta: {x: 2.15, y: 2.16}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!212 &289802276592627540
 SpriteRenderer:
   serializedVersion: 2
@@ -91,3 +96,24 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &6033163561156161348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8870892295045030717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63b2e316484c4704894a6c427a3df3a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Presentation.CircuitPuzzleNodeUI
+  _isDummyNode: 0
+  _stateIndex: 0
+  _useSpriteClickFallback: 1
+  _visualRoot: {fileID: 7602717665745214351}
+  _dummyRoot: {fileID: 0}
+  _teeRoot: {fileID: 0}
+  _crossRoot: {fileID: 0}
+  _clickRenderers:
+  - {fileID: 289802276592627540}

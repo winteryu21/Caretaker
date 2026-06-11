@@ -1,3 +1,4 @@
+using Caretaker.Shared;
 using UnityEngine;
 
 namespace Caretaker.Presentation
@@ -12,9 +13,12 @@ namespace Caretaker.Presentation
         [SerializeField] private Transform _futurePlayer;
 
         private Vector3 _basePosition;
+        private TimelineRole _cameraTimelineRole;
         private PlayerMotor2D _futureMotor;
         private PlayerMotor2D _pastMotor;
+        private float _futureProgressOriginX;
         private float _maximumPlayerSeparation;
+        private float _pastProgressOriginX;
         private bool _controlsPlayerSpacing;
         private bool _isFollowing;
 
@@ -24,13 +28,19 @@ namespace Caretaker.Presentation
             Transform futurePlayer,
             Vector3 basePosition,
             bool controlsPlayerSpacing = false,
-            float maximumPlayerSeparation = 0f)
+            float maximumPlayerSeparation = 0f,
+            TimelineRole cameraTimelineRole = TimelineRole.None,
+            float pastProgressOriginX = 0f,
+            float futureProgressOriginX = 0f)
         {
             _pastPlayer = pastPlayer;
             _futurePlayer = futurePlayer;
             _basePosition = basePosition;
             _controlsPlayerSpacing = controlsPlayerSpacing;
             _maximumPlayerSeparation = Mathf.Max(0f, maximumPlayerSeparation);
+            _cameraTimelineRole = cameraTimelineRole;
+            _pastProgressOriginX = pastProgressOriginX;
+            _futureProgressOriginX = futureProgressOriginX;
             _pastMotor = _pastPlayer != null ? _pastPlayer.GetComponent<PlayerMotor2D>() : null;
             _futureMotor = _futurePlayer != null ? _futurePlayer.GetComponent<PlayerMotor2D>() : null;
             _isFollowing = true;
@@ -52,6 +62,9 @@ namespace Caretaker.Presentation
             _futurePlayer = null;
             _pastMotor = null;
             _futureMotor = null;
+            _cameraTimelineRole = TimelineRole.None;
+            _pastProgressOriginX = 0f;
+            _futureProgressOriginX = 0f;
         }
 
         private void LateUpdate()
@@ -66,13 +79,32 @@ namespace Caretaker.Presentation
                 return;
             }
 
-            float sharedProgressX = Mathf.Min(_pastPlayer.position.x, _futurePlayer.position.x);
+            float sharedProgressX = ResolveSharedProgressX();
             transform.position = new Vector3(
-                sharedProgressX,
+                ResolveCameraWorldX(sharedProgressX),
                 _basePosition.y,
                 _basePosition.z);
 
             ApplyPlayerSpacingBounds();
+        }
+
+        private float ResolveSharedProgressX()
+        {
+            if (!UsesTimelineProgress())
+            {
+                return Mathf.Min(_pastPlayer.position.x, _futurePlayer.position.x);
+            }
+
+            return Mathf.Min(
+                ResolvePlayerProgressX(_pastPlayer, TimelineRole.Past),
+                ResolvePlayerProgressX(_futurePlayer, TimelineRole.Future));
+        }
+
+        private float ResolveCameraWorldX(float sharedProgressX)
+        {
+            return !UsesTimelineProgress()
+                ? sharedProgressX
+                : ResolveTimelineWorldX(_cameraTimelineRole, sharedProgressX);
         }
 
         private void ApplyPlayerSpacingBounds()
@@ -82,12 +114,47 @@ namespace Caretaker.Presentation
                 return;
             }
 
+            if (UsesTimelineProgress())
+            {
+                float pastProgressX = ResolvePlayerProgressX(_pastPlayer, TimelineRole.Past);
+                float futureProgressX = ResolvePlayerProgressX(_futurePlayer, TimelineRole.Future);
+                _pastMotor?.SetHorizontalBounds(
+                    ResolveTimelineWorldX(TimelineRole.Past, futureProgressX - _maximumPlayerSeparation),
+                    ResolveTimelineWorldX(TimelineRole.Past, futureProgressX + _maximumPlayerSeparation));
+                _futureMotor?.SetHorizontalBounds(
+                    ResolveTimelineWorldX(TimelineRole.Future, pastProgressX - _maximumPlayerSeparation),
+                    ResolveTimelineWorldX(TimelineRole.Future, pastProgressX + _maximumPlayerSeparation));
+                return;
+            }
+
             _pastMotor?.SetHorizontalBounds(
                 _futurePlayer.position.x - _maximumPlayerSeparation,
                 _futurePlayer.position.x + _maximumPlayerSeparation);
             _futureMotor?.SetHorizontalBounds(
                 _pastPlayer.position.x - _maximumPlayerSeparation,
                 _pastPlayer.position.x + _maximumPlayerSeparation);
+        }
+
+        private bool UsesTimelineProgress()
+        {
+            return _cameraTimelineRole is TimelineRole.Past or TimelineRole.Future;
+        }
+
+        private float ResolvePlayerProgressX(Transform player, TimelineRole timelineRole)
+        {
+            return player.position.x - ResolveOriginX(timelineRole);
+        }
+
+        private float ResolveTimelineWorldX(TimelineRole timelineRole, float progressX)
+        {
+            return ResolveOriginX(timelineRole) + progressX;
+        }
+
+        private float ResolveOriginX(TimelineRole timelineRole)
+        {
+            return timelineRole == TimelineRole.Future
+                ? _futureProgressOriginX
+                : _pastProgressOriginX;
         }
     }
 }

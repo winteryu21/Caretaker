@@ -50,7 +50,8 @@ namespace Caretaker.Presentation
         public void ApplySerializedState()
         {
             GameObject connectedRoot = _connectedCircuitRoot;
-            if (connectedRoot == null && _useSelfAsConnectedCircuitRoot)
+            if (connectedRoot == null &&
+                (_useSelfAsConnectedCircuitRoot || _disconnectedCircuitRoot == null))
             {
                 connectedRoot = gameObject;
             }

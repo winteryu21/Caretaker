@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7851473236266053553}
   - component: {fileID: 6414053840550980533}
-  - component: {fileID: 3609444442357896493}
+  - component: {fileID: 8709743978549743919}
   m_Layer: 0
   m_Name: Cornerpath
   m_TagString: Untagged
@@ -92,7 +92,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &3609444442357896493
+--- !u!114 &8709743978549743919
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,7 +101,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1945053967382382835}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 47c6d7ebec6a4d848b279dbf90979b17, type: 3}
+  m_Script: {fileID: 11500000, guid: 2e403193af4e9374f96773c94e34d504, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Presentation.CircuitPuzzleLinkUI
   _fromNode: {fileID: 0}

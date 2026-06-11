@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -28,6 +29,7 @@ namespace Caretaker.Presentation
         [SerializeField] private bool _autoCollectChildLinks = true;
         [SerializeField] private bool _completeAutomatically = true;
         [SerializeField] private bool _closeOnSolved = true;
+        [SerializeField] private float _closeDelayOnSolved = 2f;
         [SerializeField] private bool _useCameraCanvasForSpritePuzzle = true;
 
         private Canvas _ownerCanvas;
@@ -35,6 +37,7 @@ namespace Caretaker.Presentation
         private Camera _originalCanvasCamera;
         private float _originalCanvasPlaneDistance;
         private bool _hasOriginalCanvasState;
+        private Coroutine _closeRoutine;
 
         private void OnEnable()
         {
@@ -406,8 +409,26 @@ namespace Caretaker.Presentation
         {
             if (_closeOnSolved)
             {
-                Close();
+                if (_closeDelayOnSolved <= 0f)
+                {
+                    Close();
+                    return;
+                }
+
+                if (_closeRoutine != null)
+                {
+                    StopCoroutine(_closeRoutine);
+                }
+
+                _closeRoutine = StartCoroutine(CloseAfterDelay());
             }
+        }
+
+        private IEnumerator CloseAfterDelay()
+        {
+            yield return new WaitForSeconds(_closeDelayOnSolved);
+            _closeRoutine = null;
+            Close();
         }
 
         private void ApplySpritePuzzleCanvasMode()

@@ -226,12 +226,13 @@ namespace Caretaker.Core
             }
 
             _debugChaser = new GameObject(CHASER_OBJECT_NAME);
-            _debugChaser.AddComponent<Phase3Chaser>();
+            Phase3Chaser chaser = _debugChaser.AddComponent<Phase3Chaser>();
             _pastWallVisual = CreateWallVisual(_debugChaser.transform, "Past Chase Wall Visual", 0f);
             _futureWallVisual = CreateWallVisual(
                 _debugChaser.transform,
                 "Future Chase Wall Visual",
                 FUTURE_WORLD_Y_OFFSET);
+            chaser.ConfigureTimelineVisuals(_pastWallVisual, _futureWallVisual);
             RefreshWallVisualVerticalPositions();
         }
 
