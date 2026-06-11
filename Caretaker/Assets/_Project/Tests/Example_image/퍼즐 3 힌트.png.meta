@@ -1,0 +1,186 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:Caretaker/Assets/_Project/Prefabs/UI/Major1/img/A2B2.png.meta
+guid: 4de4216e1a321a747be183c67c6d50f9
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2811009534736300535
+    second: A2B2_0
+========
+guid: f8cc75b5538149841b5f9b96f826a6b0
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2152584231214560107
+    second: "\uD37C\uC990 3 \uD78C\uD2B8_0"
+>>>>>>>> bce4fb1153e9436d6f5724d92f3df31934d68407:Caretaker/Assets/_Project/Tests/Example_image/퍼즐 3 힌트.png.meta
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+<<<<<<<< HEAD:Caretaker/Assets/_Project/Prefabs/UI/Major1/img/A2B2.png.meta
+========
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+>>>>>>>> bce4fb1153e9436d6f5724d92f3df31934d68407:Caretaker/Assets/_Project/Tests/Example_image/퍼즐 3 힌트.png.meta
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+<<<<<<<< HEAD:Caretaker/Assets/_Project/Prefabs/UI/Major1/img/A2B2.png.meta
+      name: A2B2_0
+========
+      name: "\uD37C\uC990 3 \uD78C\uD2B8_0"
+>>>>>>>> bce4fb1153e9436d6f5724d92f3df31934d68407:Caretaker/Assets/_Project/Tests/Example_image/퍼즐 3 힌트.png.meta
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+<<<<<<<< HEAD:Caretaker/Assets/_Project/Prefabs/UI/Major1/img/A2B2.png.meta
+        width: 148
+        height: 117
+========
+        width: 1448
+        height: 1086
+>>>>>>>> bce4fb1153e9436d6f5724d92f3df31934d68407:Caretaker/Assets/_Project/Tests/Example_image/퍼즐 3 힌트.png.meta
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+<<<<<<<< HEAD:Caretaker/Assets/_Project/Prefabs/UI/Major1/img/A2B2.png.meta
+      spriteID: 9068ec5b8b94df8d0800000000000000
+      internalID: -2811009534736300535
+========
+      spriteID: 59c495deb0c7022e0800000000000000
+      internalID: -2152584231214560107
+>>>>>>>> bce4fb1153e9436d6f5724d92f3df31934d68407:Caretaker/Assets/_Project/Tests/Example_image/퍼즐 3 힌트.png.meta
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+<<<<<<<< HEAD:Caretaker/Assets/_Project/Prefabs/UI/Major1/img/A2B2.png.meta
+      A2B2_0: -2811009534736300535
+========
+      "\uD37C\uC990 3 \uD78C\uD2B8_0": -2152584231214560107
+>>>>>>>> bce4fb1153e9436d6f5724d92f3df31934d68407:Caretaker/Assets/_Project/Tests/Example_image/퍼즐 3 힌트.png.meta
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

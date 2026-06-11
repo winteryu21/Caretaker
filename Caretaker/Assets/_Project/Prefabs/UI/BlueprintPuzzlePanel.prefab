@@ -1200,8 +1200,8 @@ MonoBehaviour:
   _solvedTrigger: {fileID: 0}
   _solvedConditionKey: 
   _solvedConditionValue: 
-  _correctOptionA: 3
-  _correctOptionB: 7
+  _correctOptionA: 1
+  _correctOptionB: 5
   _optionButtons:
   - {fileID: 7280970620284394774}
   - {fileID: 268032181534561357}

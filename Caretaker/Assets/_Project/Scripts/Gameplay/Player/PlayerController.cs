@@ -51,6 +51,7 @@ namespace Caretaker.Gameplay
         {
             _inputReader.OnInteractionRequested += HandleInteractionRequested;
             _inputReader.OnInventorySlotSelected += HandleInventorySlotSelected;
+            _inputReader.OnTakedownRequested += HandleTakedownRequested;
         }
 
         // 플레이어의 이동과 점프, 웅크리기, 달리기 입력을 모터2D에 전달합니다.
@@ -74,6 +75,7 @@ namespace Caretaker.Gameplay
         {
             _inputReader.OnInteractionRequested -= HandleInteractionRequested;
             _inputReader.OnInventorySlotSelected -= HandleInventorySlotSelected;
+            _inputReader.OnTakedownRequested -= HandleTakedownRequested;
         }
 
         // 플레이어 입력 요청을 서비스에 전달해 실제 상호작용 여부를 판정합니다.
@@ -114,6 +116,20 @@ namespace Caretaker.Gameplay
             }
 
             OnInventorySlotSelected?.Invoke(slotIndex);
+        }
+
+        private void HandleTakedownRequested()
+        {
+            if (IsInputBlocked || _inputReader.ControlMode != PlayerControlMode.Combat)
+            {
+                return;
+            }
+
+            EnemyController target = _interactionProbe.CurrentTakedownTarget;
+            if (target != null)
+            {
+                target.BeginTakedown(this);
+            }
         }
 
         private void HandleUseItemRequested()

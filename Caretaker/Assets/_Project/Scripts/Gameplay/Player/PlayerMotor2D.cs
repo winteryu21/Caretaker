@@ -39,6 +39,9 @@ public class PlayerMotor2D : MonoBehaviour
     [Header("Ground Check")]
     [SerializeField] private LayerMask _groundLayers = Physics2D.DefaultRaycastLayers;
 
+    [Header("Visual Smoothing")]
+    [SerializeField] private bool _enableRigidbodyInterpolation = true;
+
     private readonly RaycastHit2D[] _groundHits = new RaycastHit2D[4];
 
     private Vector2 _crouchingColliderOffset;
@@ -77,12 +80,34 @@ public class PlayerMotor2D : MonoBehaviour
         _horizontalMinimumX = Mathf.Min(minimumX, maximumX);
         _horizontalMaximumX = Mathf.Max(minimumX, maximumX);
         _hasHorizontalBounds = true;
+
+        if (_rigidbody2D == null)
+        {
+            _rigidbody2D = GetComponent<Rigidbody2D>();
+        }
+
+        if (_rigidbody2D == null)
+        {
+            return;
+        }
+
+        Vector2 position = _rigidbody2D.position;
+        position.x = ClampHorizontalPosition(position.x, _horizontalMinimumX, _horizontalMaximumX);
+        _rigidbody2D.position = position;
     }
 
     /// <summary>설정된 수평 이동 범위를 해제합니다.</summary>
     public void ClearHorizontalBounds()
     {
         _hasHorizontalBounds = false;
+    }
+
+    /// <summary>현재 위치가 수평 이동 범위 밖에 있으면 범위 안으로 보정합니다.</summary>
+    public static float ClampHorizontalPosition(float positionX, float minimumX, float maximumX)
+    {
+        float boundedMinimumX = Mathf.Min(minimumX, maximumX);
+        float boundedMaximumX = Mathf.Max(minimumX, maximumX);
+        return Mathf.Clamp(positionX, boundedMinimumX, boundedMaximumX);
     }
 
     /// <summary>다음 물리 프레임에 경계를 넘지 않도록 수평 속도를 제한합니다.</summary>
@@ -458,6 +483,9 @@ public class PlayerMotor2D : MonoBehaviour
         if (_rigidbody2D != null)
         {
             _rigidbody2D.constraints |= RigidbodyConstraints2D.FreezeRotation;
+            _rigidbody2D.interpolation = _enableRigidbodyInterpolation
+                ? RigidbodyInterpolation2D.Interpolate
+                : RigidbodyInterpolation2D.None;
         }
     }
 }

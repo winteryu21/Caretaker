@@ -39,6 +39,11 @@ namespace Caretaker.Gameplay
         private Rigidbody2D _rigidbody2D;
         private bool _hasConfiguredVisibilityOwner;
         private ulong _configuredVisibilityOwnerClientId;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private TimelineRole _localDebugTimelineRole = TimelineRole.None;
+        private bool _isLocalDebugControlOwner;
+        private bool _isLocalDebugInstance;
+#endif
 
         /// <summary>
         /// 이 클라이언트가 소유한 네트워크 플레이어가 생성될 때 발생한다.
@@ -57,7 +62,20 @@ namespace Caretaker.Gameplay
         public static event Action<NetworkPlayerOwnerGate> OnObservedPlayerDespawned;
 
         /// <summary>이 네트워크 플레이어가 속한 시간대 역할.</summary>
-        public TimelineRole TimelineRole => _timelineRole.Value;
+        public TimelineRole TimelineRole
+        {
+            get
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (_isLocalDebugInstance)
+                {
+                    return _localDebugTimelineRole;
+                }
+#endif
+
+                return _timelineRole.Value;
+            }
+        }
 
         private void Awake()
         {
@@ -105,6 +123,24 @@ namespace Caretaker.Gameplay
             ApplyOwnershipControl(false);
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            if (!_isLocalDebugInstance)
+            {
+                return;
+            }
+
+            OnObservedPlayerDespawned?.Invoke(this);
+            if (_isLocalDebugControlOwner)
+            {
+                OnLocalOwnerPlayerDespawned?.Invoke(gameObject);
+            }
+        }
+#endif
+
         /// <summary>
         /// 네트워크 플레이어 생성 전에 소유자, 시간대 역할, 원격 관찰 허용 여부를 설정한다.
         /// </summary>
@@ -122,6 +158,33 @@ namespace Caretaker.Gameplay
             _phase3RemoteVisible.Value = allowRemoteObservers;
             NetworkObject.CheckObjectVisibility = ShouldShowToClient;
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// 네트워크 세션 없이 Phase 3 스킵을 검증할 때 사용할 로컬 디버그 인스턴스로 설정합니다.
+        /// </summary>
+        /// <param name="timelineRole">디버그 플레이어가 대표할 시간대 역할.</param>
+        /// <param name="enableLocalControl">이 인스턴스에 로컬 입력과 물리를 허용할지 여부.</param>
+        public void ConfigureLocalDebugInstance(TimelineRole timelineRole, bool enableLocalControl)
+        {
+            _localDebugTimelineRole = timelineRole;
+            _isLocalDebugControlOwner = enableLocalControl;
+            _isLocalDebugInstance = true;
+
+            SetRendererVisibility(true);
+            SetPhysicsEnabled(enableLocalControl);
+            SetEnabled(_playerInput, enableLocalControl);
+            SetEnabled(_playerInputReader, enableLocalControl);
+            SetEnabled(_interactionProbe, enableLocalControl);
+            SetEnabled(_playerController, enableLocalControl);
+
+            OnObservedPlayerSpawned?.Invoke(this);
+            if (enableLocalControl)
+            {
+                OnLocalOwnerPlayerSpawned?.Invoke(gameObject);
+            }
+        }
+#endif
 
         private void ApplyOwnershipControl(bool isLocalOwner)
         {

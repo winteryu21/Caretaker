@@ -1,4 +1,6 @@
+using System.Reflection;
 using Caretaker.Presentation;
+using Caretaker.Shared;
 using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -36,6 +38,76 @@ namespace Caretaker.Tests.Editor
             }
         }
 
+        [TestCase(TimelineRole.Past, -80.3f)]
+        [TestCase(TimelineRole.Future, -23f)]
+        public void TimelineCameraRig_UsesTimelineOriginsForCameraProgress(
+            TimelineRole cameraTimelineRole,
+            float expectedCameraX)
+        {
+            GameObject cameraObject = new("Camera");
+            GameObject pastPlayer = new("PastPlayer");
+            GameObject futurePlayer = new("FuturePlayer");
+
+            try
+            {
+                pastPlayer.transform.position = new Vector3(-77.3f, 0f, 0f);
+                futurePlayer.transform.position = new Vector3(-23f, 1000f, 0f);
+                TimelineCameraRig rig = cameraObject.AddComponent<TimelineCameraRig>();
+
+                rig.Configure(
+                    pastPlayer.transform,
+                    futurePlayer.transform,
+                    new Vector3(0f, 1002f, -10f),
+                    false,
+                    0f,
+                    cameraTimelineRole,
+                    -83.3f,
+                    -26f);
+
+                Assert.That(cameraObject.transform.position.x, Is.EqualTo(expectedCameraX).Within(0.001f));
+                Assert.That(cameraObject.transform.position.y, Is.EqualTo(1002f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(pastPlayer);
+                Object.DestroyImmediate(futurePlayer);
+            }
+        }
+
+        [Test]
+        public void TimelineCameraRig_FollowsAssignedPlayerVertically()
+        {
+            GameObject cameraObject = new("Camera");
+            GameObject pastPlayer = new("PastPlayer");
+            GameObject futurePlayer = new("FuturePlayer");
+
+            try
+            {
+                pastPlayer.transform.position = new Vector3(12f, 4f, 0f);
+                futurePlayer.transform.position = new Vector3(8f, 1000f, 0f);
+                TimelineCameraRig rig = cameraObject.AddComponent<TimelineCameraRig>();
+
+                rig.Configure(
+                    pastPlayer.transform,
+                    futurePlayer.transform,
+                    pastPlayer.transform,
+                    new Vector3(0f, 14f, -10f));
+
+                pastPlayer.transform.position = new Vector3(12f, 9f, 0f);
+                InvokeLateUpdate(rig);
+
+                Assert.That(cameraObject.transform.position.x, Is.EqualTo(8f).Within(0.001f));
+                Assert.That(cameraObject.transform.position.y, Is.EqualTo(19f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(pastPlayer);
+                Object.DestroyImmediate(futurePlayer);
+            }
+        }
+
         [TestCase(9.9f, 5f, 0f, 10f, 0.02f, 5f)]
         [TestCase(9.95f, 5f, 0f, 10f, 0.02f, 2.5f)]
         [TestCase(0.05f, -5f, 0f, 10f, 0.02f, -2.5f)]
@@ -59,7 +131,29 @@ namespace Caretaker.Tests.Editor
                 maximumX,
                 deltaTime);
 
-            Assert.That(result, Is.EqualTo(expected));
+            Assert.That(result, Is.EqualTo(expected).Within(0.0001f));
+        }
+
+        [Test]
+        public void PlayerMotor2D_ClampsCurrentPositionAtBounds()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                Rigidbody2D rigidbody2D = playerObject.AddComponent<Rigidbody2D>();
+                playerObject.AddComponent<BoxCollider2D>();
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+
+                rigidbody2D.position = new Vector2(12f, 0f);
+                motor.SetHorizontalBounds(-3f, 5f);
+
+                Assert.That(rigidbody2D.position.x, Is.EqualTo(5f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
         }
 
         [Test]
@@ -72,6 +166,30 @@ namespace Caretaker.Tests.Editor
                 boundaryPadding: 1f);
 
             Assert.That(separation, Is.EqualTo(4f));
+        }
+
+        [Test]
+        public void SplitViewManager_ZeroConfiguredSeparation_UsesVisibleCameraRange()
+        {
+            float separation = SplitViewManager.ResolveMaximumPlayerSeparation(
+                configuredSeparation: 0f,
+                localHalfWidth: 8f,
+                remoteHalfWidth: 5f,
+                boundaryPadding: 1f);
+
+            Assert.That(separation, Is.EqualTo(4f));
+        }
+
+        [Test]
+        public void SplitViewManager_ConfiguredSeparation_CapsVisibleCameraRange()
+        {
+            float separation = SplitViewManager.ResolveMaximumPlayerSeparation(
+                configuredSeparation: 3f,
+                localHalfWidth: 8f,
+                remoteHalfWidth: 5f,
+                boundaryPadding: 1f);
+
+            Assert.That(separation, Is.EqualTo(3f));
         }
 
         [Test]
@@ -113,6 +231,15 @@ namespace Caretaker.Tests.Editor
             EditorSceneManager.OpenScene("Assets/_Project/Scenes/Persistent.unity", OpenSceneMode.Single);
 
             Assert.That(Object.FindAnyObjectByType<SplitViewManager>(), Is.Not.Null);
+        }
+
+        private static void InvokeLateUpdate(TimelineCameraRig rig)
+        {
+            MethodInfo lateUpdate = typeof(TimelineCameraRig)
+                .GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.That(lateUpdate, Is.Not.Null);
+            lateUpdate.Invoke(rig, null);
         }
     }
 }
