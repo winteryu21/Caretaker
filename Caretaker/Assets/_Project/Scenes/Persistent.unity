@@ -272,6 +272,7 @@ MonoBehaviour:
   _playerSpawner: {fileID: 2004}
   _offset: {x: 0, y: 1.5, z: -10}
   _smoothTime: 0.12
+  _snapDistance: 8
 --- !u!1 &1100
 GameObject:
   m_ObjectHideFlags: 0
@@ -489,6 +490,10 @@ MonoBehaviour:
   _playerSpawner: {fileID: 2004}
   _defaultSpawnPointName: SpawnPoint
   _fallbackSpawnPosition: {x: 0, y: 1, z: 0}
+  _useScreenFade: 1
+  _fadeOutSeconds: 0.12
+  _fadeHoldSeconds: 0.04
+  _fadeInSeconds: 0.18
 --- !u!1 &2100
 GameObject:
   m_ObjectHideFlags: 0
@@ -659,8 +664,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 926a7d8cca9dd4f4ab568afaf53c90a8, type: 2}
   - {fileID: 11400000, guid: a36aa3146ad20e94994f4e8861a0db50, type: 2}
   - {fileID: 11400000, guid: 9c03d5707a1574049b9213ad7edd12be, type: 2}
-  - {fileID: 11400000, guid: 23ae6adcb20645089e229fa23fd66dae, type: 2}
+  - {fileID: 11400000, guid: b04644ab9a59909449dd2f4208b22e76, type: 2}
   - {fileID: 11400000, guid: 91bfeaa7d1b08994c95e2045c20b84e9, type: 2}
+  - {fileID: 11400000, guid: fb288318bd2ca0b40b44b502873a4edd, type: 2}
+  - {fileID: 11400000, guid: 8bb383d2afc007f449252ecefe07626b, type: 2}
+  - {fileID: 11400000, guid: f99b67362e96bf74db69d445fe48eb24, type: 2}
+  - {fileID: 11400000, guid: b2f3154d569a738469fded92e3eb0d50, type: 2}
 --- !u!1001 &503088414
 PrefabInstance:
   m_ObjectHideFlags: 0

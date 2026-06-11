@@ -877,6 +877,10 @@ MonoBehaviour:
   _destination: {fileID: 4489037355922926912}
   _targetRoomId: 
   _roomManager: {fileID: 0}
+  _useScreenFade: 1
+  _fadeOutSeconds: 0.1
+  _fadeHoldSeconds: 0.04
+  _fadeInSeconds: 0.16
 --- !u!1001 &2254264253346489060
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6452,6 +6456,10 @@ MonoBehaviour:
   _destination: {fileID: 3800547778073527677}
   _targetRoomId: 
   _roomManager: {fileID: 0}
+  _useScreenFade: 1
+  _fadeOutSeconds: 0.1
+  _fadeHoldSeconds: 0.04
+  _fadeInSeconds: 0.16
 --- !u!4 &3602031986762218497 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8923826559418784923, guid: 543ac0c5ba1265349ac37c37ec540fb3, type: 3}
@@ -6553,6 +6561,10 @@ MonoBehaviour:
   _destination: {fileID: 1449859404224887325}
   _targetRoomId: 
   _roomManager: {fileID: 0}
+  _useScreenFade: 1
+  _fadeOutSeconds: 0.1
+  _fadeHoldSeconds: 0.04
+  _fadeInSeconds: 0.16
 --- !u!1001 &6482995539816761925
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6561,6 +6573,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 4467836722238960590}
     m_Modifications:
+    - target: {fileID: 2269942194726138338, guid: 2920b39057782434f8b799ed8e8f90d6, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5734292470526280387, guid: 2920b39057782434f8b799ed8e8f90d6, type: 3}
       propertyPath: m_LocalPosition.x
       value: -103.8
@@ -11161,6 +11177,10 @@ PrefabInstance:
       propertyPath: _interactionTypes
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 8566958207416556667, guid: 2920b39057782434f8b799ed8e8f90d6, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -11188,10 +11208,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Fortal
       objectReference: {fileID: 0}
-    - target: {fileID: 7439049104989717754, guid: 581131ad26067884cb9eebca192dfb37, type: 3}
-      propertyPath: _destination
-      value: 
-      objectReference: {fileID: 1665522877950699204}
     - target: {fileID: 7839891793369355635, guid: 581131ad26067884cb9eebca192dfb37, type: 3}
       propertyPath: m_LocalScale.y
       value: 8
