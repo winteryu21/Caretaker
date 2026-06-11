@@ -30,6 +30,10 @@ namespace Caretaker.Gameplay
         [SerializeField] private string _spawnPointName = DEFAULT_SPAWN_POINT_NAME;
 
         private readonly Dictionary<ulong, NetworkObject> _spawnedNetworkPlayersByClientId = new();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private readonly Dictionary<TimelineRole, GameObject> _debugPhase3PlayersByRole = new();
+        private bool _spawnDebugPhase3Players;
+#endif
 
         private GameObject _currentPlayer;
         private string _loadedPhaseSceneName;
@@ -128,6 +132,34 @@ namespace Caretaker.Gameplay
             return _currentPlayer;
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// 네트워크 세션 없이 Phase 3 스킵을 검증할 때 Past/Future 플레이어를 모두 생성하도록 허용합니다.
+        /// </summary>
+        public void EnablePhase3DebugSandbox()
+        {
+            _spawnDebugPhase3Players = true;
+        }
+
+        /// <summary>
+        /// Phase 3 디버그 플레이어 생성 상태를 해제하고 남은 디버그 플레이어를 정리합니다.
+        /// </summary>
+        public void DisablePhase3DebugSandbox()
+        {
+            _spawnDebugPhase3Players = false;
+
+            foreach (GameObject player in _debugPhase3PlayersByRole.Values)
+            {
+                if (player != null)
+                {
+                    Destroy(player);
+                }
+            }
+
+            _debugPhase3PlayersByRole.Clear();
+        }
+#endif
+
         private void HandlePhaseSceneLoaded(PhaseId phaseId, TimelineRole timelineRole, string sceneName)
         {
             if (phaseId == PhaseId.Phase3)
@@ -142,6 +174,14 @@ namespace Caretaker.Gameplay
         private void HandlePhase3SceneLoaded(TimelineRole timelineRole, string sceneName)
         {
             ResolveDependencies();
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (ShouldSpawnDebugPhase3Players())
+            {
+                SpawnDebugPhase3Player(timelineRole, sceneName);
+                return;
+            }
+#endif
 
             if (CanSpawnNetworkPlayers())
             {
@@ -174,6 +214,66 @@ namespace Caretaker.Gameplay
                 SpawnLocalPlayer(PhaseId.Phase3, timelineRole, sceneName);
             }
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private bool ShouldSpawnDebugPhase3Players()
+        {
+            return _spawnDebugPhase3Players && !IsNetworkSessionActive();
+        }
+
+        private void SpawnDebugPhase3Player(TimelineRole timelineRole, string sceneName)
+        {
+            if (_playerPrefab == null)
+            {
+                Debug.LogWarning("LocalWorldPlayerSpawner requires a player prefab for Phase 3 debug sandbox.", this);
+                return;
+            }
+
+            if (timelineRole is not (TimelineRole.Past or TimelineRole.Future))
+            {
+                return;
+            }
+
+            if (_debugPhase3PlayersByRole.TryGetValue(timelineRole, out GameObject existingPlayer)
+                && existingPlayer != null)
+            {
+                Destroy(existingPlayer);
+            }
+
+            Pose spawnPose = ResolveSpawnPose(sceneName);
+            GameObject player = Instantiate(_playerPrefab, spawnPose.position, spawnPose.rotation);
+            player.name = $"DebugPhase3Player_{timelineRole}";
+            MovePlayerToLoadedPhaseScene(player, sceneName);
+            _debugPhase3PlayersByRole[timelineRole] = player;
+
+            ulong debugPlayerId = timelineRole == TimelineRole.Past ? 0UL : 1UL;
+            if (player.TryGetComponent(out RoomParticipant participant))
+            {
+                participant.SetPlayerId(debugPlayerId);
+            }
+
+            if (player.TryGetComponent(out InventoryController inventoryController))
+            {
+                inventoryController.SetPlayerId(debugPlayerId);
+            }
+
+            bool enableLocalControl = timelineRole == Phase3DebugBootstrap.OfflineSandboxLocalRole;
+            if (enableLocalControl)
+            {
+                _loadedPhaseSceneName = sceneName;
+            }
+
+            if (player.TryGetComponent(out NetworkPlayerOwnerGate ownerGate))
+            {
+                ownerGate.ConfigureLocalDebugInstance(timelineRole, enableLocalControl);
+            }
+            else if (enableLocalControl)
+            {
+                _currentPlayer = player;
+                OnCurrentPlayerChanged?.Invoke(_currentPlayer);
+            }
+        }
+#endif
 
         private static void MovePlayerToLoadedPhaseScene(GameObject player, string sceneName)
         {
@@ -221,6 +321,14 @@ namespace Caretaker.Gameplay
             NetworkManager networkManager = NetworkManager.Singleton;
             return networkManager != null && networkManager.IsListening && !networkManager.IsServer;
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private static bool IsNetworkSessionActive()
+        {
+            NetworkManager networkManager = NetworkManager.Singleton;
+            return networkManager != null && networkManager.IsListening;
+        }
+#endif
 
         private void SpawnNetworkPlayersForRegisteredClients(PhaseId phaseId, string sceneName)
         {

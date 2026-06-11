@@ -79,13 +79,13 @@ namespace Caretaker.Presentation
                 || _pastPlayer == null
                 || _futurePlayer == null
                 || _mainCamera == null
-                || _roleManager == null
+                || !HasTimelineRoleSource()
                 || _remoteTimelineView == null)
             {
                 return;
             }
 
-            TimelineRole localRole = _roleManager.LocalTimelineRole;
+            TimelineRole localRole = ResolveLocalTimelineRole();
             if (localRole is not (TimelineRole.Past or TimelineRole.Future))
             {
                 return;
@@ -103,18 +103,20 @@ namespace Caretaker.Presentation
 
             Rect localViewport = localRole == TimelineRole.Past ? TOP_VIEWPORT : BOTTOM_VIEWPORT;
             Rect remoteViewport = remoteRole == TimelineRole.Past ? TOP_VIEWPORT : BOTTOM_VIEWPORT;
+            Vector3 localBasePosition = ResolveCameraBasePosition(localTemplate, localRole);
+            Vector3 remoteBasePosition = ResolveCameraBasePosition(remoteTemplate, remoteRole);
 
             _mainCamera.CopyFrom(localTemplate);
             _mainCamera.targetTexture = null;
             _mainCamera.rect = localViewport;
             _mainCamera.depth = -1f;
             _mainCamera.transform.SetPositionAndRotation(
-                localTemplate.transform.position,
+                localBasePosition,
                 localTemplate.transform.rotation);
             _mainCameraRig.Configure(
                 _pastPlayer,
                 _futurePlayer,
-                localTemplate.transform.position,
+                localBasePosition,
                 true,
                 CalculateMaximumPlayerSeparation(localTemplate, remoteTemplate));
 
@@ -122,7 +124,8 @@ namespace Caretaker.Presentation
                 remoteTemplate,
                 _pastPlayer,
                 _futurePlayer,
-                remoteViewport);
+                remoteViewport,
+                remoteBasePosition);
             _isSplitViewActive = true;
         }
 
@@ -236,6 +239,30 @@ namespace Caretaker.Presentation
             }
         }
 
+        private TimelineRole ResolveLocalTimelineRole()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (Phase3DebugBootstrap.IsOfflineSandboxActive)
+            {
+                return Phase3DebugBootstrap.OfflineSandboxLocalRole;
+            }
+#endif
+
+            return _roleManager != null ? _roleManager.LocalTimelineRole : TimelineRole.None;
+        }
+
+        private bool HasTimelineRoleSource()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (Phase3DebugBootstrap.IsOfflineSandboxActive)
+            {
+                return true;
+            }
+#endif
+
+            return _roleManager != null;
+        }
+
         private void ResolveDependencies()
         {
             if (_sceneLoader == null)
@@ -319,6 +346,24 @@ namespace Caretaker.Presentation
                 localHalfWidth,
                 remoteHalfWidth,
                 _cameraBoundaryPadding);
+        }
+
+        private Vector3 ResolveCameraBasePosition(Camera templateCamera, TimelineRole timelineRole)
+        {
+            Vector3 basePosition = templateCamera.transform.position;
+            Transform player = timelineRole == TimelineRole.Past ? _pastPlayer : _futurePlayer;
+            if (player == null || !templateCamera.orthographic)
+            {
+                return basePosition;
+            }
+
+            float verticalDistance = Mathf.Abs(player.position.y - basePosition.y);
+            if (verticalDistance > templateCamera.orthographicSize)
+            {
+                basePosition.y = player.position.y;
+            }
+
+            return basePosition;
         }
 
         /// <summary>설정된 거리와 두 카메라 중 좁은 월드 범위를 기준으로 최대 간격을 계산합니다.</summary>
