@@ -8,9 +8,6 @@ namespace Caretaker.Presentation
     [Serializable]
     public sealed class CircuitPuzzleLink
     {
-        [Header("Identity")]
-        [SerializeField] private string _linkId;
-
         [Header("Nodes")]
         [SerializeField] private CircuitPuzzleNodeUI _fromNode;
         [SerializeField] private CircuitPuzzleNodeUI _toNode;
@@ -29,24 +26,6 @@ namespace Caretaker.Presentation
 
         private bool _isConnected;
 
-        public CircuitPuzzleLink()
-        {
-        }
-
-        public CircuitPuzzleLink(
-            CircuitPuzzleNodeUI fromNode,
-            CircuitPuzzleNodeUI toNode,
-            GameObject connectedCircuitRoot = null,
-            GameObject disconnectedCircuitRoot = null)
-        {
-            _fromNode = fromNode;
-            _toNode = toNode;
-            _connectedCircuitRoot = connectedCircuitRoot;
-            _disconnectedCircuitRoot = disconnectedCircuitRoot;
-        }
-
-        public string LinkId => _linkId;
-
         public CircuitPuzzleNodeUI FromNode => _fromNode;
 
         public CircuitPuzzleNodeUI ToNode => _toNode;
@@ -54,11 +33,6 @@ namespace Caretaker.Presentation
         public bool IsConnected => _isConnected;
 
         public bool HasValidNodes => _fromNode != null && _toNode != null && _fromNode != _toNode;
-
-        public bool ContainsNode(CircuitPuzzleNodeUI node)
-        {
-            return node != null && (node == _fromNode || node == _toNode);
-        }
 
         public void Configure(
             CircuitPuzzleNodeUI fromNode,
@@ -76,7 +50,6 @@ namespace Caretaker.Presentation
             _toRequiredDirection = toRequiredDirection;
             _connectedCircuitRoot = connectedCircuitRoot;
             _disconnectedCircuitRoot = disconnectedCircuitRoot;
-            Normalize();
         }
 
         public bool EvaluateAndApply()
@@ -95,11 +68,6 @@ namespace Caretaker.Presentation
 
             GetRequiredDirections(out CircuitNodeDirection fromDirection, out CircuitNodeDirection toDirection);
             return _fromNode.HasPort(fromDirection) && _toNode.HasPort(toDirection);
-        }
-
-        public void Normalize()
-        {
-            _linkId = _linkId?.Trim();
         }
 
         private void SetConnected(bool isConnected)

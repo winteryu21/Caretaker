@@ -2,9 +2,8 @@ namespace Caretaker.Presentation
 {
     public enum CircuitNodeShape
     {
-        End = 0,
-        Dummy = 1,
-        Tee = 2,
-        Cross = 3
+        Dummy = 0,
+        Tee = 1,
+        Cross = 2
     }
 }

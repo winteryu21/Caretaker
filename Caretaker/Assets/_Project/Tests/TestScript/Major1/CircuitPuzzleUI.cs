@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Caretaker.Presentation
 {
@@ -25,30 +24,17 @@ namespace Caretaker.Presentation
         [Header("Circuit Puzzle")]
         [SerializeField] private CircuitPuzzleNodeUI[] _nodes;
         [SerializeField] private CircuitPuzzleLink[] _links;
-        [SerializeField] private CircuitPuzzleLinkUI[] _linkComponents;
         [SerializeField] private bool _autoCollectChildNodes = true;
         [SerializeField] private bool _autoCollectChildLinks = true;
         [SerializeField] private bool _completeAutomatically = true;
         [SerializeField] private bool _closeOnSolved = true;
-        [SerializeField] private bool _logSolutionChecks = true;
-        [SerializeField] private bool _fadePanelBackgroundForSpritePuzzle;
-        [SerializeField] [Range(0f, 1f)] private float _testPanelBackgroundAlpha = 0.05f;
         [SerializeField] private bool _useCameraCanvasForSpritePuzzle = true;
 
-        private Graphic _panelBackgroundGraphic;
-        private Color _panelBackgroundColor;
-        private bool _hasPanelBackgroundColor;
         private Canvas _ownerCanvas;
         private RenderMode _originalCanvasRenderMode;
         private Camera _originalCanvasCamera;
         private float _originalCanvasPlaneDistance;
         private bool _hasOriginalCanvasState;
-
-        public event Action<CircuitPuzzleUI> OnCircuitStateChanged;
-
-        public int ConnectedLinkCount { get; private set; }
-
-        public int TotalLinkCount { get; private set; }
 
         private void OnEnable()
         {
@@ -70,27 +56,6 @@ namespace Caretaker.Presentation
         private void OnValidate()
         {
             CollectConfiguredParts();
-            NormalizeLinks();
-        }
-
-        public void ConfigurePuzzle(
-            IEnumerable<CircuitPuzzleNodeUI> nodes,
-            IEnumerable<CircuitPuzzleLink> links)
-        {
-            UnsubscribeFromNodes();
-
-            _nodes = nodes != null
-                ? new List<CircuitPuzzleNodeUI>(nodes).ToArray()
-                : Array.Empty<CircuitPuzzleNodeUI>();
-
-            _links = links != null
-                ? new List<CircuitPuzzleLink>(links).ToArray()
-                : Array.Empty<CircuitPuzzleLink>();
-
-            _linkComponents = Array.Empty<CircuitPuzzleLinkUI>();
-            NormalizeLinks();
-            SubscribeToNodes();
-            EvaluateConnections();
         }
 
         public void RefreshPuzzle()
@@ -108,27 +73,10 @@ namespace Caretaker.Presentation
         {
             if (_links == null || _links.Length == 0)
             {
-                LogSolutionCheck("fail: no circuit links collected.");
                 return false;
             }
 
-            if (HasM1SubstationNodes())
-            {
-                return IsM1SubstationSolution();
-            }
-
-            for (int i = 0; i < _links.Length; i++)
-            {
-                CircuitPuzzleLink link = _links[i];
-                if (link == null || !link.EvaluateConnection())
-                {
-                    LogSolutionCheck($"fail: link is disconnected. index={i}, linkId={link?.LinkId}");
-                    return false;
-                }
-            }
-
-            LogSolutionCheck("success: all fallback links are connected.");
-            return true;
+            return HasM1SubstationNodes() && IsM1SubstationSolution();
         }
 
         private bool HasM1SubstationNodes()
@@ -138,18 +86,11 @@ namespace Caretaker.Presentation
             {
                 if (!nodesByName.ContainsKey(M1_FAULT_NODE_NAMES[i]))
                 {
-                    LogSolutionCheck($"fail: M1 node was not found. node={M1_FAULT_NODE_NAMES[i]}");
                     return false;
                 }
             }
 
-            bool hasA2 = nodesByName.ContainsKey("A-2");
-            if (!hasA2)
-            {
-                LogSolutionCheck("fail: M1 node was not found. node=A-2");
-            }
-
-            return hasA2;
+            return nodesByName.ContainsKey("A-2");
         }
 
         private bool IsM1SubstationSolution()
@@ -159,26 +100,22 @@ namespace Caretaker.Presentation
 
             if (!AreNodesConnected(connectedGraph, M1_FAULT_NODE_NAMES))
             {
-                LogSolutionCheck($"fail: fault node group is not connected. group={string.Join(", ", M1_FAULT_NODE_NAMES)}");
                 return false;
             }
 
             string[] stableNodeNames = GetStableNodeNames(nodesByName);
             if (stableNodeNames.Length > 1 && !AreNodesConnected(connectedGraph, stableNodeNames))
             {
-                LogSolutionCheck($"fail: stable node group is not connected. group={string.Join(", ", stableNodeNames)}");
                 return false;
             }
 
             if (HasConnectedLinkBetween(M1_FAULT_NODE_NAMES, stableNodeNames))
             {
-                LogSolutionCheck("fail: fault node group is still connected to stable node group.");
                 return false;
             }
 
             if (HasDirectConnectedLink("A-1", "A-2"))
             {
-                LogSolutionCheck("fail: A-1 and A-2 are directly connected.");
                 return false;
             }
 
@@ -187,11 +124,9 @@ namespace Caretaker.Presentation
                 (!HasDirectConnectedLink(MAIN_NODE_NAME, "A-1") ||
                 !HasDirectConnectedLink(MAIN_NODE_NAME, "A-2")))
             {
-                LogSolutionCheck("fail: Mainnode must be directly connected to both A-1 and A-2.");
                 return false;
             }
 
-            LogSolutionCheck("success: M1 substation solution matched.");
             return true;
         }
 
@@ -459,69 +394,19 @@ namespace Caretaker.Presentation
         protected override void HandleOpened()
         {
             ApplySpritePuzzleCanvasMode();
-            ApplyTestPanelBackgroundVisibility();
             RefreshPuzzle();
         }
 
         protected override void HandleClosed()
         {
-            RestorePanelBackgroundVisibility();
             RestoreSpritePuzzleCanvasMode();
         }
 
         protected override void HandleSolved()
         {
-            LogSolutionCheck("solved: closing puzzle UI.");
-
             if (_closeOnSolved)
             {
                 Close();
-            }
-        }
-
-        private void LogSolutionCheck(string message)
-        {
-            if (!_logSolutionChecks)
-            {
-                return;
-            }
-
-            Debug.Log($"CircuitPuzzleUI '{name}' solution check {message}", this);
-        }
-
-        private void ApplyTestPanelBackgroundVisibility()
-        {
-            if (!_fadePanelBackgroundForSpritePuzzle)
-            {
-                return;
-            }
-
-            if (_panelBackgroundGraphic == null)
-            {
-                _panelBackgroundGraphic = GetComponent<Graphic>();
-            }
-
-            if (_panelBackgroundGraphic == null)
-            {
-                return;
-            }
-
-            if (!_hasPanelBackgroundColor)
-            {
-                _panelBackgroundColor = _panelBackgroundGraphic.color;
-                _hasPanelBackgroundColor = true;
-            }
-
-            Color fadedColor = _panelBackgroundColor;
-            fadedColor.a = _testPanelBackgroundAlpha;
-            _panelBackgroundGraphic.color = fadedColor;
-        }
-
-        private void RestorePanelBackgroundVisibility()
-        {
-            if (_panelBackgroundGraphic != null && _hasPanelBackgroundColor)
-            {
-                _panelBackgroundGraphic.color = _panelBackgroundColor;
             }
         }
 
@@ -598,7 +483,6 @@ namespace Caretaker.Presentation
                 return;
             }
 
-            _linkComponents = childLinkComponents;
             _links = BuildLinksFromComponents(childLinkComponents);
         }
 
@@ -624,9 +508,6 @@ namespace Caretaker.Presentation
 
         private void EvaluateConnections()
         {
-            int connectedLinkCount = 0;
-            int totalLinkCount = 0;
-
             if (_links != null)
             {
                 for (int i = 0; i < _links.Length; i++)
@@ -637,17 +518,9 @@ namespace Caretaker.Presentation
                         continue;
                     }
 
-                    totalLinkCount++;
-                    if (link.EvaluateAndApply())
-                    {
-                        connectedLinkCount++;
-                    }
+                    link.EvaluateAndApply();
                 }
             }
-
-            ConnectedLinkCount = connectedLinkCount;
-            TotalLinkCount = totalLinkCount;
-            OnCircuitStateChanged?.Invoke(this);
         }
 
         private void SubscribeToNodes()
@@ -685,17 +558,5 @@ namespace Caretaker.Presentation
             }
         }
 
-        private void NormalizeLinks()
-        {
-            if (_links == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < _links.Length; i++)
-            {
-                _links[i]?.Normalize();
-            }
-        }
     }
 }

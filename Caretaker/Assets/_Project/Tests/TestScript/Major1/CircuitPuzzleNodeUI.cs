@@ -19,7 +19,6 @@ namespace Caretaker.Presentation
         [Header("Node")]
         [SerializeField] private bool _isDummyNode;
         [SerializeField] [Range(0, STATE_COUNT - 1)] private int _stateIndex;
-        [SerializeField] private bool _logClicks;
         [SerializeField] private bool _useSpriteClickFallback = true;
 
         [Header("Visuals")]
@@ -36,8 +35,6 @@ namespace Caretaker.Presentation
         private RectTransform _rectTransform;
         private Canvas _canvas;
         private Camera _eventCamera;
-        private bool _hasVisualSpriteLocalPosition;
-        private Vector3 _visualSpriteLocalPosition;
 
         public event Action<CircuitPuzzleNodeUI> OnDirectionChanged;
 
@@ -55,7 +52,6 @@ namespace Caretaker.Presentation
             _canvas = GetComponentInParent<Canvas>();
             CacheClickRenderers();
             CacheDefaultVisualRoot();
-            CacheVisualSpriteLocalPosition();
             ApplyState(false);
         }
 
@@ -64,7 +60,6 @@ namespace Caretaker.Presentation
             _rectTransform = transform as RectTransform;
             CacheClickRenderers();
             CacheDefaultVisualRoot();
-            CacheVisualSpriteLocalPosition();
             _stateIndex = Mathf.Clamp(_stateIndex, 0, STATE_COUNT - 1);
             ApplyState(false);
         }
@@ -84,11 +79,6 @@ namespace Caretaker.Presentation
                 _lastHandledClickFrame = Time.frameCount;
                 HandleClicked();
             }
-        }
-
-        public void RotateClockwise()
-        {
-            AdvanceState();
         }
 
         public void AdvanceState()
@@ -118,19 +108,6 @@ namespace Caretaker.Presentation
             }
 
             _stateIndex = clampedIndex;
-            ApplyState(true);
-        }
-
-        public void SetDummyNode(bool isDummyNode)
-        {
-            if (_isDummyNode == isDummyNode)
-            {
-                ApplyState(false);
-                return;
-            }
-
-            _isDummyNode = isDummyNode;
-            _stateIndex = 0;
             ApplyState(true);
         }
 
@@ -166,12 +143,7 @@ namespace Caretaker.Presentation
 
         public void HandleClicked()
         {
-            if (_logClicks)
-            {
-                Debug.Log($"Circuit node clicked: name={name}, state={_stateIndex}, dummy={_isDummyNode}", this);
-            }
-
-            RotateClockwise();
+            AdvanceState();
         }
 
         private void CacheClickRenderers()
@@ -193,14 +165,6 @@ namespace Caretaker.Presentation
             {
                 _visualRoot = _rectTransform;
             }
-        }
-
-        private void CacheVisualSpriteLocalPosition()
-        {
-            _hasVisualSpriteLocalPosition =
-                TryGetFirstSpriteLocalPosition(_crossRoot, transform, out _visualSpriteLocalPosition) ||
-                TryGetFirstSpriteLocalPosition(_teeRoot, transform, out _visualSpriteLocalPosition) ||
-                TryGetFirstSpriteLocalPosition(_dummyRoot, transform, out _visualSpriteLocalPosition);
         }
 
         private bool IsPointerInsideNode()
@@ -350,64 +314,6 @@ namespace Caretaker.Presentation
             if (visualRoot != null)
             {
                 visualRoot.SetActive(isActive);
-            }
-        }
-
-        private static bool TryGetFirstSpriteLocalPosition(
-            GameObject visualRoot,
-            Transform nodeTransform,
-            out Vector3 localPosition)
-        {
-            localPosition = Vector3.zero;
-            if (visualRoot == null || nodeTransform == null)
-            {
-                return false;
-            }
-
-            if (TryGetFirstSpriteRenderer(visualRoot, out SpriteRenderer spriteRenderer))
-            {
-                localPosition = nodeTransform.InverseTransformPoint(spriteRenderer.transform.position);
-                return true;
-            }
-
-            return false;
-        }
-
-        private static bool TryGetFirstSpriteRenderer(
-            GameObject visualRoot,
-            out SpriteRenderer firstSpriteRenderer)
-        {
-            firstSpriteRenderer = null;
-            if (visualRoot == null)
-            {
-                return false;
-            }
-
-            SpriteRenderer[] spriteRenderers = visualRoot.GetComponentsInChildren<SpriteRenderer>(true);
-            for (int i = 0; i < spriteRenderers.Length; i++)
-            {
-                SpriteRenderer spriteRenderer = spriteRenderers[i];
-                if (spriteRenderer != null)
-                {
-                    firstSpriteRenderer = spriteRenderer;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private void ApplyRootSpritePosition(GameObject visualRoot)
-        {
-            if (!_hasVisualSpriteLocalPosition || visualRoot == null)
-            {
-                return;
-            }
-
-            if (TryGetFirstSpriteRenderer(visualRoot, out SpriteRenderer spriteRenderer))
-            {
-                Vector3 targetWorldPosition = transform.TransformPoint(_visualSpriteLocalPosition);
-                visualRoot.transform.position += targetWorldPosition - spriteRenderer.transform.position;
             }
         }
 
