@@ -1,29 +1,43 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+using Caretaker.Gameplay;
+
 namespace Caretaker.Presentation
 {
-    public class SwitchPopupUI : PuzzleUIBase
+    public sealed class SwitchPopupUI : PuzzleUIBase
     {
-        [SerializeField] private SwitchPuzzleManager puzzleManager;
+        [SerializeField] private SwitchPuzzleManager _puzzleManager;
 
         [Header("Switch Images")]
-        [SerializeField] private Image switchImage1;
-        [SerializeField] private Image switchImage2;
+        [SerializeField] private Image _switchImage1;
+        [SerializeField] private Image _switchImage2;
 
-        [SerializeField] private Sprite offSprite;
-        [SerializeField] private Sprite onSprite;
+        [SerializeField] private Sprite _offSprite;
+        [SerializeField] private Sprite _onSprite;
 
-        private SwitchGroup currentGroup;
+        private SwitchGroup _currentGroup;
+        private PlayerController _currentActor;
 
         private void Awake()
         {
             AutoCacheReferences();
         }
 
+        /// <summary>Opens the popup for a switch group without actor context.</summary>
+        /// <param name="group">Switch group represented by this popup.</param>
         public void Open(SwitchGroup group)
         {
-            currentGroup = group;
+            Open(group, null);
+        }
+
+        /// <summary>Opens the popup for a switch group and tracks the operating actor.</summary>
+        /// <param name="group">Switch group represented by this popup.</param>
+        /// <param name="actor">Player who opened the popup.</param>
+        public void Open(SwitchGroup group, PlayerController actor)
+        {
+            _currentGroup = group;
+            _currentActor = actor;
 
             AutoCacheReferences();
 
@@ -31,15 +45,39 @@ namespace Caretaker.Presentation
             Refresh();
         }
 
+        /// <summary>Toggles the first switch in the current group.</summary>
         public void OnClickSwitch1()
         {
-            puzzleManager.ToggleSwitch(currentGroup, 0);
+            if (_puzzleManager == null)
+            {
+                AutoCacheReferences();
+            }
+
+            if (_puzzleManager == null)
+            {
+                Debug.LogError("SwitchPopupUI: Puzzle Manager가 연결되지 않았습니다.", this);
+                return;
+            }
+
+            _puzzleManager.ToggleSwitch(_currentGroup, 0, _currentActor);
             Refresh();
         }
 
+        /// <summary>Toggles the second switch in the current group.</summary>
         public void OnClickSwitch2()
         {
-            puzzleManager.ToggleSwitch(currentGroup, 1);
+            if (_puzzleManager == null)
+            {
+                AutoCacheReferences();
+            }
+
+            if (_puzzleManager == null)
+            {
+                Debug.LogError("SwitchPopupUI: Puzzle Manager가 연결되지 않았습니다.", this);
+                return;
+            }
+
+            _puzzleManager.ToggleSwitch(_currentGroup, 1, _currentActor);
             Refresh();
         }
 
@@ -50,50 +88,50 @@ namespace Caretaker.Presentation
 
         private void Refresh()
         {
-            if (puzzleManager == null)
+            if (_puzzleManager == null)
             {
                 Debug.LogError("SwitchPopupUI: Puzzle Manager가 연결되지 않았습니다.", this);
                 return;
             }
 
-            if (switchImage1 == null)
+            if (_switchImage1 == null)
             {
                 Debug.LogError("SwitchPopupUI: Switch Image 1이 연결되지 않았습니다.", this);
                 return;
             }
 
-            if (switchImage2 == null)
+            if (_switchImage2 == null)
             {
                 Debug.LogError("SwitchPopupUI: Switch Image 2가 연결되지 않았습니다.", this);
                 return;
             }
 
-            if (offSprite == null)
+            if (_offSprite == null)
             {
                 Debug.LogError("SwitchPopupUI: Off Sprite가 연결되지 않았습니다.", this);
                 return;
             }
 
-            if (onSprite == null)
+            if (_onSprite == null)
             {
                 Debug.LogError("SwitchPopupUI: On Sprite가 연결되지 않았습니다.", this);
                 return;
             }
 
-            switchImage1.sprite = puzzleManager.GetSwitchState(currentGroup, 0)
-                ? onSprite
-                : offSprite;
+            _switchImage1.sprite = _puzzleManager.GetSwitchState(_currentGroup, 0)
+                ? _onSprite
+                : _offSprite;
 
-            switchImage2.sprite = puzzleManager.GetSwitchState(currentGroup, 1)
-                ? onSprite
-                : offSprite;
+            _switchImage2.sprite = _puzzleManager.GetSwitchState(_currentGroup, 1)
+                ? _onSprite
+                : _offSprite;
         }
 
         private void AutoCacheReferences()
         {
-            if (puzzleManager == null)
+            if (_puzzleManager == null)
             {
-                puzzleManager = FindFirstObjectByType<SwitchPuzzleManager>();
+                _puzzleManager = FindFirstObjectByType<SwitchPuzzleManager>();
             }
         }
     }

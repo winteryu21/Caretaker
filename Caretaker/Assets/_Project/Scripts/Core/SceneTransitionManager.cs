@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 
 using Caretaker.Gameplay;
+using Caretaker.Presentation;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -20,6 +21,12 @@ namespace Caretaker.Core
         [SerializeField] private LocalWorldPlayerSpawner _playerSpawner;
         [SerializeField] private string _defaultSpawnPointName = DEFAULT_SPAWN_POINT_NAME;
         [SerializeField] private Vector3 _fallbackSpawnPosition = new(0f, 1f, 0f);
+
+        [Header("Screen Fade")]
+        [SerializeField] private bool _useScreenFade = true;
+        [SerializeField] [Min(0f)] private float _fadeOutSeconds = 0.12f;
+        [SerializeField] [Min(0f)] private float _fadeHoldSeconds = 0.04f;
+        [SerializeField] [Min(0f)] private float _fadeInSeconds = 0.18f;
 
         private bool _isTransitioning;
 
@@ -88,8 +95,12 @@ namespace Caretaker.Core
             Scene targetScene = SceneManager.GetSceneByName(resolvedSceneName);
             if (targetScene.IsValid() && targetScene.isLoaded)
             {
-                MoveActorToLoadedScene(actor, targetScene, resolvedSpawnPointName);
-                TryUnloadActorScene(actorScene, targetScene, unloadActorScene);
+                StartCoroutine(MoveLoadedActorRoutine(
+                    actor,
+                    targetScene,
+                    resolvedSpawnPointName,
+                    actorScene,
+                    unloadActorScene));
                 return true;
             }
 
@@ -110,23 +121,31 @@ namespace Caretaker.Core
             bool unloadActorScene)
         {
             _isTransitioning = true;
+            SetActorInputBlocked(actor, true);
+            yield return FadeOutForTransition();
 
-            AsyncOperation loadOperation;
+            AsyncOperation loadOperation = null;
+            string loadStartError = null;
             try
             {
                 loadOperation = SceneManager.LoadSceneAsync(targetSceneName, LoadSceneMode.Additive);
             }
             catch (ArgumentException exception)
             {
-                Debug.LogError($"Scene transition failed to start loading '{targetSceneName}': {exception.Message}", this);
-                _isTransitioning = false;
+                loadStartError = exception.Message;
+            }
+
+            if (!string.IsNullOrEmpty(loadStartError))
+            {
+                Debug.LogError($"Scene transition failed to start loading '{targetSceneName}': {loadStartError}", this);
+                yield return FinishFailedTransition(actor);
                 yield break;
             }
 
             if (loadOperation == null)
             {
                 Debug.LogError($"Scene transition failed to start loading '{targetSceneName}'.", this);
-                _isTransitioning = false;
+                yield return FinishFailedTransition(actor);
                 yield break;
             }
 
@@ -135,6 +154,7 @@ namespace Caretaker.Core
             if (actor == null)
             {
                 Debug.LogWarning($"Scene transition cancelled because actor was destroyed. target={targetSceneName}", this);
+                yield return FadeInForTransition();
                 _isTransitioning = false;
                 yield break;
             }
@@ -143,12 +163,42 @@ namespace Caretaker.Core
             if (!targetScene.IsValid() || !targetScene.isLoaded)
             {
                 Debug.LogError($"Scene transition failed: loaded scene is invalid. target={targetSceneName}", this);
+                yield return FinishFailedTransition(actor);
+                yield break;
+            }
+
+            MoveActorToLoadedScene(actor, targetScene, spawnPointName);
+            TryUnloadActorScene(actorScene, targetScene, unloadActorScene);
+            yield return HoldFadeForTransition();
+            yield return FadeInForTransition();
+            SetActorInputBlocked(actor, false);
+            _isTransitioning = false;
+        }
+
+        private IEnumerator MoveLoadedActorRoutine(
+            PlayerController actor,
+            Scene targetScene,
+            string spawnPointName,
+            Scene actorScene,
+            bool unloadActorScene)
+        {
+            _isTransitioning = true;
+            SetActorInputBlocked(actor, true);
+            yield return FadeOutForTransition();
+
+            if (actor == null)
+            {
+                Debug.LogWarning($"Scene transition cancelled because actor was destroyed. target={targetScene.name}", this);
+                yield return FadeInForTransition();
                 _isTransitioning = false;
                 yield break;
             }
 
             MoveActorToLoadedScene(actor, targetScene, spawnPointName);
             TryUnloadActorScene(actorScene, targetScene, unloadActorScene);
+            yield return HoldFadeForTransition();
+            yield return FadeInForTransition();
+            SetActorInputBlocked(actor, false);
             _isTransitioning = false;
         }
 
@@ -185,6 +235,37 @@ namespace Caretaker.Core
             if (unloadOperation == null)
             {
                 Debug.LogWarning($"Scene transition could not unload previous scene: {actorScene.name}", this);
+            }
+        }
+
+        private IEnumerator FinishFailedTransition(PlayerController actor)
+        {
+            yield return FadeInForTransition();
+            SetActorInputBlocked(actor, false);
+            _isTransitioning = false;
+        }
+
+        private IEnumerator FadeOutForTransition()
+        {
+            if (_useScreenFade)
+            {
+                yield return ScreenFadePresenter.GetOrCreate().FadeOut(_fadeOutSeconds);
+            }
+        }
+
+        private IEnumerator FadeInForTransition()
+        {
+            if (_useScreenFade)
+            {
+                yield return ScreenFadePresenter.GetOrCreate().FadeIn(_fadeInSeconds);
+            }
+        }
+
+        private IEnumerator HoldFadeForTransition()
+        {
+            if (_useScreenFade && _fadeHoldSeconds > 0f)
+            {
+                yield return new WaitForSecondsRealtime(_fadeHoldSeconds);
             }
         }
 
@@ -237,6 +318,14 @@ namespace Caretaker.Core
             if (_playerSpawner == null)
             {
                 _playerSpawner = FindAnyObjectByType<LocalWorldPlayerSpawner>();
+            }
+        }
+
+        private static void SetActorInputBlocked(PlayerController actor, bool isBlocked)
+        {
+            if (actor != null)
+            {
+                actor.SetInputBlocked(isBlocked);
             }
         }
     }

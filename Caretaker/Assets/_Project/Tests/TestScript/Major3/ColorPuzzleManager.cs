@@ -45,44 +45,40 @@ public class ColorPuzzleManager : MonoBehaviour
         if (buttonD.IsOn) count++;
         if (buttonE.IsOn) count++;
 
-        // 정확히 2개만 켜져 있어야 함
         if (count != 2)
         {
             colorDisplay.color = Color.white;
             return;
         }
 
-        // 조합별 색상
-
         if (buttonA.IsOn && buttonB.IsOn)
-            colorDisplay.color = Color.red;
+            colorDisplay.color = Color.yellow;
 
         else if (buttonA.IsOn && buttonC.IsOn)
             colorDisplay.color = Color.blue;
 
         else if (buttonA.IsOn && buttonD.IsOn)
-            colorDisplay.color = Color.green;
+            colorDisplay.color = new Color(0.5f, 0f, 1f);
 
         else if (buttonA.IsOn && buttonE.IsOn)
-            colorDisplay.color = Color.yellow;
+            colorDisplay.color = Color.green;
 
         else if (buttonB.IsOn && buttonC.IsOn)
-            colorDisplay.color = Color.cyan;
+            colorDisplay.color = Color.yellow;
 
         else if (buttonB.IsOn && buttonD.IsOn)
-            colorDisplay.color = Color.magenta;
+            colorDisplay.color = Color.red;
 
         else if (buttonB.IsOn && buttonE.IsOn)
-            colorDisplay.color = new Color(1f, 0.5f, 0f);
+            colorDisplay.color = new Color(0.5f, 0f, 1f);
 
         else if (buttonC.IsOn && buttonD.IsOn)
-            colorDisplay.color = Color.gray;
+            colorDisplay.color = Color.green;
 
         else if (buttonC.IsOn && buttonE.IsOn)
-            colorDisplay.color = Color.black;
+            colorDisplay.color = Color.red;
 
         else if (buttonD.IsOn && buttonE.IsOn)
-            colorDisplay.color = new Color(0.5f, 0f, 1f);
+            colorDisplay.color = Color.blue;
     }
 }
- 

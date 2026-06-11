@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8940500252502664524}
   - component: {fileID: 2278910074953956365}
   - component: {fileID: 8073785276411285478}
+  - component: {fileID: 2436149833808880455}
   m_Layer: 0
   m_Name: Enemy_Drone
   m_TagString: Untagged
@@ -107,14 +108,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.EnemyController
   _movementMode: 1
+  _roomId: 
+  _roomManager: {fileID: 0}
   _tuning: {fileID: 11400000, guid: 6143b1ea21a2b8c47840bdff8414ab00, type: 2}
   _patrolWaypoints: []
+  _targetPlayer: {fileID: 0}
   _groundLayers:
     serializedVersion: 2
     m_Bits: 51
+  _searchPatrolRadius: 1.5
   _groundProbeForwardDistance: 0.15
   _groundProbeDownDistance: 0.4
   _stuckSkipSeconds: 1
+  _takedownDistance: 1.5
+  _takedownRearAngle: 90
+  _takedownDuration: 0.6
 --- !u!61 &2278910074953956365
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -188,3 +196,26 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &2436149833808880455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5847071286799488435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa8b3462ffa58a843b64a74c3019fd0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Gameplay.EnemyPerception2D
+  _tuning: {fileID: 11400000, guid: 6143b1ea21a2b8c47840bdff8414ab00, type: 2}
+  _obstructionLayers:
+    serializedVersion: 2
+    m_Bits: 115
+  _eyeOffset: {x: 0, y: 0}
+  _showVisionArea: 1
+  _patrolVisionColor: {r: 0, g: 0.4, b: 1, a: 0.25}
+  _chaseVisionColor: {r: 1, g: 0, b: 0, a: 0.25}
+  _searchVisionColor: {r: 1, g: 0.45, b: 0, a: 0.25}
+  _visionSegments: 24
+  _visionSortingOrder: -1

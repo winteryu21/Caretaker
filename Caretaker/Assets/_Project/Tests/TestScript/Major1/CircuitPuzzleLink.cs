@@ -54,6 +54,11 @@ namespace Caretaker.Presentation
 
         public bool EvaluateAndApply()
         {
+            if (!HasValidNodes)
+            {
+                return false;
+            }
+
             bool isConnected = EvaluateConnection();
             SetConnected(isConnected);
             return isConnected;

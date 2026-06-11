@@ -30,11 +30,11 @@ namespace Caretaker.Presentation
 
         public bool Execute(PlayerController actor)
         {
-            OpenPuzzleUI();
+            OpenPuzzleUI(actor);
             return true;
         }
 
-        private void OpenPuzzleUI()
+        private void OpenPuzzleUI(PlayerController actor)
         {
             if (_puzzleUi == null)
             {
@@ -49,7 +49,7 @@ namespace Caretaker.Presentation
 
             if (_puzzleUi is SwitchPopupUI switchPopupUI)
             {
-                switchPopupUI.Open(_switchGroup);
+                switchPopupUI.Open(_switchGroup, actor);
                 return;
             }
 
