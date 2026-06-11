@@ -20,7 +20,7 @@ namespace Caretaker.Core
         [SerializeField] private TMP_Text _hostPortLabel;
 
         [Header("Debug Panel")]
-        [SerializeField] private bool _showDebugPanel;
+        [SerializeField] private bool _showDebugPanel = false;
         [SerializeField] private Vector2 _panelPosition = new Vector2(16f, 16f);
         [SerializeField] private Vector2 _panelSize = new Vector2(420f, 310f);
 

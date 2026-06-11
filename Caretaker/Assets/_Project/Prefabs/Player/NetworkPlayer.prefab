@@ -368,6 +368,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 51
   _interactionRadius: 1
+  _takedownRadius: 1.5
 --- !u!114 &330467203190987209
 MonoBehaviour:
   m_ObjectHideFlags: 0

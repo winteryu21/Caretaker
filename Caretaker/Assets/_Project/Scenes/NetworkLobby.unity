@@ -1959,7 +1959,7 @@ MonoBehaviour:
   _hostPortInput: {fileID: 861242331}
   _hostIpLabel: {fileID: 1922215830}
   _hostPortLabel: {fileID: 442007364}
-  _showDebugPanel: 1
+  _showDebugPanel: 0
   _panelPosition: {x: 16, y: 16}
   _panelSize: {x: 360, y: 180}
 --- !u!1 &1092012469
