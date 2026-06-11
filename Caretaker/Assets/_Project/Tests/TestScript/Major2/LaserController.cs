@@ -183,6 +183,9 @@ public class LaserController : MonoBehaviour
 
         foreach (RectTransform wall in walls)
         {
+
+            if (!wall.gameObject.activeInHierarchy)
+                continue;
             Vector2 center = wall.anchoredPosition;
             Vector2 size = wall.rect.size;
 
@@ -191,6 +194,7 @@ public class LaserController : MonoBehaviour
                 tip.y >= center.y - size.y * 0.5f &&
                 tip.y <= center.y + size.y * 0.5f)
             {
+                Debug.Log($"충돌한 벽 : {wall.name}");
                 return true;
             }
         }

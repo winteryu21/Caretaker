@@ -7,5 +7,6 @@ public class TogleSelf : MonoBehaviour
     public void ToggleChild()
     {
         targetChild.SetActive(!targetChild.activeSelf);
+     
     }
 }
