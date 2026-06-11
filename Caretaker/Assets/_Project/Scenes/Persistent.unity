@@ -469,7 +469,7 @@ MonoBehaviour:
   _sceneLoader: {fileID: 2002}
   _roleManager: {fileID: 0}
   _mainCamera: {fileID: 1002}
-  _maximumPlayerSeparation: 7
+  _maximumPlayerSeparation: 0
   _cameraBoundaryPadding: 1
   _referenceViewportAspect: 1.7777778
 --- !u!114 &2006

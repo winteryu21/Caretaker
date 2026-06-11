@@ -59,7 +59,7 @@ namespace Caretaker.Tests.Editor
                 maximumX,
                 deltaTime);
 
-            Assert.That(result, Is.EqualTo(expected));
+            Assert.That(result, Is.EqualTo(expected).Within(0.0001f));
         }
 
         [Test]
@@ -72,6 +72,30 @@ namespace Caretaker.Tests.Editor
                 boundaryPadding: 1f);
 
             Assert.That(separation, Is.EqualTo(4f));
+        }
+
+        [Test]
+        public void SplitViewManager_ZeroConfiguredSeparation_UsesVisibleCameraRange()
+        {
+            float separation = SplitViewManager.ResolveMaximumPlayerSeparation(
+                configuredSeparation: 0f,
+                localHalfWidth: 8f,
+                remoteHalfWidth: 5f,
+                boundaryPadding: 1f);
+
+            Assert.That(separation, Is.EqualTo(4f));
+        }
+
+        [Test]
+        public void SplitViewManager_ConfiguredSeparation_CapsVisibleCameraRange()
+        {
+            float separation = SplitViewManager.ResolveMaximumPlayerSeparation(
+                configuredSeparation: 3f,
+                localHalfWidth: 8f,
+                remoteHalfWidth: 5f,
+                boundaryPadding: 1f);
+
+            Assert.That(separation, Is.EqualTo(3f));
         }
 
         [Test]

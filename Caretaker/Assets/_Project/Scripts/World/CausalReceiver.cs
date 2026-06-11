@@ -21,6 +21,13 @@ namespace Caretaker.World
     {
         private static readonly Color DEBUG_COLOR_ACTIVATED = Color.green;
         private static readonly Color DEBUG_COLOR_DEACTIVATED = Color.red;
+        private static readonly Color DEFAULT_SUCCESS_EFFECT_COLOR = new(0.2f, 1f, 0.85f, 1f);
+
+        private const int SUCCESS_EFFECT_PARTICLE_COUNT = 18;
+        private const float SUCCESS_EFFECT_DURATION = 0.7f;
+        private const float SUCCESS_EFFECT_PARTICLE_SIZE = 0.18f;
+        private const float SUCCESS_EFFECT_SPEED = 1.4f;
+        private const string SUCCESS_EFFECT_NAME = "CausalitySuccessEffect";
 
         [Header("Causal Rule")]
         [Tooltip("CausalRuleSO를 드래그하면 Receiver ID가 자동 설정됩니다.")]
@@ -43,6 +50,11 @@ namespace Caretaker.World
         [Header("Debug")]
         [Tooltip("SpriteRenderer가 있으면 활성화/비활성화 시 색상을 자동 변경합니다.")]
         [SerializeField] private bool _debugColorFeedback = true;
+
+        [Header("Success Effect")]
+        [SerializeField] private bool _showSuccessEffect = true;
+        [SerializeField] private Color _successEffectColor = DEFAULT_SUCCESS_EFFECT_COLOR;
+        [SerializeField] [Min(0.01f)] private float _successEffectScale = 1f;
 
         private SpriteRenderer _spriteRenderer;
         private bool _isActivated;
@@ -105,6 +117,7 @@ namespace Caretaker.World
         /// <param name="stateValue">적용할 상태 값. (예: Powered, Unlocked)</param>
         public void ApplyState(string stateKey, string stateValue)
         {
+            bool stateChanged = _lastStateKey != stateKey || _lastStateValue != stateValue;
             _lastStateKey = stateKey;
             _lastStateValue = stateValue;
 
@@ -117,6 +130,11 @@ namespace Caretaker.World
                 && stateValue != "Locked"
                 && stateValue != "false"
                 && stateValue != "Inactive";
+
+            if (stateChanged)
+            {
+                ShowSuccessEffect();
+            }
 
             SetActivated(shouldActivate);
         }
@@ -170,6 +188,96 @@ namespace Caretaker.World
             {
                 _onDeactivated?.Invoke();
             }
+        }
+
+        private void ShowSuccessEffect()
+        {
+            if (!_showSuccessEffect || !Application.isPlaying)
+            {
+                return;
+            }
+
+            GameObject effectObject = new(SUCCESS_EFFECT_NAME);
+            effectObject.transform.position = GetEffectPosition();
+
+            ParticleSystem particleSystem = effectObject.AddComponent<ParticleSystem>();
+            ParticleSystem.MainModule main = particleSystem.main;
+            main.duration = SUCCESS_EFFECT_DURATION;
+            main.loop = false;
+            main.playOnAwake = false;
+            main.startLifetime = SUCCESS_EFFECT_DURATION;
+            main.startSpeed = SUCCESS_EFFECT_SPEED * _successEffectScale;
+            main.startSize = SUCCESS_EFFECT_PARTICLE_SIZE * _successEffectScale;
+            main.startColor = _successEffectColor;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.stopAction = ParticleSystemStopAction.Destroy;
+
+            ParticleSystem.EmissionModule emission = particleSystem.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 0f;
+            emission.SetBursts(new[]
+            {
+                new ParticleSystem.Burst(0f, SUCCESS_EFFECT_PARTICLE_COUNT)
+            });
+
+            ParticleSystem.ShapeModule shape = particleSystem.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.25f * _successEffectScale;
+            shape.radiusThickness = 1f;
+
+            ParticleSystem.ColorOverLifetimeModule colorOverLifetime = particleSystem.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            Gradient alphaGradient = new();
+            alphaGradient.SetKeys(
+                new[]
+                {
+                    new GradientColorKey(_successEffectColor, 0f),
+                    new GradientColorKey(_successEffectColor, 1f)
+                },
+                new[]
+                {
+                    new GradientAlphaKey(1f, 0f),
+                    new GradientAlphaKey(0f, 1f)
+                });
+            colorOverLifetime.color = alphaGradient;
+
+            ParticleSystemRenderer particleRenderer = particleSystem.GetComponent<ParticleSystemRenderer>();
+            ConfigureEffectRenderer(particleRenderer);
+
+            particleSystem.Play();
+        }
+
+        private Vector3 GetEffectPosition()
+        {
+            Renderer receiverRenderer = GetComponentInChildren<Renderer>();
+            return receiverRenderer != null
+                ? receiverRenderer.bounds.center
+                : transform.position;
+        }
+
+        private void ConfigureEffectRenderer(ParticleSystemRenderer particleRenderer)
+        {
+            SpriteRenderer receiverRenderer = GetComponentInChildren<SpriteRenderer>();
+            if (receiverRenderer != null)
+            {
+                particleRenderer.sortingLayerID = receiverRenderer.sortingLayerID;
+                particleRenderer.sortingOrder = receiverRenderer.sortingOrder + 2;
+            }
+            else
+            {
+                particleRenderer.sortingOrder = 2;
+            }
+
+            Shader spriteShader = Shader.Find("Sprites/Default");
+            if (spriteShader == null)
+            {
+                return;
+            }
+
+            Material effectMaterial = new(spriteShader);
+            particleRenderer.sharedMaterial = effectMaterial;
+            Destroy(effectMaterial, SUCCESS_EFFECT_DURATION + 0.1f);
         }
 
         /// <summary>
