@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace Caretaker.Presentation
 {
@@ -13,8 +14,10 @@ namespace Caretaker.Presentation
     public sealed class CircuitPuzzleNodeUI : MonoBehaviour, IPointerClickHandler
     {
         private const int STATE_COUNT = 5;
+        private const float CLICK_DEBOUNCE_SECONDS = 0.12f;
         private const float TEE_VISUAL_ROTATION_OFFSET_Z = 180f;
         private static int _lastHandledClickFrame = -1;
+        private static float _lastHandledClickTime = -CLICK_DEBOUNCE_SECONDS;
 
         [Header("Node")]
         [SerializeField] private bool _isDummyNode;
@@ -24,6 +27,10 @@ namespace Caretaker.Presentation
         [Header("Visuals")]
         [Tooltip("Optional root used only as a fallback when no visual roots are assigned.")]
         [SerializeField] private RectTransform _visualRoot;
+        [SerializeField] private Image _nodeImage;
+        [SerializeField] private Sprite _dummySprite;
+        [SerializeField] private Sprite _teeSprite;
+        [SerializeField] private Sprite _crossSprite;
         [SerializeField] private GameObject _dummyRoot;
         [SerializeField] private GameObject _teeRoot;
         [SerializeField] private GameObject _crossRoot;
@@ -50,6 +57,7 @@ namespace Caretaker.Presentation
         {
             _rectTransform = transform as RectTransform;
             _canvas = GetComponentInParent<Canvas>();
+            CacheImage();
             CacheClickRenderers();
             CacheDefaultVisualRoot();
             ApplyState(false);
@@ -58,6 +66,7 @@ namespace Caretaker.Presentation
         private void OnValidate()
         {
             _rectTransform = transform as RectTransform;
+            CacheImage();
             CacheClickRenderers();
             CacheDefaultVisualRoot();
             _stateIndex = Mathf.Clamp(_stateIndex, 0, STATE_COUNT - 1);
@@ -67,17 +76,17 @@ namespace Caretaker.Presentation
         private void Update()
         {
             if (!_useSpriteClickFallback ||
+                HasUiClickTarget() ||
                 Mouse.current == null ||
                 !Mouse.current.leftButton.wasPressedThisFrame ||
-                _lastHandledClickFrame == Time.frameCount)
+                !CanHandleClick())
             {
                 return;
             }
 
             if (IsPointerInsideNode())
             {
-                _lastHandledClickFrame = Time.frameCount;
-                HandleClicked();
+                HandleClickIfAllowed();
             }
         }
 
@@ -132,13 +141,7 @@ namespace Caretaker.Presentation
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (_lastHandledClickFrame == Time.frameCount)
-            {
-                return;
-            }
-
-            _lastHandledClickFrame = Time.frameCount;
-            HandleClicked();
+            HandleClickIfAllowed();
         }
 
         public void HandleClicked()
@@ -152,6 +155,44 @@ namespace Caretaker.Presentation
             {
                 _clickRenderers = GetComponentsInChildren<SpriteRenderer>(true);
             }
+        }
+
+        private void CacheImage()
+        {
+            if (_nodeImage == null)
+            {
+                _nodeImage = GetComponent<Image>();
+            }
+
+            if (_nodeImage == null)
+            {
+                _nodeImage = GetComponentInChildren<Image>(true);
+            }
+        }
+
+        private bool HasUiClickTarget()
+        {
+            return _nodeImage != null &&
+                _nodeImage.raycastTarget &&
+                _nodeImage.isActiveAndEnabled;
+        }
+
+        private void HandleClickIfAllowed()
+        {
+            if (!CanHandleClick())
+            {
+                return;
+            }
+
+            _lastHandledClickFrame = Time.frameCount;
+            _lastHandledClickTime = Time.unscaledTime;
+            HandleClicked();
+        }
+
+        private static bool CanHandleClick()
+        {
+            return _lastHandledClickFrame != Time.frameCount &&
+                Time.unscaledTime - _lastHandledClickTime >= CLICK_DEBOUNCE_SECONDS;
         }
 
         private void CacheDefaultVisualRoot()
@@ -246,6 +287,7 @@ namespace Caretaker.Presentation
             ApplyRootSpriteRotation(_dummyRoot, activeRoot == _dummyRoot ? rotationZ : 0f);
             ApplyRootSpriteRotation(_teeRoot, activeRoot == _teeRoot ? teeRotationZ : 0f);
             ApplyRootSpriteRotation(_crossRoot, activeRoot == _crossRoot ? rotationZ : 0f);
+            ApplyImageRotation(activeRoot == _teeRoot ? teeRotationZ : rotationZ);
 
             if (activeRoot != null || _visualRoot == null)
             {
@@ -267,6 +309,7 @@ namespace Caretaker.Presentation
             SetVisualRootActive(_dummyRoot, isDummy);
             SetVisualRootActive(_teeRoot, isTee);
             SetVisualRootActive(_crossRoot, isCross);
+            ApplyImageVisual(isDummy, isTee, isCross);
 
             if (isDummy)
             {
@@ -284,6 +327,33 @@ namespace Caretaker.Presentation
             }
 
             return null;
+        }
+
+        private void ApplyImageVisual(bool isDummy, bool isTee, bool isCross)
+        {
+            if (_nodeImage == null)
+            {
+                return;
+            }
+
+            Sprite sprite = null;
+            if (isDummy)
+            {
+                sprite = _dummySprite != null ? _dummySprite : GetFirstSprite(_dummyRoot);
+            }
+            else if (isTee)
+            {
+                sprite = _teeSprite != null ? _teeSprite : GetFirstSprite(_teeRoot);
+            }
+            else if (isCross)
+            {
+                sprite = _crossSprite != null ? _crossSprite : GetFirstSprite(_crossRoot);
+            }
+
+            if (sprite != null)
+            {
+                _nodeImage.sprite = sprite;
+            }
         }
 
         private static void ResolveState(
@@ -338,6 +408,30 @@ namespace Caretaker.Presentation
             }
         }
 
+        private void ApplyImageRotation(float rotationZ)
+        {
+            if (_nodeImage == null)
+            {
+                return;
+            }
+
+            RectTransform imageRectTransform = _nodeImage.rectTransform;
+            Vector3 localEulerAngles = imageRectTransform.localEulerAngles;
+            localEulerAngles.z = rotationZ;
+            imageRectTransform.localEulerAngles = localEulerAngles;
+        }
+
+        private static Sprite GetFirstSprite(GameObject visualRoot)
+        {
+            if (visualRoot == null)
+            {
+                return null;
+            }
+
+            SpriteRenderer spriteRenderer = visualRoot.GetComponentInChildren<SpriteRenderer>(true);
+            return spriteRenderer != null ? spriteRenderer.sprite : null;
+        }
+
         private Camera GetEventCamera()
         {
             if (_eventCamera != null)
@@ -358,8 +452,7 @@ namespace Caretaker.Presentation
 
             if (_canvas.renderMode == RenderMode.ScreenSpaceOverlay)
             {
-                _eventCamera = Camera.main;
-                return _eventCamera;
+                return null;
             }
 
             _eventCamera = _canvas.worldCamera != null ? _canvas.worldCamera : Camera.main;
