@@ -1,3 +1,4 @@
+using System.Reflection;
 using Caretaker.Presentation;
 using Caretaker.Shared;
 using NUnit.Framework;
@@ -74,6 +75,39 @@ namespace Caretaker.Tests.Editor
             }
         }
 
+        [Test]
+        public void TimelineCameraRig_FollowsAssignedPlayerVertically()
+        {
+            GameObject cameraObject = new("Camera");
+            GameObject pastPlayer = new("PastPlayer");
+            GameObject futurePlayer = new("FuturePlayer");
+
+            try
+            {
+                pastPlayer.transform.position = new Vector3(12f, 4f, 0f);
+                futurePlayer.transform.position = new Vector3(8f, 1000f, 0f);
+                TimelineCameraRig rig = cameraObject.AddComponent<TimelineCameraRig>();
+
+                rig.Configure(
+                    pastPlayer.transform,
+                    futurePlayer.transform,
+                    pastPlayer.transform,
+                    new Vector3(0f, 14f, -10f));
+
+                pastPlayer.transform.position = new Vector3(12f, 9f, 0f);
+                InvokeLateUpdate(rig);
+
+                Assert.That(cameraObject.transform.position.x, Is.EqualTo(8f).Within(0.001f));
+                Assert.That(cameraObject.transform.position.y, Is.EqualTo(19f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(pastPlayer);
+                Object.DestroyImmediate(futurePlayer);
+            }
+        }
+
         [TestCase(9.9f, 5f, 0f, 10f, 0.02f, 5f)]
         [TestCase(9.95f, 5f, 0f, 10f, 0.02f, 2.5f)]
         [TestCase(0.05f, -5f, 0f, 10f, 0.02f, -2.5f)]
@@ -98,6 +132,28 @@ namespace Caretaker.Tests.Editor
                 deltaTime);
 
             Assert.That(result, Is.EqualTo(expected).Within(0.0001f));
+        }
+
+        [Test]
+        public void PlayerMotor2D_ClampsCurrentPositionAtBounds()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                Rigidbody2D rigidbody2D = playerObject.AddComponent<Rigidbody2D>();
+                playerObject.AddComponent<BoxCollider2D>();
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+
+                rigidbody2D.position = new Vector2(12f, 0f);
+                motor.SetHorizontalBounds(-3f, 5f);
+
+                Assert.That(rigidbody2D.position.x, Is.EqualTo(5f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
         }
 
         [Test]
@@ -175,6 +231,15 @@ namespace Caretaker.Tests.Editor
             EditorSceneManager.OpenScene("Assets/_Project/Scenes/Persistent.unity", OpenSceneMode.Single);
 
             Assert.That(Object.FindAnyObjectByType<SplitViewManager>(), Is.Not.Null);
+        }
+
+        private static void InvokeLateUpdate(TimelineCameraRig rig)
+        {
+            MethodInfo lateUpdate = typeof(TimelineCameraRig)
+                .GetMethod("LateUpdate", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.That(lateUpdate, Is.Not.Null);
+            lateUpdate.Invoke(rig, null);
         }
     }
 }
