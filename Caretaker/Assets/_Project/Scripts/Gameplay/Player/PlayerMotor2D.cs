@@ -80,20 +80,6 @@ public class PlayerMotor2D : MonoBehaviour
         _horizontalMinimumX = Mathf.Min(minimumX, maximumX);
         _horizontalMaximumX = Mathf.Max(minimumX, maximumX);
         _hasHorizontalBounds = true;
-
-        if (_rigidbody2D == null)
-        {
-            _rigidbody2D = GetComponent<Rigidbody2D>();
-        }
-
-        if (_rigidbody2D == null)
-        {
-            return;
-        }
-
-        Vector2 position = _rigidbody2D.position;
-        position.x = ClampHorizontalPosition(position.x, _horizontalMinimumX, _horizontalMaximumX);
-        _rigidbody2D.position = position;
     }
 
     /// <summary>설정된 수평 이동 범위를 해제합니다.</summary>
