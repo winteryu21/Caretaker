@@ -329,6 +329,7 @@ MonoBehaviour:
   _airAcceleration: 20
   _airDeceleration: 8
   _airTurnSpeed: 24
+  _landingMomentumDuration: 0.12
   _coyoteTimeDuration: 0.1
   _jumpBufferDuration: 0.1
   _jumpReleaseVelocityMultiplier: 0.5
