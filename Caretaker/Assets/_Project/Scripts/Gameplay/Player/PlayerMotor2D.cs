@@ -22,6 +22,7 @@ public class PlayerMotor2D : MonoBehaviour
     [SerializeField] private float _airAcceleration = 20f;
     [SerializeField] private float _airDeceleration = 8f;
     [SerializeField] private float _airTurnSpeed = 24f;
+    [SerializeField] [Min(0f)] private float _landingMomentumDuration = 0.12f;
 
     [Header("Jump Assist")]
     [SerializeField] private float _coyoteTimeDuration = 0.1f;
@@ -35,6 +36,9 @@ public class PlayerMotor2D : MonoBehaviour
 
     [Header("Crouch")]
     [SerializeField] [Range(0.3f, 1f)] private float _crouchColliderHeightScale = 0.6f;
+
+    [Header("Collision")]
+    [SerializeField] [Min(0f)] private float _colliderEdgeRadius = 0.08f;
 
     [Header("Ground Check")]
     [SerializeField] private LayerMask _groundLayers = Physics2D.DefaultRaycastLayers;
@@ -51,12 +55,14 @@ public class PlayerMotor2D : MonoBehaviour
 
     private BoxCollider2D _boxCollider;
     private Rigidbody2D _rigidbody2D;
+    private PhysicsMaterial2D _frictionlessMaterial;
 
     private float _coyoteTimeRemaining;
     private float _horizontalMaximumX;
     private float _horizontalMinimumX;
     private float _jumpBufferRemaining;
     private float _jumpAirTime;
+    private float _landingMomentumTimeRemaining;
     private bool _hasHorizontalBounds;
     private bool _isCrouching;
     private bool _isJumpGravityActive;
@@ -138,6 +144,8 @@ public class PlayerMotor2D : MonoBehaviour
         _boxCollider = GetComponent<BoxCollider2D>();
         _rigidbody2D = GetComponent<Rigidbody2D>();
 
+        ConfigureColliderMaterial();
+        ConfigureColliderShape();
         ConfigureRigidbodyConstraints();
         CacheColliderState();
         IsGrounded = PerformGroundCheck();
@@ -149,7 +157,29 @@ public class PlayerMotor2D : MonoBehaviour
 
     private void OnValidate()
     {
+        ConfigureColliderShape();
         ConfigureRigidbodyConstraints();
+    }
+
+    private void OnDestroy()
+    {
+        if (_frictionlessMaterial == null)
+        {
+            return;
+        }
+
+        if (_boxCollider != null && _boxCollider.sharedMaterial == _frictionlessMaterial)
+        {
+            _boxCollider.sharedMaterial = null;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(_frictionlessMaterial);
+            return;
+        }
+
+        DestroyImmediate(_frictionlessMaterial);
     }
 
     /// <summary>
@@ -188,7 +218,19 @@ public class PlayerMotor2D : MonoBehaviour
 
     private void UpdateGroundState()
     {
+        bool wasGrounded = IsGrounded;
         IsGrounded = PerformGroundCheck();
+
+        if (IsGrounded && !wasGrounded)
+        {
+            _landingMomentumTimeRemaining = _landingMomentumDuration;
+        }
+        else
+        {
+            _landingMomentumTimeRemaining = Mathf.Max(
+                0f,
+                _landingMomentumTimeRemaining - Time.fixedDeltaTime);
+        }
     }
 
     private void UpdateJumpState()
@@ -374,18 +416,25 @@ public class PlayerMotor2D : MonoBehaviour
 
     private float GetHorizontalAcceleration(float currentSpeed, float targetSpeed)
     {
-        if (Mathf.Approximately(targetSpeed, 0f))
-        {
-            return IsGrounded ? _groundDeceleration : _airDeceleration;
-        }
-
-        bool isTurning = !Mathf.Approximately(currentSpeed, 0f) && Mathf.Sign(currentSpeed) != Mathf.Sign(targetSpeed);
+        bool isTurning = !Mathf.Approximately(currentSpeed, 0f) &&
+            !Mathf.Approximately(targetSpeed, 0f) &&
+            Mathf.Sign(currentSpeed) != Mathf.Sign(targetSpeed);
         if (isTurning)
         {
             return IsGrounded ? _groundTurnSpeed : _airTurnSpeed;
         }
 
-        return IsGrounded ? _groundAcceleration : _airAcceleration;
+        bool preserveLandingMomentum = IsGrounded && _landingMomentumTimeRemaining > 0f;
+        if (Mathf.Approximately(targetSpeed, 0f))
+        {
+            return IsGrounded && !preserveLandingMomentum
+                ? _groundDeceleration
+                : _airDeceleration;
+        }
+
+        return IsGrounded && !preserveLandingMomentum
+            ? _groundAcceleration
+            : _airAcceleration;
     }
 
     // 웅크리기 관련
@@ -473,5 +522,36 @@ public class PlayerMotor2D : MonoBehaviour
                 ? RigidbodyInterpolation2D.Interpolate
                 : RigidbodyInterpolation2D.None;
         }
+    }
+
+    private void ConfigureColliderMaterial()
+    {
+        if (_boxCollider == null)
+        {
+            return;
+        }
+
+        _frictionlessMaterial = new PhysicsMaterial2D($"{name}_Frictionless")
+        {
+            friction = 0f,
+            bounciness = 0f
+        };
+        _boxCollider.sharedMaterial = _frictionlessMaterial;
+    }
+
+    private void ConfigureColliderShape()
+    {
+        if (_boxCollider == null)
+        {
+            _boxCollider = GetComponent<BoxCollider2D>();
+        }
+
+        if (_boxCollider == null)
+        {
+            return;
+        }
+
+        float maximumEdgeRadius = Mathf.Min(_boxCollider.size.x, _boxCollider.size.y) * 0.5f;
+        _boxCollider.edgeRadius = Mathf.Clamp(_colliderEdgeRadius, 0f, maximumEdgeRadius);
     }
 }
