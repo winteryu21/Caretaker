@@ -36,6 +36,9 @@ public class PlayerMotor2D : MonoBehaviour
     [Header("Crouch")]
     [SerializeField] [Range(0.3f, 1f)] private float _crouchColliderHeightScale = 0.6f;
 
+    [Header("Collision")]
+    [SerializeField] [Min(0f)] private float _colliderEdgeRadius = 0.08f;
+
     [Header("Ground Check")]
     [SerializeField] private LayerMask _groundLayers = Physics2D.DefaultRaycastLayers;
 
@@ -140,6 +143,7 @@ public class PlayerMotor2D : MonoBehaviour
         _rigidbody2D = GetComponent<Rigidbody2D>();
 
         ConfigureColliderMaterial();
+        ConfigureColliderShape();
         ConfigureRigidbodyConstraints();
         CacheColliderState();
         IsGrounded = PerformGroundCheck();
@@ -151,6 +155,7 @@ public class PlayerMotor2D : MonoBehaviour
 
     private void OnValidate()
     {
+        ConfigureColliderShape();
         ConfigureRigidbodyConstraints();
     }
 
@@ -511,5 +516,21 @@ public class PlayerMotor2D : MonoBehaviour
             bounciness = 0f
         };
         _boxCollider.sharedMaterial = _frictionlessMaterial;
+    }
+
+    private void ConfigureColliderShape()
+    {
+        if (_boxCollider == null)
+        {
+            _boxCollider = GetComponent<BoxCollider2D>();
+        }
+
+        if (_boxCollider == null)
+        {
+            return;
+        }
+
+        float maximumEdgeRadius = Mathf.Min(_boxCollider.size.x, _boxCollider.size.y) * 0.5f;
+        _boxCollider.edgeRadius = Mathf.Clamp(_colliderEdgeRadius, 0f, maximumEdgeRadius);
     }
 }

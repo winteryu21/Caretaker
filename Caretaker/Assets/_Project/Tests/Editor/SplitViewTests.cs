@@ -175,6 +175,24 @@ namespace Caretaker.Tests.Editor
             }
         }
 
+        [Test]
+        public void PlayerMotor2D_AppliesRoundedBoxColliderEdges()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+                BoxCollider2D playerCollider = motor.GetComponent<BoxCollider2D>();
+
+                Assert.That(playerCollider.edgeRadius, Is.EqualTo(0.08f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
         [TestCase(TimelineRole.Past)]
         [TestCase(TimelineRole.Future)]
         public void TimelineCameraRig_ControlsOnlyCameraTimelinePlayerSpacing(TimelineRole cameraTimelineRole)

@@ -336,6 +336,7 @@ MonoBehaviour:
   _jumpPeakGravityMultiplier: 2.4
   _jumpGravityRampDuration: 0.35
   _crouchColliderHeightScale: 0.6
+  _colliderEdgeRadius: 0.08
   _groundLayers:
     serializedVersion: 2
     m_Bits: 51
