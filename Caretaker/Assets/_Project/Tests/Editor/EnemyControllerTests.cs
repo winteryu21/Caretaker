@@ -155,6 +155,30 @@ namespace Caretaker.Tests.Editor
         }
 
         [Test]
+        public void FlyingMode_ChasesAbovePlayerHead()
+        {
+            EnemyController controller = CreateController(
+                new Vector3(0f, 4f, 0f),
+                CreateTuning(2f, 0f),
+                FLYING_MOVEMENT_MODE_INDEX);
+            PlayerMotor2D player = CreatePlayer(new Vector3(3f, 0f, 0f));
+            controller.SetTargetPlayer(player);
+            Physics2D.SyncTransforms();
+
+            Collider2D playerCollider = player.GetComponent<Collider2D>();
+            Collider2D droneCollider = controller.GetComponent<Collider2D>();
+            Vector2 chaseTarget = GetChaseTargetPosition(controller);
+
+            Assert.That(chaseTarget.x, Is.EqualTo(playerCollider.bounds.center.x).Within(0.001f));
+            Assert.That(
+                chaseTarget.y,
+                Is.EqualTo(playerCollider.bounds.max.y + droneCollider.bounds.extents.y).Within(0.001f));
+
+            Object.DestroyImmediate(player.gameObject);
+            DestroyController(controller);
+        }
+
+        [Test]
         public void OnEnable_AssignsCurrentPlayerFromSpawnerInSameScene()
         {
             const string phaseSceneName = "Phase1_Past";
@@ -257,6 +281,10 @@ namespace Caretaker.Tests.Editor
 
             TickEnemy(controller, 0.1f);
 
+            Assert.That(controller.CurrentState, Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+
+            TickEnemy(controller, 0.9f);
+
             Assert.That(controller.CurrentState, Is.EqualTo(EnemyStateMachine.EnemyState.Chase));
             Assert.That(controller.GetComponent<Rigidbody2D>().linearVelocity.x, Is.EqualTo(4f).Within(0.001f));
 
@@ -283,6 +311,25 @@ namespace Caretaker.Tests.Editor
             Assert.That(stateMachine.TickState(false, 0.1f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Search));
             Assert.That(stateMachine.TickState(false, 9.9f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Search));
             Assert.That(stateMachine.TickState(false, 0.2f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+        }
+
+        [Test]
+        public void EnemyStateMachine_ChasesAfterContinuousDetectionDelay()
+        {
+            EnemyStateMachine stateMachine = new();
+
+            Assert.That(
+                stateMachine.TickState(true, false, 0.5f, 10f, 1f),
+                Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+            Assert.That(
+                stateMachine.TickState(false, false, 0.1f, 10f, 1f),
+                Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+            Assert.That(
+                stateMachine.TickState(true, false, 0.9f, 10f, 1f),
+                Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+            Assert.That(
+                stateMachine.TickState(true, false, 0.1f, 10f, 1f),
+                Is.EqualTo(EnemyStateMachine.EnemyState.Chase));
         }
 
         [Test]
@@ -320,6 +367,28 @@ namespace Caretaker.Tests.Editor
             Assert.That(perception.EvaluateSight(new Vector2(6f, 0f), true), Is.False);
             Assert.That(perception.EvaluateSight(new Vector2(6f, 6f), false), Is.False);
 
+            Object.DestroyImmediate(perception.gameObject);
+        }
+
+        [Test]
+        public void EvaluateSight_DetectsTouchingPlayerOnlyInFront()
+        {
+            EnemyPerception2D perception = CreatePerception(CreateTuning(1f, 0f, 10f, 45f, 4f, 10f), 0);
+            perception.SetFacingDirection(Vector2.right);
+            GameObject player = new("Player");
+            BoxCollider2D playerCollider = player.AddComponent<BoxCollider2D>();
+
+            player.transform.position = Vector2.right;
+            Physics2D.SyncTransforms();
+
+            Assert.That(perception.EvaluateSight(player.transform.position, false, playerCollider), Is.True);
+
+            player.transform.position = Vector2.left;
+            Physics2D.SyncTransforms();
+
+            Assert.That(perception.EvaluateSight(player.transform.position, false, playerCollider), Is.False);
+
+            Object.DestroyImmediate(player);
             Object.DestroyImmediate(perception.gameObject);
         }
 
@@ -469,7 +538,8 @@ namespace Caretaker.Tests.Editor
             float sightDistance,
             float fovDegrees,
             float chaseSpeed,
-            float loseSightSeconds)
+            float loseSightSeconds,
+            float chaseStartDelaySeconds = 1f)
         {
             EnemyTuningSO tuning = ScriptableObject.CreateInstance<EnemyTuningSO>();
             SerializedObject serializedObject = new(tuning);
@@ -477,6 +547,7 @@ namespace Caretaker.Tests.Editor
             serializedObject.FindProperty("_patrolWaitTime").floatValue = patrolWaitTime;
             serializedObject.FindProperty("_sightDistance").floatValue = sightDistance;
             serializedObject.FindProperty("_fovDegrees").floatValue = fovDegrees;
+            serializedObject.FindProperty("_chaseStartDelaySeconds").floatValue = chaseStartDelaySeconds;
             serializedObject.FindProperty("_chaseSpeed").floatValue = chaseSpeed;
             serializedObject.FindProperty("_loseSightSeconds").floatValue = loseSightSeconds;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
@@ -493,6 +564,7 @@ namespace Caretaker.Tests.Editor
         private static EnemyPerception2D CreatePerception(EnemyTuningSO tuning, int obstructionLayerMask)
         {
             GameObject gameObject = new("EnemyPerception");
+            gameObject.AddComponent<BoxCollider2D>();
             EnemyPerception2D perception = gameObject.AddComponent<EnemyPerception2D>();
             SerializedObject serializedObject = new(perception);
             serializedObject.FindProperty("_tuning").objectReferenceValue = tuning;
@@ -548,6 +620,14 @@ namespace Caretaker.Tests.Editor
         {
             MethodInfo methodInfo = typeof(EnemyController).GetMethod("TickEnemy", INSTANCE_PRIVATE);
             methodInfo.Invoke(controller, new object[] { deltaTime });
+        }
+
+        private static Vector2 GetChaseTargetPosition(EnemyController controller)
+        {
+            MethodInfo methodInfo = typeof(EnemyController).GetMethod(
+                "GetChaseTargetPosition",
+                INSTANCE_PRIVATE);
+            return (Vector2)methodInfo.Invoke(controller, null);
         }
 
         private static void DestroyController(EnemyController controller)
