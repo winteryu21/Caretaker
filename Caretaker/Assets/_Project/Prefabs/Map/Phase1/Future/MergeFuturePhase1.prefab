@@ -538,6 +538,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4467836722238960590}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &6488571823047398219
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9180956520384246959}
+  m_Layer: 0
+  m_Name: Entrance
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9180956520384246959
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6488571823047398219}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -17.899994, y: -2.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5620392325207423037}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7267902394696708359
 GameObject:
   m_ObjectHideFlags: 0
@@ -1284,6 +1315,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6103046825915953179, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
+      propertyPath: _destination
+      value: 
+      objectReference: {fileID: 3602031986762218497}
     - target: {fileID: 6142262054488203889, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -1302,6 +1337,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5960343062852262617, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6498725252301163525}
+    - targetCorrespondingSourceObject: {fileID: 5960343062852262617, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9180956520384246959}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
 --- !u!4 &5620392325207423037 stripped
@@ -6520,7 +6558,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cf81ef0f4c4475e8eab6ba60319128c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.RoomTransitionOperateAction
-  _destination: {fileID: 0}
+  _destination: {fileID: 9180956520384246959}
   _targetRoomId: 
   _roomManager: {fileID: 0}
   _useScreenFade: 1
