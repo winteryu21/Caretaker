@@ -155,6 +155,30 @@ namespace Caretaker.Tests.Editor
         }
 
         [Test]
+        public void FlyingMode_ChasesAbovePlayerHead()
+        {
+            EnemyController controller = CreateController(
+                new Vector3(0f, 4f, 0f),
+                CreateTuning(2f, 0f),
+                FLYING_MOVEMENT_MODE_INDEX);
+            PlayerMotor2D player = CreatePlayer(new Vector3(3f, 0f, 0f));
+            controller.SetTargetPlayer(player);
+            Physics2D.SyncTransforms();
+
+            Collider2D playerCollider = player.GetComponent<Collider2D>();
+            Collider2D droneCollider = controller.GetComponent<Collider2D>();
+            Vector2 chaseTarget = GetChaseTargetPosition(controller);
+
+            Assert.That(chaseTarget.x, Is.EqualTo(playerCollider.bounds.center.x).Within(0.001f));
+            Assert.That(
+                chaseTarget.y,
+                Is.EqualTo(playerCollider.bounds.max.y + droneCollider.bounds.extents.y).Within(0.001f));
+
+            Object.DestroyImmediate(player.gameObject);
+            DestroyController(controller);
+        }
+
+        [Test]
         public void OnEnable_AssignsCurrentPlayerFromSpawnerInSameScene()
         {
             const string phaseSceneName = "Phase1_Past";
@@ -596,6 +620,14 @@ namespace Caretaker.Tests.Editor
         {
             MethodInfo methodInfo = typeof(EnemyController).GetMethod("TickEnemy", INSTANCE_PRIVATE);
             methodInfo.Invoke(controller, new object[] { deltaTime });
+        }
+
+        private static Vector2 GetChaseTargetPosition(EnemyController controller)
+        {
+            MethodInfo methodInfo = typeof(EnemyController).GetMethod(
+                "GetChaseTargetPosition",
+                INSTANCE_PRIVATE);
+            return (Vector2)methodInfo.Invoke(controller, null);
         }
 
         private static void DestroyController(EnemyController controller)

@@ -408,9 +408,24 @@ namespace Caretaker.Gameplay
                 return;
             }
 
-            Vector2 targetPosition = _targetPlayer.transform.position;
+            Vector2 targetPosition = GetChaseTargetPosition();
             _lastKnownPlayerPosition = targetPosition;
             MoveToward(targetPosition, deltaTime, Mathf.Max(0f, _tuning.ChaseSpeed));
+        }
+
+        private Vector2 GetChaseTargetPosition()
+        {
+            if (_movementMode != EnemyMovementMode.Flying ||
+                _targetCollider == null ||
+                _collider2D == null)
+            {
+                return _targetPlayer.transform.position;
+            }
+
+            Bounds playerBounds = _targetCollider.bounds;
+            return new Vector2(
+                playerBounds.center.x,
+                playerBounds.max.y + _collider2D.bounds.extents.y);
         }
 
         private void BeginSearch()
