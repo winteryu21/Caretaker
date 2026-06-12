@@ -135,7 +135,7 @@ namespace Caretaker.Tests.Editor
         }
 
         [Test]
-        public void PlayerMotor2D_ClampsCurrentPositionAtBounds()
+        public void PlayerMotor2D_SetHorizontalBounds_DoesNotTeleportCurrentPosition()
         {
             GameObject playerObject = new("Player");
 
@@ -148,11 +148,123 @@ namespace Caretaker.Tests.Editor
                 rigidbody2D.position = new Vector2(12f, 0f);
                 motor.SetHorizontalBounds(-3f, 5f);
 
-                Assert.That(rigidbody2D.position.x, Is.EqualTo(5f).Within(0.001f));
+                Assert.That(rigidbody2D.position.x, Is.EqualTo(12f).Within(0.001f));
             }
             finally
             {
                 Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
+        public void PlayerMotor2D_UsesFrictionlessColliderMaterial()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+                BoxCollider2D playerCollider = motor.GetComponent<BoxCollider2D>();
+
+                Assert.That(playerCollider.sharedMaterial, Is.Not.Null);
+                Assert.That(playerCollider.sharedMaterial.friction, Is.Zero);
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
+        public void PlayerMotor2D_AppliesRoundedBoxColliderEdges()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+                BoxCollider2D playerCollider = motor.GetComponent<BoxCollider2D>();
+
+                Assert.That(playerCollider.edgeRadius, Is.EqualTo(0.08f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
+        public void PlayerMotor2D_PreservesAirDecelerationBrieflyAfterLanding()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+                FieldInfo groundedField = typeof(PlayerMotor2D).GetField(
+                    "<IsGrounded>k__BackingField",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                FieldInfo landingMomentumField = typeof(PlayerMotor2D).GetField(
+                    "_landingMomentumTimeRemaining",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                MethodInfo accelerationMethod = typeof(PlayerMotor2D).GetMethod(
+                    "GetHorizontalAcceleration",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+
+                groundedField.SetValue(motor, true);
+                landingMomentumField.SetValue(motor, 0.1f);
+                float landingAcceleration = (float)accelerationMethod.Invoke(
+                    motor,
+                    new object[] { 5f, 0f });
+
+                landingMomentumField.SetValue(motor, 0f);
+                float groundedAcceleration = (float)accelerationMethod.Invoke(
+                    motor,
+                    new object[] { 5f, 0f });
+
+                Assert.That(landingAcceleration, Is.EqualTo(8f).Within(0.001f));
+                Assert.That(groundedAcceleration, Is.EqualTo(28f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [TestCase(TimelineRole.Past)]
+        [TestCase(TimelineRole.Future)]
+        public void TimelineCameraRig_ControlsOnlyCameraTimelinePlayerSpacing(TimelineRole cameraTimelineRole)
+        {
+            GameObject cameraObject = new("Camera");
+            GameObject pastPlayer = CreateMotorPlayer("PastPlayer", new Vector3(5f, 0f, 0f));
+            GameObject futurePlayer = CreateMotorPlayer("FuturePlayer", new Vector3(22f, 1000f, 0f));
+
+            try
+            {
+                TimelineCameraRig rig = cameraObject.AddComponent<TimelineCameraRig>();
+
+                rig.Configure(
+                    pastPlayer.transform,
+                    futurePlayer.transform,
+                    pastPlayer.transform,
+                    new Vector3(0f, 2f, -10f),
+                    true,
+                    3f,
+                    cameraTimelineRole,
+                    0f,
+                    20f);
+
+                PlayerMotor2D pastMotor = pastPlayer.GetComponent<PlayerMotor2D>();
+                PlayerMotor2D futureMotor = futurePlayer.GetComponent<PlayerMotor2D>();
+
+                Assert.That(HasHorizontalBounds(pastMotor), Is.EqualTo(cameraTimelineRole == TimelineRole.Past));
+                Assert.That(HasHorizontalBounds(futureMotor), Is.EqualTo(cameraTimelineRole == TimelineRole.Future));
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+                Object.DestroyImmediate(pastPlayer);
+                Object.DestroyImmediate(futurePlayer);
             }
         }
 
@@ -240,6 +352,25 @@ namespace Caretaker.Tests.Editor
 
             Assert.That(lateUpdate, Is.Not.Null);
             lateUpdate.Invoke(rig, null);
+        }
+
+        private static GameObject CreateMotorPlayer(string name, Vector3 position)
+        {
+            GameObject playerObject = new(name);
+            playerObject.transform.position = position;
+            playerObject.AddComponent<Rigidbody2D>();
+            playerObject.AddComponent<BoxCollider2D>();
+            playerObject.AddComponent<PlayerMotor2D>();
+            return playerObject;
+        }
+
+        private static bool HasHorizontalBounds(PlayerMotor2D motor)
+        {
+            FieldInfo hasBoundsField = typeof(PlayerMotor2D)
+                .GetField("_hasHorizontalBounds", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.That(hasBoundsField, Is.Not.Null);
+            return (bool)hasBoundsField.GetValue(motor);
         }
     }
 }

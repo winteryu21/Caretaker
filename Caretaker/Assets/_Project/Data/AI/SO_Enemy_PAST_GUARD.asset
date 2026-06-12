@@ -17,6 +17,7 @@ MonoBehaviour:
   _patrolWaitTime: 1
   _sightDistance: 10
   _fovDegrees: 45
+  _chaseStartDelaySeconds: 1
   _chaseSpeed: 5
   _loseSightSeconds: 10
   _alertDuration: 30

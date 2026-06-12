@@ -329,6 +329,7 @@ MonoBehaviour:
   _airAcceleration: 20
   _airDeceleration: 8
   _airTurnSpeed: 24
+  _landingMomentumDuration: 0.12
   _coyoteTimeDuration: 0.1
   _jumpBufferDuration: 0.1
   _jumpReleaseVelocityMultiplier: 0.5
@@ -336,6 +337,7 @@ MonoBehaviour:
   _jumpPeakGravityMultiplier: 2.4
   _jumpGravityRampDuration: 0.35
   _crouchColliderHeightScale: 0.6
+  _colliderEdgeRadius: 0.08
   _groundLayers:
     serializedVersion: 2
     m_Bits: 51

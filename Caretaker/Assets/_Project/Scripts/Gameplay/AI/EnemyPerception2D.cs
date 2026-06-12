@@ -12,6 +12,7 @@ namespace Caretaker.Gameplay
     public class EnemyPerception2D : MonoBehaviour
     {
         private const float CROUCH_DETECTION_RANGE_MULTIPLIER = 0.5f;
+        private const float CLOSE_DETECTION_DISTANCE = 0.05f;
         private const float MIN_FACING_SQR_MAGNITUDE = 0.0001f;
         private const string VISION_OBJECT_NAME = "VisionArea";
         private const string VISION_SHADER_NAME = "Sprites/Default";
@@ -32,6 +33,7 @@ namespace Caretaker.Gameplay
         private readonly RaycastHit2D[] _obstructionHits = new RaycastHit2D[8];
 
         private Vector2 _facingDirection = Vector2.right;
+        private Collider2D _selfCollider;
         private EnemyStateMachine.EnemyState _visionState = EnemyStateMachine.EnemyState.Patrol;
         private bool _isVisionDisplayEnabled = true;
         private GameObject _visionObject;
@@ -43,6 +45,7 @@ namespace Caretaker.Gameplay
 
         private void Awake()
         {
+            _selfCollider = GetComponent<Collider2D>();
             CreateVisionArea();
             RefreshVisionArea();
         }
@@ -159,7 +162,9 @@ namespace Caretaker.Gameplay
             Vector2 origin = (Vector2)transform.position + _eyeOffset;
             Vector2 toPlayer = playerPosition - origin;
             float distanceToPlayer = toPlayer.magnitude;
-            if (distanceToPlayer <= 0f)
+            if (distanceToPlayer <= 0f ||
+                (IsWithinCloseDetectionRange(ignoredCollider) &&
+                 Vector2.Dot(_facingDirection, toPlayer) >= 0f))
             {
                 return true;
             }
@@ -182,6 +187,20 @@ namespace Caretaker.Gameplay
             }
 
             return !IsSightObstructed(origin, toPlayer.normalized, distanceToPlayer, ignoredCollider);
+        }
+
+        private bool IsWithinCloseDetectionRange(Collider2D playerCollider)
+        {
+            if (_selfCollider == null ||
+                playerCollider == null ||
+                !_selfCollider.enabled ||
+                !playerCollider.enabled)
+            {
+                return false;
+            }
+
+            ColliderDistance2D colliderDistance = _selfCollider.Distance(playerCollider);
+            return colliderDistance.isOverlapped || colliderDistance.distance <= CLOSE_DETECTION_DISTANCE;
         }
 
         private bool IsSightObstructed(Vector2 origin, Vector2 direction, float distance, Collider2D ignoredCollider)

@@ -30,6 +30,7 @@ namespace Caretaker.Presentation
         [SerializeField] private Color _dividerColor = Color.black;
 
         private RemoteTimelineView _remoteTimelineView;
+        private LocalPlayerCameraFollow _mainCameraLocalFollow;
         private TimelineCameraRig _mainCameraRig;
         private GameObject _dividerCanvasObject;
         private RectTransform _dividerRect;
@@ -37,6 +38,8 @@ namespace Caretaker.Presentation
         private Transform _pastPlayer;
         private Transform _futurePlayer;
         private bool _futureSceneLoaded;
+        private bool _localCameraFollowWasEnabled;
+        private bool _localCameraFollowSuspended;
         private bool _pastSceneLoaded;
         private bool _isSplitViewActive;
 
@@ -122,6 +125,7 @@ namespace Caretaker.Presentation
             Vector3 localBasePosition = ResolveCameraBasePosition(localTemplate, localRole);
             Vector3 remoteBasePosition = ResolveCameraBasePosition(remoteTemplate, remoteRole);
 
+            SuspendLocalCameraFollow();
             _mainCamera.CopyFrom(localTemplate);
             _mainCamera.targetTexture = null;
             _mainCamera.rect = localViewport;
@@ -168,6 +172,7 @@ namespace Caretaker.Presentation
 
             _mainCameraRig?.StopFollowing();
             _remoteTimelineView?.Hide();
+            RestoreLocalCameraFollow();
             HideDivider();
             _isSplitViewActive = false;
             _pastSceneLoaded = false;
@@ -230,6 +235,7 @@ namespace Caretaker.Presentation
 
             _mainCameraRig?.StopFollowing();
             _remoteTimelineView?.Hide();
+            RestoreLocalCameraFollow();
             HideDivider();
             _isSplitViewActive = false;
         }
@@ -317,11 +323,16 @@ namespace Caretaker.Presentation
         {
             if (_mainCamera != null && _mainCameraRig == null)
             {
+                _mainCameraLocalFollow = _mainCamera.GetComponent<LocalPlayerCameraFollow>();
                 _mainCameraRig = _mainCamera.GetComponent<TimelineCameraRig>();
                 if (_mainCameraRig == null)
                 {
                     _mainCameraRig = _mainCamera.gameObject.AddComponent<TimelineCameraRig>();
                 }
+            }
+            else if (_mainCamera != null && _mainCameraLocalFollow == null)
+            {
+                _mainCameraLocalFollow = _mainCamera.GetComponent<LocalPlayerCameraFollow>();
             }
 
             if (_remoteTimelineView == null)
@@ -337,6 +348,29 @@ namespace Caretaker.Presentation
             }
 
             _remoteTimelineView.Initialize();
+        }
+
+        private void SuspendLocalCameraFollow()
+        {
+            if (_mainCameraLocalFollow == null || _localCameraFollowSuspended)
+            {
+                return;
+            }
+
+            _localCameraFollowWasEnabled = _mainCameraLocalFollow.enabled;
+            _mainCameraLocalFollow.enabled = false;
+            _localCameraFollowSuspended = true;
+        }
+
+        private void RestoreLocalCameraFollow()
+        {
+            if (_mainCameraLocalFollow == null || !_localCameraFollowSuspended)
+            {
+                return;
+            }
+
+            _mainCameraLocalFollow.enabled = _localCameraFollowWasEnabled;
+            _localCameraFollowSuspended = false;
         }
 
         private void EnsureDividerComponents()
