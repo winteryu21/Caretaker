@@ -12590,13 +12590,14 @@ GameObject:
   m_Component:
   - component: {fileID: 4312993631375134596}
   - component: {fileID: 3116480005713071463}
+  - component: {fileID: 866889262787469530}
   m_Layer: 0
   m_Name: CausalityPulseRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4312993631375134596
 RectTransform:
   m_ObjectHideFlags: 0
@@ -12630,9 +12631,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Presentation.CausalityIndicatorPresenter
   _root: {fileID: 8080577171196451567}
+  _canvasGroup: {fileID: 866889262787469530}
   _animator: {fileID: 0}
   _pulseTriggerName: Pulse
   _visibleSeconds: 1.5
+--- !u!225 &866889262787469530
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8080577171196451567}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &8145263685779299928
 GameObject:
   m_ObjectHideFlags: 0

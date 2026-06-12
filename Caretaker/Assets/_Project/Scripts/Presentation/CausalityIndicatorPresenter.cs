@@ -17,6 +17,7 @@ namespace Caretaker.Presentation
         private const float DEFAULT_VISIBLE_SECONDS = 1.5f;
 
         [SerializeField] private GameObject _root;
+        [SerializeField] private CanvasGroup _canvasGroup;
         [SerializeField] private Animator _animator;
         [SerializeField] private string _pulseTriggerName = "Pulse";
         [SerializeField] private float _visibleSeconds = DEFAULT_VISIBLE_SECONDS;
@@ -76,6 +77,11 @@ namespace Caretaker.Presentation
             {
                 _animator = GetComponentInChildren<Animator>(true);
             }
+
+            if (_canvasGroup == null && _root != null)
+            {
+                _canvasGroup = _root.GetComponent<CanvasGroup>();
+            }
         }
 
         private IEnumerator HideAfterDelay()
@@ -91,7 +97,14 @@ namespace Caretaker.Presentation
 
             if (_root != null)
             {
-                _root.SetActive(isVisible);
+                _root.SetActive(_canvasGroup != null || isVisible);
+            }
+
+            if (_canvasGroup != null)
+            {
+                _canvasGroup.alpha = isVisible ? 1f : 0f;
+                _canvasGroup.interactable = false;
+                _canvasGroup.blocksRaycasts = false;
             }
         }
     }
