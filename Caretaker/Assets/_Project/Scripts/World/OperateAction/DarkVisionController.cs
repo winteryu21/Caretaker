@@ -59,10 +59,19 @@ namespace Caretaker.World
         private static float _targetAlpha;
         private static bool _hasNormalCameraSize;
         private static bool _isRestricted;
+        private static DarkVisionController _effectOwner;
 
         private void Awake()
         {
             EnsureOperateInteractionType();
+        }
+
+        private void OnDestroy()
+        {
+            if (_effectOwner == this)
+            {
+                ClearEffectImmediately();
+            }
         }
 
         private void Reset()
@@ -127,6 +136,7 @@ namespace Caretaker.World
 
             _activeCamera = camera;
             _followTarget = followTarget;
+            _effectOwner = this;
             _isRestricted = restricted;
             _targetAlpha = restricted ? _darkness : 0f;
             _targetCameraSize = restricted ? _restrictedOrthographicSize : _normalCameraSize;
@@ -138,6 +148,47 @@ namespace Caretaker.World
             }
 
             return true;
+        }
+
+        private static void ClearEffectImmediately()
+        {
+            if (_activeCamera != null && _hasNormalCameraSize)
+            {
+                _activeCamera.orthographicSize = _normalCameraSize;
+            }
+
+            DestroyEffectObject(_fogOverlay);
+            DestroyEffectObject(_visionHole);
+
+            _fogOverlay = null;
+            _visionHole = null;
+            _fogRenderer = null;
+            _visionMask = null;
+            _activeCamera = null;
+            _followTarget = null;
+            _normalCameraSize = 0f;
+            _targetCameraSize = 0f;
+            _currentAlpha = 0f;
+            _targetAlpha = 0f;
+            _hasNormalCameraSize = false;
+            _isRestricted = false;
+            _effectOwner = null;
+        }
+
+        private static void DestroyEffectObject(GameObject effectObject)
+        {
+            if (effectObject == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(effectObject);
+                return;
+            }
+
+            DestroyImmediate(effectObject);
         }
 
         private void TickEffect(float deltaTime)
