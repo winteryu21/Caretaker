@@ -59,6 +59,11 @@ namespace Caretaker.Presentation
             float pastProgressOriginX = 0f,
             float futureProgressOriginX = 0f)
         {
+            if (_controlsPlayerSpacing)
+            {
+                ClearPlayerSpacingBounds();
+            }
+
             _pastPlayer = pastPlayer;
             _futurePlayer = futurePlayer;
             _verticalFollowTarget = verticalFollowTarget;
@@ -82,8 +87,7 @@ namespace Caretaker.Presentation
         {
             if (_controlsPlayerSpacing)
             {
-                _pastMotor?.ClearHorizontalBounds();
-                _futureMotor?.ClearHorizontalBounds();
+                ClearPlayerSpacingBounds();
             }
 
             _isFollowing = false;
@@ -155,21 +159,43 @@ namespace Caretaker.Presentation
             {
                 float pastProgressX = ResolvePlayerProgressX(_pastPlayer, TimelineRole.Past);
                 float futureProgressX = ResolvePlayerProgressX(_futurePlayer, TimelineRole.Future);
-                _pastMotor?.SetHorizontalBounds(
-                    ResolveTimelineWorldX(TimelineRole.Past, futureProgressX - _maximumPlayerSeparation),
-                    ResolveTimelineWorldX(TimelineRole.Past, futureProgressX + _maximumPlayerSeparation));
-                _futureMotor?.SetHorizontalBounds(
-                    ResolveTimelineWorldX(TimelineRole.Future, pastProgressX - _maximumPlayerSeparation),
-                    ResolveTimelineWorldX(TimelineRole.Future, pastProgressX + _maximumPlayerSeparation));
+                if (_cameraTimelineRole == TimelineRole.Past)
+                {
+                    SetTimelineBounds(_pastMotor, TimelineRole.Past, futureProgressX);
+                }
+                else if (_cameraTimelineRole == TimelineRole.Future)
+                {
+                    SetTimelineBounds(_futureMotor, TimelineRole.Future, pastProgressX);
+                }
+
                 return;
             }
 
-            _pastMotor?.SetHorizontalBounds(
-                _futurePlayer.position.x - _maximumPlayerSeparation,
-                _futurePlayer.position.x + _maximumPlayerSeparation);
-            _futureMotor?.SetHorizontalBounds(
-                _pastPlayer.position.x - _maximumPlayerSeparation,
-                _pastPlayer.position.x + _maximumPlayerSeparation);
+            if (_cameraTimelineRole == TimelineRole.Past)
+            {
+                _pastMotor?.SetHorizontalBounds(
+                    _futurePlayer.position.x - _maximumPlayerSeparation,
+                    _futurePlayer.position.x + _maximumPlayerSeparation);
+            }
+            else if (_cameraTimelineRole == TimelineRole.Future)
+            {
+                _futureMotor?.SetHorizontalBounds(
+                    _pastPlayer.position.x - _maximumPlayerSeparation,
+                    _pastPlayer.position.x + _maximumPlayerSeparation);
+            }
+        }
+
+        private void SetTimelineBounds(PlayerMotor2D motor, TimelineRole timelineRole, float peerProgressX)
+        {
+            motor?.SetHorizontalBounds(
+                ResolveTimelineWorldX(timelineRole, peerProgressX - _maximumPlayerSeparation),
+                ResolveTimelineWorldX(timelineRole, peerProgressX + _maximumPlayerSeparation));
+        }
+
+        private void ClearPlayerSpacingBounds()
+        {
+            _pastMotor?.ClearHorizontalBounds();
+            _futureMotor?.ClearHorizontalBounds();
         }
 
         private bool UsesTimelineProgress()
