@@ -156,6 +156,81 @@ namespace Caretaker.Tests.Editor
             }
         }
 
+        [Test]
+        public void PlayerMotor2D_UsesFrictionlessColliderMaterial()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+                BoxCollider2D playerCollider = motor.GetComponent<BoxCollider2D>();
+
+                Assert.That(playerCollider.sharedMaterial, Is.Not.Null);
+                Assert.That(playerCollider.sharedMaterial.friction, Is.Zero);
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
+        public void PlayerMotor2D_AppliesRoundedBoxColliderEdges()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+                BoxCollider2D playerCollider = motor.GetComponent<BoxCollider2D>();
+
+                Assert.That(playerCollider.edgeRadius, Is.EqualTo(0.08f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
+        public void PlayerMotor2D_PreservesAirDecelerationBrieflyAfterLanding()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+                FieldInfo groundedField = typeof(PlayerMotor2D).GetField(
+                    "<IsGrounded>k__BackingField",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                FieldInfo landingMomentumField = typeof(PlayerMotor2D).GetField(
+                    "_landingMomentumTimeRemaining",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                MethodInfo accelerationMethod = typeof(PlayerMotor2D).GetMethod(
+                    "GetHorizontalAcceleration",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+
+                groundedField.SetValue(motor, true);
+                landingMomentumField.SetValue(motor, 0.1f);
+                float landingAcceleration = (float)accelerationMethod.Invoke(
+                    motor,
+                    new object[] { 5f, 0f });
+
+                landingMomentumField.SetValue(motor, 0f);
+                float groundedAcceleration = (float)accelerationMethod.Invoke(
+                    motor,
+                    new object[] { 5f, 0f });
+
+                Assert.That(landingAcceleration, Is.EqualTo(8f).Within(0.001f));
+                Assert.That(groundedAcceleration, Is.EqualTo(28f).Within(0.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
         [TestCase(TimelineRole.Past)]
         [TestCase(TimelineRole.Future)]
         public void TimelineCameraRig_ControlsOnlyCameraTimelinePlayerSpacing(TimelineRole cameraTimelineRole)

@@ -63,6 +63,11 @@ namespace Caretaker.Presentation
                 _panelRoot = gameObject;
             }
 
+            if (_solvedTrigger == null)
+            {
+                _solvedTrigger = GetComponent<CausalTrigger>();
+            }
+
             IsOpen = _panelRoot.activeSelf;
         }
 
@@ -177,11 +182,43 @@ namespace Caretaker.Presentation
         {
             IsSolved = true;
 
-            ApplySolvedCondition();
-            FireSolvedTrigger();
+            if (!TrySubmitSolvedPuzzleTrigger())
+            {
+                ApplySolvedCondition();
+                FireSolvedTrigger();
+            }
 
             OnPuzzleSolved?.Invoke(this);
             HandleSolved();
+        }
+
+        private bool TrySubmitSolvedPuzzleTrigger()
+        {
+            if (_solvedTrigger == null || string.IsNullOrWhiteSpace(_solvedConditionKey))
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(_solvedTrigger.TriggerId))
+            {
+                return false;
+            }
+
+            if (_causalityManager == null)
+            {
+                _causalityManager = FindAnyObjectByType<CausalityManager>();
+            }
+
+            if (_causalityManager == null)
+            {
+                return false;
+            }
+
+            _causalityManager.SubmitPuzzleSolvedTrigger(
+                _solvedTrigger.TriggerId,
+                _solvedConditionKey,
+                _solvedConditionValue);
+            return true;
         }
 
         private void ApplySolvedCondition()

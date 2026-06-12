@@ -1156,6 +1156,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7461717613579751393}
   - component: {fileID: 5456173967800558223}
+  - component: {fileID: 4456532720342461178}
   m_Layer: 5
   m_Name: BlueprintPuzzlePanel
   m_TagString: Untagged
@@ -1197,9 +1198,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Presentation.BlueprintSelectionPuzzleUI
   _panelRoot: {fileID: 0}
   _causalityManager: {fileID: 0}
-  _solvedTrigger: {fileID: 0}
-  _solvedConditionKey: 
-  _solvedConditionValue: 
+  _solvedTrigger: {fileID: 4456532720342461178}
+  _solvedConditionKey: blueprintSelection
+  _solvedConditionValue: Correct
   _correctOptionA: 1
   _correctOptionB: 5
   _optionButtons:
@@ -1216,6 +1217,20 @@ MonoBehaviour:
   _normalColor: {r: 0.003921569, g: 0.003921569, b: 0.003921569, a: 0}
   _selectedColor: {r: 0.3921569, g: 0.5843138, b: 0.9294118, a: 0.11764706}
   _closeOnSolved: 1
+--- !u!114 &4456532720342461178
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6315449502112272938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c61d884c68b533649be48979870cdb0a, type: 3}
+  m_Name: ""
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.CausalTrigger
+  _causalRule: {fileID: 11400000, guid: b5bf582d8bc734649bcf90bcb1b51fda, type: 2}
+  _triggerId: CR_P2_BLUEPRINT_ID
 --- !u!1 &6544234333321880669
 GameObject:
   m_ObjectHideFlags: 0

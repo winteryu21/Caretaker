@@ -215,6 +215,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6420986099650447466}
   - component: {fileID: 6601524977860039242}
+  - component: {fileID: 3971851032209616911}
   m_Layer: 0
   m_Name: TileGroup1
   m_TagString: Untagged
@@ -264,14 +265,11 @@ MonoBehaviour:
   _receiverId: RCV_TILE_1
   _onActivated:
     m_PersistentCalls:
-      m_Calls: []
-  _onDeactivated:
-    m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1232416479322462444}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 3971851032209616911}
+        m_TargetAssemblyTypeName: SquentialDrop, Assembly-CSharp
+        m_MethodName: StartFalling
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -280,10 +278,28 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  _onDeactivated:
+    m_PersistentCalls:
+      m_Calls: []
   _debugColorFeedback: 1
   _showSuccessEffect: 1
   _successEffectColor: {r: 0.2, g: 1, b: 0.85, a: 1}
   _successEffectScale: 1
+--- !u!114 &3971851032209616911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1232416479322462444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: baae76bb4c4cfc04398c8d9b28d8b554, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SquentialDrop
+  fallDistance: 3
+  fallSpeed: 5
+  delayBetweenBlocks: 0.2
 --- !u!1 &3017213004416961583
 GameObject:
   m_ObjectHideFlags: 0
