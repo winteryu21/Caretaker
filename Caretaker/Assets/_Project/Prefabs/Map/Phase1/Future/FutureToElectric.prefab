@@ -29737,13 +29737,47 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5272162417334746285, guid: 581131ad26067884cb9eebca192dfb37, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5329616232094040064}
   m_SourcePrefab: {fileID: 100100000, guid: 581131ad26067884cb9eebca192dfb37, type: 3}
 --- !u!4 &4941221249393974719 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7839891793369355635, guid: 581131ad26067884cb9eebca192dfb37, type: 3}
   m_PrefabInstance: {fileID: 2908861947409238220}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &7022274340294784097 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5272162417334746285, guid: 581131ad26067884cb9eebca192dfb37, type: 3}
+  m_PrefabInstance: {fileID: 2908861947409238220}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5329616232094040064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7022274340294784097}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3707e39893c2f048b08091a18cb0553, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.DarkVisionController
+  _mode: 1
+  _visionRadius: 2.5
+  _visionCenterOffset: {x: 0, y: 0.75}
+  _darkness: 0.85
+  _transitionSpeed: 5
+  _targetCamera: {fileID: 0}
+  _captureCurrentSizeAsNormal: 1
+  _normalOrthographicSize: 5
+  _restrictedOrthographicSize: 3
+  _zoomSpeed: 4
+  _sortingLayerName: Default
+  _fogSortingOrder: 1000
+  _fogWorldSize: {x: 200, y: 200}
+  _effectZ: 0
 --- !u!1001 &3891514714546591343
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -29897,6 +29931,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.DarkVisionController
   _mode: 1
   _visionRadius: 2.5
+  _visionCenterOffset: {x: 0, y: 0.75}
   _darkness: 0.85
   _transitionSpeed: 5
   _targetCamera: {fileID: 0}
