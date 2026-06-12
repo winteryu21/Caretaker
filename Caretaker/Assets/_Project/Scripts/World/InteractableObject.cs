@@ -105,7 +105,7 @@ namespace Caretaker.World
 
         private void Awake()
         {
-            _cachedCollider2D = GetComponent<Collider2D>();
+            _cachedCollider2D = GetComponent<CircleCollider2D>();
             _causalTrigger = GetComponent<CausalTrigger>();
             RefreshOperateActions();
             CacheFallbackGlowRenderers();
@@ -298,7 +298,7 @@ namespace Caretaker.World
         {
             if (_cachedCollider2D == null)
             {
-                _cachedCollider2D = GetComponent<Collider2D>();
+                _cachedCollider2D = GetComponent<CircleCollider2D>();
             }
 
             if (_cachedCollider2D != null)
