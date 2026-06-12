@@ -51,6 +51,7 @@ public class PlayerMotor2D : MonoBehaviour
 
     private BoxCollider2D _boxCollider;
     private Rigidbody2D _rigidbody2D;
+    private PhysicsMaterial2D _frictionlessMaterial;
 
     private float _coyoteTimeRemaining;
     private float _horizontalMaximumX;
@@ -138,6 +139,7 @@ public class PlayerMotor2D : MonoBehaviour
         _boxCollider = GetComponent<BoxCollider2D>();
         _rigidbody2D = GetComponent<Rigidbody2D>();
 
+        ConfigureColliderMaterial();
         ConfigureRigidbodyConstraints();
         CacheColliderState();
         IsGrounded = PerformGroundCheck();
@@ -150,6 +152,27 @@ public class PlayerMotor2D : MonoBehaviour
     private void OnValidate()
     {
         ConfigureRigidbodyConstraints();
+    }
+
+    private void OnDestroy()
+    {
+        if (_frictionlessMaterial == null)
+        {
+            return;
+        }
+
+        if (_boxCollider != null && _boxCollider.sharedMaterial == _frictionlessMaterial)
+        {
+            _boxCollider.sharedMaterial = null;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(_frictionlessMaterial);
+            return;
+        }
+
+        DestroyImmediate(_frictionlessMaterial);
     }
 
     /// <summary>
@@ -473,5 +496,20 @@ public class PlayerMotor2D : MonoBehaviour
                 ? RigidbodyInterpolation2D.Interpolate
                 : RigidbodyInterpolation2D.None;
         }
+    }
+
+    private void ConfigureColliderMaterial()
+    {
+        if (_boxCollider == null)
+        {
+            return;
+        }
+
+        _frictionlessMaterial = new PhysicsMaterial2D($"{name}_Frictionless")
+        {
+            friction = 0f,
+            bounciness = 0f
+        };
+        _boxCollider.sharedMaterial = _frictionlessMaterial;
     }
 }

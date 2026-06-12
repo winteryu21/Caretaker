@@ -156,6 +156,25 @@ namespace Caretaker.Tests.Editor
             }
         }
 
+        [Test]
+        public void PlayerMotor2D_UsesFrictionlessColliderMaterial()
+        {
+            GameObject playerObject = new("Player");
+
+            try
+            {
+                PlayerMotor2D motor = playerObject.AddComponent<PlayerMotor2D>();
+                BoxCollider2D playerCollider = motor.GetComponent<BoxCollider2D>();
+
+                Assert.That(playerCollider.sharedMaterial, Is.Not.Null);
+                Assert.That(playerCollider.sharedMaterial.friction, Is.Zero);
+            }
+            finally
+            {
+                Object.DestroyImmediate(playerObject);
+            }
+        }
+
         [TestCase(TimelineRole.Past)]
         [TestCase(TimelineRole.Future)]
         public void TimelineCameraRig_ControlsOnlyCameraTimelinePlayerSpacing(TimelineRole cameraTimelineRole)
