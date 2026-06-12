@@ -1197,6 +1197,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6864131742020002194, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -18.67
+      objectReference: {fileID: 0}
     - target: {fileID: 223301720499066700, guid: ef44ec442a2722f438a7c97534edc2b8, type: 3}
       propertyPath: _examineText
       value: "\uC804\uAE30\uC2E4\uC758 \uD575\uC2EC \uCF54\uC5B4\uC778 \uAC83 \uAC19\uB2E4."
@@ -1210,6 +1214,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
+--- !u!4 &4614652597637333878 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6864131742020002194, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
+  m_PrefabInstance: {fileID: 2254264253346489060}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &5620392325207423037 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5960343062852262617, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
@@ -6426,9 +6435,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cf81ef0f4c4475e8eab6ba60319128c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.RoomTransitionOperateAction
-  _destination: {fileID: 0}
+  _destination: {fileID: 4614652597637333878}
   _targetRoomId: 
-  _roomManager: {fileID: 0}
+  _roomManager: {fileID: 341746609957106391, guid: e383e0009d8698142b958dd73aa2506d, type: 3}
   _useScreenFade: 1
   _fadeOutSeconds: 0.1
   _fadeHoldSeconds: 0.04

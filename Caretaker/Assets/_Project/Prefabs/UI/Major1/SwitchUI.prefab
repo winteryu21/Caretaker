@@ -414,6 +414,9 @@ GameObject:
   - component: {fileID: 5131495494692662155}
   - component: {fileID: 1517503275032847071}
   - component: {fileID: 4019683223590411737}
+  - component: {fileID: 9085136332187298930}
+  - component: {fileID: -3845886943899526128}
+  - component: {fileID: 1859349463046676408}
   m_Layer: 5
   m_Name: SwitchUI
   m_TagString: Untagged
@@ -504,6 +507,94 @@ MonoBehaviour:
   _switchImage2: {fileID: 4681087455312025082}
   _offSprite: {fileID: -8163277379077224856, guid: 298154339606aa5449c249aa83e94941, type: 3}
   _onSprite: {fileID: -6323927577793927498, guid: c55493a4d9d6c4f4c8a7b23e6a2c5855, type: 3}
+--- !u!114 &9085136332187298930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6142262054488203889}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41e65a96005d02f43aacb35528ee1018, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.CausalReceiver
+  _causalRule: {fileID: 11400000, guid: e0b213e9a57aa084d8bf608c212a661d, type: 2}
+  _receiverEffectIndex: 0
+  _receiverId: RCV_P1_BREAKER_PANEL
+  _onActivated:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: -3845886943899526128}
+        m_TargetAssemblyTypeName: Caretaker.Presentation.M1PowerController, Assembly-CSharp
+        m_MethodName: MarkPastCircuitSolved
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  _onDeactivated:
+    m_PersistentCalls:
+      m_Calls: []
+  _debugColorFeedback: 1
+  _showSuccessEffect: 1
+  _successEffectColor: {r: 0.2, g: 1, b: 0.85, a: 1}
+  _successEffectScale: 1
+--- !u!114 &-3845886943899526128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6142262054488203889}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26d823d0edc261746a26b6aa4e0135e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Caretaker.Presentation.M1PowerController
+  _causalityManager: {fileID: 0}
+  _powerRestoredTrigger: {fileID: 0}
+  _darkVisionReleaseController: {fileID: 0}
+  _onPastCircuitSolved:
+    m_PersistentCalls:
+      m_Calls: []
+  _onBatteryInserted:
+    m_PersistentCalls:
+      m_Calls: []
+  _onCableConnected:
+    m_PersistentCalls:
+      m_Calls: []
+  _onPowerRestored:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!223 &1859349463046676408
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6142262054488203889}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 0
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
+  m_TargetDisplay: 0
 --- !u!1 &8347991619154056229
 GameObject:
   m_ObjectHideFlags: 0
