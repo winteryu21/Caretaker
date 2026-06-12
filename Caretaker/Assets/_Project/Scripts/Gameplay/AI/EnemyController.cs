@@ -261,7 +261,8 @@ namespace Caretaker.Gameplay
                 canSeePlayer,
                 _roomAlertState == AlertState.Alert,
                 deltaTime,
-                GetSearchDuration());
+                GetSearchDuration(),
+                GetChaseStartDelay());
 
             if (state != previousState && _perception != null)
             {
@@ -407,9 +408,24 @@ namespace Caretaker.Gameplay
                 return;
             }
 
-            Vector2 targetPosition = _targetPlayer.transform.position;
+            Vector2 targetPosition = GetChaseTargetPosition();
             _lastKnownPlayerPosition = targetPosition;
             MoveToward(targetPosition, deltaTime, Mathf.Max(0f, _tuning.ChaseSpeed));
+        }
+
+        private Vector2 GetChaseTargetPosition()
+        {
+            if (_movementMode != EnemyMovementMode.Flying ||
+                _targetCollider == null ||
+                _collider2D == null)
+            {
+                return _targetPlayer.transform.position;
+            }
+
+            Bounds playerBounds = _targetCollider.bounds;
+            return new Vector2(
+                playerBounds.center.x,
+                playerBounds.max.y + _collider2D.bounds.extents.y);
         }
 
         private void BeginSearch()
@@ -732,6 +748,11 @@ namespace Caretaker.Gameplay
         private float GetSearchDuration()
         {
             return _tuning != null ? Mathf.Max(0f, _tuning.LoseSightSeconds) : 0f;
+        }
+
+        private float GetChaseStartDelay()
+        {
+            return _tuning != null ? Mathf.Max(0f, _tuning.ChaseStartDelaySeconds) : 0f;
         }
 
         private void CacheTargetCollider()
