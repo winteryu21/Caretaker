@@ -14,6 +14,7 @@ namespace Caretaker.Gameplay
         [SerializeField] private float _patrolWaitTime = 1f;
         [SerializeField] private float _sightDistance = 10f;
         [SerializeField] private float _fovDegrees = 45f;
+        [SerializeField] [Min(0f)] private float _chaseStartDelaySeconds = 1f;
         [SerializeField] private float _chaseSpeed = 5f;
         [SerializeField] private float _loseSightSeconds = 10f;
         [SerializeField] private float _alertDuration = 30f;
@@ -32,6 +33,9 @@ namespace Caretaker.Gameplay
 
         /// <summary>시야각 (degrees).</summary>
         public float FovDegrees => _fovDegrees;
+
+        /// <summary>플레이어를 연속 감지한 뒤 추격을 시작하기까지의 시간 (seconds).</summary>
+        public float ChaseStartDelaySeconds => _chaseStartDelaySeconds;
 
         /// <summary>추적 이동 속도 (units/sec).</summary>
         public float ChaseSpeed => _chaseSpeed;

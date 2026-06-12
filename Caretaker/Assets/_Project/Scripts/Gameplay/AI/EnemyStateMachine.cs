@@ -29,6 +29,8 @@ namespace Caretaker.Gameplay
         /// </summary>
         public float SearchTimeRemaining { get; private set; }
 
+        private float _playerVisibleTime;
+
         /// <summary>
         /// 상태 머신을 Patrol 상태로 초기화한다.
         /// </summary>
@@ -36,6 +38,7 @@ namespace Caretaker.Gameplay
         {
             CurrentState = EnemyState.Patrol;
             SearchTimeRemaining = 0f;
+            _playerVisibleTime = 0f;
         }
 
         /// <summary>
@@ -60,12 +63,47 @@ namespace Caretaker.Gameplay
         /// <returns>갱신된 적 상태.</returns>
         public EnemyState TickState(bool canSeePlayer, bool hasRoomAlert, float deltaTime, float searchDuration)
         {
+            return TickState(canSeePlayer, hasRoomAlert, deltaTime, searchDuration, 0f);
+        }
+
+        /// <summary>
+        /// 감지 결과와 연속 감지 시간을 기반으로 상태 머신을 진행한다.
+        /// </summary>
+        /// <param name="canSeePlayer">현재 적이 플레이어를 볼 수 있는지 여부.</param>
+        /// <param name="hasRoomAlert">적이 속한 방에 경보가 활성화되어 있는지 여부.</param>
+        /// <param name="deltaTime">초 단위 경과 시간.</param>
+        /// <param name="searchDuration">시야 이탈 후 탐색 지속 시간.</param>
+        /// <param name="chaseStartDelay">추격 전환에 필요한 연속 감지 시간.</param>
+        /// <returns>갱신된 적 상태.</returns>
+        public EnemyState TickState(
+            bool canSeePlayer,
+            bool hasRoomAlert,
+            float deltaTime,
+            float searchDuration,
+            float chaseStartDelay)
+        {
             if (canSeePlayer)
             {
-                CurrentState = EnemyState.Chase;
-                SearchTimeRemaining = 0f;
+                if (CurrentState == EnemyState.Chase)
+                {
+                    return CurrentState;
+                }
+
+                _playerVisibleTime += deltaTime;
+                if (_playerVisibleTime >= chaseStartDelay)
+                {
+                    CurrentState = EnemyState.Chase;
+                    SearchTimeRemaining = 0f;
+                }
+                else if (hasRoomAlert && CurrentState == EnemyState.Patrol)
+                {
+                    CurrentState = EnemyState.Alert;
+                }
+
                 return CurrentState;
             }
+
+            _playerVisibleTime = 0f;
 
             if (hasRoomAlert && CurrentState != EnemyState.Chase && CurrentState != EnemyState.Search)
             {
