@@ -347,6 +347,28 @@ namespace Caretaker.Tests.Editor
         }
 
         [Test]
+        public void EvaluateSight_DetectsTouchingPlayerOnlyInFront()
+        {
+            EnemyPerception2D perception = CreatePerception(CreateTuning(1f, 0f, 10f, 45f, 4f, 10f), 0);
+            perception.SetFacingDirection(Vector2.right);
+            GameObject player = new("Player");
+            BoxCollider2D playerCollider = player.AddComponent<BoxCollider2D>();
+
+            player.transform.position = Vector2.right;
+            Physics2D.SyncTransforms();
+
+            Assert.That(perception.EvaluateSight(player.transform.position, false, playerCollider), Is.True);
+
+            player.transform.position = Vector2.left;
+            Physics2D.SyncTransforms();
+
+            Assert.That(perception.EvaluateSight(player.transform.position, false, playerCollider), Is.False);
+
+            Object.DestroyImmediate(player);
+            Object.DestroyImmediate(perception.gameObject);
+        }
+
+        [Test]
         public void EvaluateSight_ReturnsFalseWhenObstacleBlocksRaycast()
         {
             EnemyPerception2D perception = CreatePerception(CreateTuning(1f, 0f, 10f, 45f, 4f, 10f), 1);
@@ -518,6 +540,7 @@ namespace Caretaker.Tests.Editor
         private static EnemyPerception2D CreatePerception(EnemyTuningSO tuning, int obstructionLayerMask)
         {
             GameObject gameObject = new("EnemyPerception");
+            gameObject.AddComponent<BoxCollider2D>();
             EnemyPerception2D perception = gameObject.AddComponent<EnemyPerception2D>();
             SerializedObject serializedObject = new(perception);
             serializedObject.FindProperty("_tuning").objectReferenceValue = tuning;
