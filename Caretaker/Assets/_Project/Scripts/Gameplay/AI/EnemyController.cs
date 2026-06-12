@@ -261,7 +261,8 @@ namespace Caretaker.Gameplay
                 canSeePlayer,
                 _roomAlertState == AlertState.Alert,
                 deltaTime,
-                GetSearchDuration());
+                GetSearchDuration(),
+                GetChaseStartDelay());
 
             if (state != previousState && _perception != null)
             {
@@ -732,6 +733,11 @@ namespace Caretaker.Gameplay
         private float GetSearchDuration()
         {
             return _tuning != null ? Mathf.Max(0f, _tuning.LoseSightSeconds) : 0f;
+        }
+
+        private float GetChaseStartDelay()
+        {
+            return _tuning != null ? Mathf.Max(0f, _tuning.ChaseStartDelaySeconds) : 0f;
         }
 
         private void CacheTargetCollider()

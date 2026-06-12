@@ -257,6 +257,10 @@ namespace Caretaker.Tests.Editor
 
             TickEnemy(controller, 0.1f);
 
+            Assert.That(controller.CurrentState, Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+
+            TickEnemy(controller, 0.9f);
+
             Assert.That(controller.CurrentState, Is.EqualTo(EnemyStateMachine.EnemyState.Chase));
             Assert.That(controller.GetComponent<Rigidbody2D>().linearVelocity.x, Is.EqualTo(4f).Within(0.001f));
 
@@ -283,6 +287,25 @@ namespace Caretaker.Tests.Editor
             Assert.That(stateMachine.TickState(false, 0.1f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Search));
             Assert.That(stateMachine.TickState(false, 9.9f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Search));
             Assert.That(stateMachine.TickState(false, 0.2f, 10f), Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+        }
+
+        [Test]
+        public void EnemyStateMachine_ChasesAfterContinuousDetectionDelay()
+        {
+            EnemyStateMachine stateMachine = new();
+
+            Assert.That(
+                stateMachine.TickState(true, false, 0.5f, 10f, 1f),
+                Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+            Assert.That(
+                stateMachine.TickState(false, false, 0.1f, 10f, 1f),
+                Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+            Assert.That(
+                stateMachine.TickState(true, false, 0.9f, 10f, 1f),
+                Is.EqualTo(EnemyStateMachine.EnemyState.Patrol));
+            Assert.That(
+                stateMachine.TickState(true, false, 0.1f, 10f, 1f),
+                Is.EqualTo(EnemyStateMachine.EnemyState.Chase));
         }
 
         [Test]
@@ -469,7 +492,8 @@ namespace Caretaker.Tests.Editor
             float sightDistance,
             float fovDegrees,
             float chaseSpeed,
-            float loseSightSeconds)
+            float loseSightSeconds,
+            float chaseStartDelaySeconds = 1f)
         {
             EnemyTuningSO tuning = ScriptableObject.CreateInstance<EnemyTuningSO>();
             SerializedObject serializedObject = new(tuning);
@@ -477,6 +501,7 @@ namespace Caretaker.Tests.Editor
             serializedObject.FindProperty("_patrolWaitTime").floatValue = patrolWaitTime;
             serializedObject.FindProperty("_sightDistance").floatValue = sightDistance;
             serializedObject.FindProperty("_fovDegrees").floatValue = fovDegrees;
+            serializedObject.FindProperty("_chaseStartDelaySeconds").floatValue = chaseStartDelaySeconds;
             serializedObject.FindProperty("_chaseSpeed").floatValue = chaseSpeed;
             serializedObject.FindProperty("_loseSightSeconds").floatValue = loseSightSeconds;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
