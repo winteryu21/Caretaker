@@ -563,7 +563,7 @@ Transform:
   m_GameObject: {fileID: 6488571823047398219}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -17.899994, y: -2.5, z: 0}
+  m_LocalPosition: {x: -15.76, y: -1.14, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1346,11 +1346,6 @@ PrefabInstance:
       addedObject: {fileID: 9180956520384246959}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
---- !u!4 &4614652597637333878 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6864131742020002194, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
-  m_PrefabInstance: {fileID: 2254264253346489060}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &5620392325207423037 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5960343062852262617, guid: 7a9c38d21959e5945a985c102ab0e1cd, type: 3}
@@ -6567,7 +6562,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cf81ef0f4c4475e8eab6ba60319128c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Caretaker.World.RoomTransitionOperateAction
-  _destination: {fileID: 4614652597637333878}
+  _destination: {fileID: 9180956520384246959}
   _targetRoomId: 
   _roomManager: {fileID: 341746609957106391, guid: e383e0009d8698142b958dd73aa2506d, type: 3}
   _useScreenFade: 1
