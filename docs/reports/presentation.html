@@ -1,0 +1,1316 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caretaker — 중간 발표</title>
+  <meta name="description" content="시간 인과율 기반 2인 비대칭 협동 퍼즐 어드벤처 졸업 프로젝트 중간 발표">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ===== Reset & Base ===== */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #09090b;
+      --bg-card: #131316;
+      --bg-card-hover: #1a1a1f;
+      --border: #222228;
+      --border-light: #2a2a32;
+      --text: #ececf0;
+      --text-muted: #6e6e80;
+      --text-dim: #4a4a58;
+      --teal: #2dd4a8;
+      --teal-dim: rgba(45, 212, 168, 0.10);
+      --cyan: #06b6d4;
+      --cyan-dim: rgba(6, 182, 212, 0.10);
+      --cyan-text: #22d3ee;
+      --rose: #f97583;
+      --yellow: #e3b341;
+      --font-sans: 'Inter', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+      --slide-max-w: 1400px;
+      --transition: 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 22px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Slide Container ===== */
+    .deck {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 50px 100px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(12px);
+      transition: opacity var(--transition), transform var(--transition), visibility 0s 0.4s;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      transition: opacity var(--transition), transform var(--transition), visibility 0s 0s;
+    }
+
+    .slide-inner {
+      width: 100%;
+      max-width: var(--slide-max-w);
+    }
+
+    /* ===== Typography ===== */
+    h1 {
+      font-size: 3.2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.5em;
+    }
+
+    h2 {
+      font-size: 2.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      margin-bottom: 0.6em;
+      color: var(--text);
+    }
+
+    h2::after {
+      content: '';
+      display: block;
+      width: 50px;
+      height: 3px;
+      background: var(--cyan);
+      margin-top: 12px;
+      border-radius: 1px;
+    }
+
+    h3 {
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.4em;
+    }
+
+    p {
+      margin-bottom: 0.8em;
+      color: var(--text);
+    }
+
+    .muted {
+      color: var(--text-muted);
+    }
+
+    .dim {
+      color: var(--text-dim);
+    }
+
+    .accent {
+      color: var(--cyan-text);
+    }
+
+    .teal {
+      color: var(--teal);
+    }
+
+    .rose {
+      color: var(--rose);
+    }
+
+    .yellow {
+      color: var(--yellow);
+    }
+
+    strong {
+      font-weight: 600;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--cyan-text);
+    }
+
+    small {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* ===== Title Slide ===== */
+    .slide-title {
+      text-align: center;
+    }
+
+    .slide-title h1 {
+      font-size: 4.2rem;
+      margin-bottom: 0.3em;
+    }
+
+    .slide-title .subtitle {
+      font-size: 1.35rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-bottom: 2em;
+      line-height: 1.6;
+    }
+
+    .slide-title .keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 2em;
+    }
+
+    .slide-title .keywords span {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .team-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 1em;
+    }
+
+    .team-pill {
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .team-pill .name {
+      font-weight: 600;
+      color: var(--text);
+      margin-right: 4px;
+    }
+
+    /* ===== Cards & Panels ===== */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px 32px;
+      margin-bottom: 16px;
+    }
+
+    .card-sm {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .mt-1 {
+      margin-top: 16px;
+    }
+
+    .mt-2 {
+      margin-top: 24px;
+    }
+
+    .mb-1 {
+      margin-bottom: 16px;
+    }
+
+    /* ===== Tables ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 1rem;
+    }
+
+    th,
+    td {
+      padding: 12px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      color: var(--text);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-wrap {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .table-wrap table th {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* ===== Diagram Boxes ===== */
+    .diagram {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .diagram .box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 22px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .diagram .box.hl-teal {
+      border-color: rgba(45, 212, 168, 0.4);
+      background: var(--teal-dim);
+      color: var(--teal);
+    }
+
+    .diagram .box.hl-cyan {
+      border-color: rgba(6, 182, 212, 0.4);
+      background: var(--cyan-dim);
+      color: var(--cyan-text);
+    }
+
+    .diagram .arrow {
+      color: var(--text-dim);
+      font-size: 1.4rem;
+      padding: 0 6px;
+      user-select: none;
+    }
+
+    /* ===== Lists ===== */
+    ul.clean-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    ul.clean-list li {
+      padding: 5px 0;
+      font-size: 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    ul.clean-list li::before {
+      content: '·';
+      color: var(--text-dim);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: -1px;
+    }
+
+    /* ===== Badge ===== */
+    .badge {
+      display: inline-block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 3px 12px;
+      border-radius: 12px;
+      vertical-align: middle;
+    }
+
+    .badge-teal {
+      background: var(--teal-dim);
+      color: var(--teal);
+    }
+
+    .badge-cyan {
+      background: var(--cyan-dim);
+      color: var(--cyan-text);
+    }
+
+    .badge-rose {
+      background: rgba(249, 117, 131, 0.12);
+      color: var(--rose);
+    }
+
+    /* ===== Pillar Cards ===== */
+    .pillar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      text-align: center;
+    }
+
+    .pillar-icon {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+    }
+
+    .pillar-name {
+      font-weight: 600;
+      font-size: 1.15rem;
+      margin-bottom: 4px;
+    }
+
+    .pillar-desc {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ===== Problem / Solution ===== */
+    .problem-box {
+      border-left: 3px solid var(--rose);
+      padding-left: 24px;
+      margin-bottom: 20px;
+    }
+
+    .solution-box {
+      border-left: 3px solid var(--teal);
+      padding-left: 24px;
+    }
+
+    .problem-box h3 {
+      color: var(--rose);
+    }
+
+    .solution-box h3 {
+      color: var(--teal);
+    }
+
+    /* ===== Flow Steps ===== */
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1rem;
+    }
+
+    .flow-step .num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--cyan-dim);
+      color: var(--cyan-text);
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ===== Phase Timeline ===== */
+    .phase-cards {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 0;
+      align-items: start;
+    }
+
+    .phase-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px 28px;
+    }
+
+    .phase-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--cyan-text);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .phase-name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .phase-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 1.5rem;
+      padding: 0 8px;
+      margin-top: 40px;
+    }
+
+    /* ===== Architecture Layer ===== */
+    .arch-layer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      margin: 3px 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .arch-layer-label {
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--cyan-text);
+      min-width: 120px;
+      font-size: 0.85rem;
+    }
+
+    .arch-layer-items {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ===== Tech Point ===== */
+    .tech-point {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      border-top: 3px solid var(--cyan);
+      margin-bottom: 10px;
+    }
+
+    .tech-point h3 {
+      color: var(--text);
+      margin-bottom: 4px;
+      font-size: 1rem;
+    }
+
+    .tech-point p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    /* ===== Tool Card ===== */
+    .tool-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+    }
+
+    .tool-name {
+      font-weight: 600;
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+    }
+
+    .tool-desc {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .tool-screenshot {
+      width: 100%;
+      height: 150px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed var(--border-light);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+
+    /* ===== Team Section ===== */
+    .team-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px 32px;
+    }
+
+    .team-section-title {
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .team-member {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .team-member:last-child {
+      margin-bottom: 0;
+    }
+
+    .team-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .team-avatar.sys {
+      background: var(--teal-dim);
+      color: var(--teal);
+    }
+
+    .team-avatar.con {
+      background: var(--cyan-dim);
+      color: var(--cyan-text);
+    }
+
+    .team-name-text {
+      font-weight: 500;
+      font-size: 1.05rem;
+    }
+
+    /* ===== Conclusion ===== */
+    .plan-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .plan-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .plan-card .plan-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .plan-card h3 {
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .plan-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .closing-cta {
+      display: inline-block;
+      margin-top: 32px;
+      padding: 16px 40px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ===== Progress Bar ===== */
+    .progress-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: var(--cyan);
+      transition: width var(--transition);
+      z-index: 100;
+    }
+
+    .slide-counter {
+      position: fixed;
+      bottom: 16px;
+      right: 24px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+      z-index: 100;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      .slide {
+        padding: 40px 32px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .slide-title h1 {
+        font-size: 2.4rem;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+      }
+
+      .grid-2,
+      .grid-3,
+      .phase-cards,
+      .plan-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .phase-arrow {
+        display: none;
+      }
+
+      .diagram {
+        flex-direction: column;
+      }
+
+      .diagram .arrow {
+        transform: rotate(90deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="deck" id="deck">
+
+    <!-- ========== Slide 1: Title ========== -->
+    <section class="slide slide-title active" data-slide="1">
+      <div class="slide-inner">
+        <h1>Caretaker</h1>
+        <p class="subtitle">
+          시간 인과율 기반<br>
+          2인 비대칭 협동 퍼즐 어드벤처
+        </p>
+
+        <div class="keywords">
+          <span>Time Causality</span>
+          <span>Information Isolation</span>
+          <span>Half-duplex Radio</span>
+          <span>Netcode for GameObjects</span>
+          <span>Unity 6 URP 2D</span>
+        </div>
+
+        <div class="team-pills">
+          <div class="team-pill"><span class="name">유민서</span>22311884</div>
+          <div class="team-pill"><span class="name">김도경</span>22012139</div>
+          <div class="team-pill"><span class="name">김병규</span>22012140</div>
+          <div class="team-pill"><span class="name">백승헌</span>22112089</div>
+          <div class="team-pill"><span class="name">배원일</span>22313530</div>
+          <div class="team-pill"><span class="name">권순표</span>22313552</div>
+        </div>
+
+        <small class="dim">2026년 졸업 프로젝트 · 중간 발표</small>
+      </div>
+    </section>
+
+    <!-- ========== Slide 2: Game Intro ========== -->
+    <section class="slide" data-slide="2">
+      <div class="slide-inner">
+        <h2>게임 소개</h2>
+        <h3>서로 다른 시간대에 존재하는 두 플레이어가, 제한된 통신과 시간 인과율로 함께 연구소를 탈출한다</h3>
+
+        <div class="grid-3 mt-1">
+          <div class="pillar-card">
+            <div class="pillar-icon">🕐</div>
+            <div class="pillar-name">시간 인과율</div>
+            <div class="pillar-desc">과거의 행동이<br>미래를 바꾼다</div>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🔇</div>
+            <div class="pillar-name">정보 격리</div>
+            <div class="pillar-desc">상대 화면을<br>볼 수 없다</div>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">📻</div>
+            <div class="pillar-name">무전기 소통</div>
+            <div class="pillar-desc">소통만이 유일한<br>연결고리</div>
+          </div>
+        </div>
+
+        <div class="table-wrap mt-2">
+          <table>
+            <tr>
+              <th style="width:120px;">항목</th>
+              <th>내용</th>
+            </tr>
+            <tr>
+              <td>장르</td>
+              <td>2인 비대칭 협동 퍼즐 어드벤처</td>
+            </tr>
+            <tr>
+              <td>플랫폼</td>
+              <td>PC (Windows)</td>
+            </tr>
+            <tr>
+              <td>엔진</td>
+              <td>Unity 6.4 · URP 2D · C# 12</td>
+            </tr>
+            <tr>
+              <td>네트워크</td>
+              <td>Netcode for GameObjects (Host-Client)</td>
+            </tr>
+            <tr>
+              <td>팀 규모</td>
+              <td>6인</td>
+            </tr>
+            <tr>
+              <td>개발 기간</td>
+              <td>2026.03 – 2026.11</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Slide 3: Background ========== -->
+    <section class="slide" data-slide="3">
+      <div class="slide-inner">
+        <h2>개발 배경 & 동기</h2>
+
+        <div class="grid-2">
+          <div>
+            <div class="problem-box">
+              <h3>기존 협동 게임의 틀</h3>
+              <ul class="clean-list">
+                <li>같은 공간을 공유 → 소통의 "필요성"이 낮음</li>
+                <li>정보 비대칭이 있어도 물리적 환경 변화 연동 부재</li>
+                <li>상대가 무엇을 보는지 시각적으로 확인 가능</li>
+              </ul>
+            </div>
+
+            <div class="card-sm mt-1">
+              <h3 style="color: var(--text); margin-bottom: 8px;">시장 트렌드</h3>
+              <ul class="clean-list">
+                <li>It Takes Two — GOTY 수상 (2021)</li>
+                <li>We Were Here — 누적 2,000만 다운로드</li>
+                <li>2인 협동 게임 시장 <strong>지속 성장</strong></li>
+              </ul>
+            </div>
+          </div>
+
+          <div>
+            <div class="solution-box">
+              <h3>우리의 시도</h3>
+              <ul class="clean-list">
+                <li><strong>시공간 완전 분리</strong> — 각자 다른 시간대에 존재</li>
+                <li><strong>물리적 인과</strong> — 과거 행동이 미래 환경을 즉시 변경</li>
+                <li><strong>필수적 소통</strong> — 인게임 무전기만 사용 가능</li>
+              </ul>
+              <p class="mt-1" style="font-size: 0.92rem;">
+                <span class="muted">소통의 중요성 <strong style="color: var(--text);">대폭 증대</strong></span>
+              </p>
+            </div>
+
+            <div class="card mt-1" style="border-left: 3px solid var(--cyan); text-align: center;">
+              <h3 style="color: var(--cyan-text); margin-bottom: 8px;">개발 목표</h3>
+              <p style="font-size: 0.95rem; margin-bottom: 10px;">프로토타입으로 핵심 메커니즘의 재미 검증</p>
+              <div style="display: flex; gap: 8px; justify-content: center;">
+                <span class="badge badge-teal">GO</span>
+                <span class="badge badge-cyan">ITERATE</span>
+                <span class="badge badge-rose">PIVOT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Slide 4: Core Mechanics ========== -->
+    <section class="slide" data-slide="4">
+      <div class="slide-inner">
+        <h2>핵심 메커니즘</h2>
+        <h3>세 가지 기둥이 함께 작동하여 "필연적인 협동"을 만든다</h3>
+
+        <div class="grid-3 mt-1">
+          <!-- A. Causality -->
+          <div class="card">
+            <h3 style="color: var(--teal);">A. 시간 인과율</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 12px;">과거 플레이어의 행동이 미래 환경을 <strong>즉시</strong> 변화시킨다</p>
+            <p style="font-size: 0.85rem; margin-bottom: 12px;">
+              <span class="muted">단방향:</span>
+              <span class="badge badge-teal">Past</span>
+              →
+              <span class="badge badge-cyan">Future</span>
+            </p>
+            <div class="card-sm" style="padding: 14px 18px;">
+              <div style="font-size: 0.88rem; display: flex; flex-direction: column; gap: 6px;">
+                <div><span class="teal">배선 변경</span> <span class="dim">→</span> <span class="accent">전력 복구</span></div>
+                <div><span class="teal">바이러스 설치</span> <span class="dim">→</span> <span class="accent">실린더 해제</span>
+                </div>
+                <div><span class="teal">레버 당김</span> <span class="dim">→</span> <span class="accent">다리 생성</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- B. Information Isolation -->
+          <div class="card">
+            <h3 style="color: var(--cyan-text);">B. 정보 격리</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 12px;">각 플레이어는 자기 시간대<strong>만</strong> 볼 수 있다</p>
+
+            <div class="card-sm" style="padding: 14px 18px; text-align: center;">
+              <p style="font-size: 1.8rem; margin-bottom: 4px;">🚫</p>
+              <p style="font-size: 0.88rem; margin: 0;">네트워크 수준에서<br>상대 데이터 <strong style="color: var(--text);">전송
+                  차단</strong></p>
+              <p style="font-size: 0.78rem; margin: 4px 0 0 0;"><span class="dim">(복제 필터링)</span></p>
+            </div>
+
+            <p class="mt-1" style="font-size: 0.88rem;">
+              <span class="muted">상대가 무엇을 보고 있는지 시스템적으로 알 수 없음</span>
+            </p>
+          </div>
+
+          <!-- C. Radio -->
+          <div class="card">
+            <h3 style="color: var(--yellow);">C. 무전기 소통</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 12px;">인게임 <strong>Push-to-Talk</strong>, Half-duplex</p>
+
+            <div class="card-sm" style="padding: 14px 18px; text-align: center;">
+              <p style="font-size: 1.8rem; margin-bottom: 4px;">📻</p>
+              <p style="font-size: 0.88rem; margin: 0;"><strong style="color: var(--text);">한 번에 한 명만</strong> 송신 가능</p>
+            </div>
+
+            <p class="mt-1" style="font-size: 0.88rem;">
+              <span class="muted">정보를 <strong style="color: var(--text);">말로 설명</strong>해야 하는 어려움 자체가 게임플레이</span>
+            </p>
+            <p style="font-size: 0.82rem;">
+              <span class="dim">정보 격리 + 무전기 = "제한된 소통의 긴장감"</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Slide 5: Gameplay Flow ========== -->
+    <section class="slide" data-slide="5">
+      <div class="slide-inner">
+        <h2>게임 플레이 흐름</h2>
+        <h3>연구소 1 스테이지, 3 페이즈 구성</h3>
+
+        <div class="phase-cards mt-1">
+          <!-- Phase 1 -->
+          <div class="phase-card">
+            <div class="phase-label">Phase 1</div>
+            <div class="phase-name">진입</div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
+              <strong style="color: var(--text);">A동</strong><br><br>
+              연구소 진입<br>
+              전력 복구 <span class="badge badge-teal" style="font-size: 0.72rem;">M1</span><br>
+              보안 침입 <span class="badge badge-cyan" style="font-size: 0.72rem;">M2</span><br><br>
+              <span class="accent">⚡ 경비 시스템 가동</span>
+            </p>
+          </div>
+
+          <div class="phase-arrow">→</div>
+
+          <!-- Phase 2 -->
+          <div class="phase-card">
+            <div class="phase-label">Phase 2</div>
+            <div class="phase-name">탐색</div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
+              <strong style="color: var(--text);">A동 2F + B동</strong><br><br>
+              금고 → 카드키 획득<br>
+              청사진 식별 <span class="badge badge-teal" style="font-size: 0.72rem;">M3</span><br>
+              실린더 회수 <span class="badge badge-cyan" style="font-size: 0.72rem;">M4</span><br><br>
+              과거/미래 독립 + 합류 퍼즐
+            </p>
+          </div>
+
+          <div class="phase-arrow">→</div>
+
+          <!-- Phase 3 -->
+          <div class="phase-card" style="border-color: rgba(6, 182, 212, 0.3);">
+            <div class="phase-label" style="color: var(--yellow);">Phase 3</div>
+            <div class="phase-name">탈출</div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
+              <strong style="color: var(--text);">C동 (폐쇄 저장고)</strong><br><br>
+              🚨 전면 추격 발동<br><br>
+              <strong style="color: var(--cyan-text);">스플릿뷰 전환</strong><br>
+              상: 과거 / 하: 미래<br><br>
+              인과 ↔ 정보 → <strong style="color: var(--text);">동시 탈출</strong>
+            </p>
+          </div>
+        </div>
+
+        <p class="mt-2" style="font-size: 0.88rem; text-align: center;">
+          <span class="muted">
+            <span class="badge badge-teal" style="font-size: 0.72rem;">M1–M4</span>
+            = Major Interaction — 혼자서는 절대 풀 수 없는 <strong style="color: var(--text);">Mutual Dependency</strong> 구조
+          </span>
+        </p>
+      </div>
+    </section>
+
+    <!-- ========== Slide 6: Tech Stack & Structure ========== -->
+    <section class="slide" data-slide="6">
+      <div class="slide-inner">
+        <h2>기술 아키텍처 — 스택 &amp; 구조</h2>
+
+        <div class="grid-2" style="gap: 32px; align-items: start;">
+          <div>
+            <h3>기술 스택</h3>
+            <div class="table-wrap">
+              <table>
+                <tr>
+                  <th style="width:110px;">영역</th>
+                  <th>기술</th>
+                </tr>
+                <tr>
+                  <td>엔진</td>
+                  <td>Unity 6.4 · URP 2D</td>
+                </tr>
+                <tr>
+                  <td>언어</td>
+                  <td>C# 12</td>
+                </tr>
+                <tr>
+                  <td>네트워크</td>
+                  <td>Netcode for GameObjects (Host-Client)</td>
+                </tr>
+                <tr>
+                  <td>이슈 관리</td>
+                  <td>Linear</td>
+                </tr>
+                <tr>
+                  <td>버전 관리</td>
+                  <td>Git + Git LFS</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <h3>5계층 시스템 구조</h3>
+            <div class="arch-layer"><span class="arch-layer-label">Core</span><span class="arch-layer-items">GameFlow · Network · Session</span></div>
+            <div class="arch-layer"><span class="arch-layer-label">World</span><span class="arch-layer-items">Causality · Room · Interaction</span></div>
+            <div class="arch-layer"><span class="arch-layer-label">Gameplay</span><span class="arch-layer-items">Player · AI · Inventory · Radio</span></div>
+            <div class="arch-layer"><span class="arch-layer-label">Presentation</span><span class="arch-layer-items">Camera · HUD · SplitView</span></div>
+            <div class="arch-layer"><span class="arch-layer-label">Shared</span><span class="arch-layer-items">IDs · Types · Enums</span></div>
+
+            <div class="mt-2" style="text-align: center;">
+              <div class="diagram" style="margin-bottom: 6px;">
+                <div class="box">Player</div>
+                <span class="arrow">→</span>
+                <div class="box hl-teal">CausalTrigger</div>
+              </div>
+              <div style="color: var(--text-dim); font-size: 1rem; margin: 4px 0;">↓</div>
+              <div class="diagram">
+                <div class="box">Host 판정</div>
+                <span class="arrow">→</span>
+                <div class="box hl-cyan">CausalReceiver</div>
+              </div>
+              <p style="margin-top: 6px;"><small class="dim">인과 전파 흐름</small></p>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Slide 7: Core Tech Points ========== -->
+    <section class="slide" data-slide="7">
+      <div class="slide-inner">
+        <h2>기술 아키텍처 &mdash; 핵심 기술</h2>
+
+        <div class="grid-3 mt-1">
+          <div class="tech-point" style="margin-bottom: 0;">
+            <h3>데이터 드리븐 인과 시스템</h3>
+            <p><code>CausalRuleSO</code>로 인과 규칙 정의<br>코드 수정 없이 새 퍼즐 추가 가능</p>
+          </div>
+          <div class="tech-point" style="margin-bottom: 0;">
+            <h3>네트워크 정보 격리</h3>
+            <p>Phase별 복제 범위 제어<br>Host Authority &mdash; 모든 판정은 Host에서</p>
+          </div>
+          <div class="tech-point" style="margin-bottom: 0;">
+            <h3>Phase 3 스플릿뷰</h3>
+            <p><code>RenderTexture</code> 기반 로컬 렌더링<br>영상 스트리밍이 아닌 상태 동기화</p>
+          </div>
+        </div>
+
+        <div class="grid-3 mt-2">
+          <div class="card-sm" style="border-left: 3px solid var(--teal);">
+            <h3 style="color: var(--teal); margin-bottom: 6px; font-size: 0.95rem;">Host Authority</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">치트 방지, 일관된 상태 관리<br>모든 게임 판정은 Host에서 수행</p>
+          </div>
+          <div class="card-sm" style="border-left: 3px solid var(--cyan);">
+            <h3 style="color: var(--cyan-text); margin-bottom: 6px; font-size: 0.95rem;">Event-Based Sync</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">매 프레임 동기화 대신<br>이벤트 전파 방식</p>
+          </div>
+          <div class="card-sm" style="border-left: 3px solid var(--yellow);">
+            <h3 style="color: var(--yellow); margin-bottom: 6px; font-size: 0.95rem;">Data-Driven Rules</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">ScriptableObject로<br>규칙 외부화</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Slide 8: Linear ========== -->
+    <section class="slide" data-slide="8">
+      <div class="slide-inner">
+        <h2>협업 도구 &mdash; Linear</h2>
+        <h3>이슈 트래킹 &amp; 스프린트 관리 &middot; Epic 8개 / 이슈 40개 &middot; 3주 스프린트</h3>
+
+        <div class="grid-2 mt-2">
+          <div>
+            <div class="tool-screenshot" style="height: 320px; padding: 0; border: none;"><img src="linear-inprogress.png" alt="Linear In Progress" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;"></div>
+            <p style="text-align: center; margin-top: 8px;"><small class="dim">In Progress — 진행중 이슈</small></p>
+          </div>
+          <div>
+            <div class="tool-screenshot" style="height: 320px; padding: 0; border: none;"><img src="linear-done.png" alt="Linear Done" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;"></div>
+            <p style="text-align: center; margin-top: 8px;"><small class="dim">Done — 완료 이슈</small></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Slide 9: Figma ========== -->
+    <!-- ========== Slide 9: Figma ========== -->
+    <section class="slide" data-slide="9">
+      <div class="slide-inner">
+        <h2>협업 도구 &mdash; Figma</h2>
+        <h3>UI/UX 설계 &amp; 디자인 협업 &middot; 와이어프레임 &middot; HUD 레이아웃</h3>
+
+        <div class="grid-2 mt-2">
+          <div>
+            <div class="tool-screenshot" style="height: 320px; padding: 0; border: none;"><img src="1.png" alt="Figma 1" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;"></div>
+            <p style="text-align: center; margin-top: 8px;"><small class="dim">UI 와이어프레임</small></p>
+          </div>
+          <div>
+            <div class="tool-screenshot" style="height: 320px; padding: 0; border: none;"><img src="2.png" alt="Figma 2" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;"></div>
+            <p style="text-align: center; margin-top: 8px;"><small class="dim">HUD / 인벤토리 디자인</small></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Slide 10: Git ========== -->
+    <section class="slide" data-slide="10">
+      <div class="slide-inner">
+        <h2>협업 도구 &mdash; Git &amp; GitHub</h2>
+
+        <div class="grid-2 mt-1" style="gap: 32px;">
+          <div>
+            <h3>브랜치 전략</h3>
+            <div class="diagram" style="flex-direction: column; gap: 6px; align-items: stretch;">
+              <div class="box" style="text-align: center; border-color: rgba(249, 117, 131, 0.4); color: var(--rose);">main <small class="dim" style="margin-left: 8px;">배포 전용</small></div>
+              <div style="text-align: center; color: var(--text-dim); font-size: 0.85rem;">&uarr; merge</div>
+              <div class="box" style="text-align: center; border-color: rgba(45, 212, 168, 0.4); color: var(--teal);">develop <small class="dim" style="margin-left: 8px;">통합 브랜치</small></div>
+              <div style="text-align: center; color: var(--text-dim); font-size: 0.85rem;">&uarr; PR merge</div>
+              <div class="box" style="text-align: center;">feat/*, fix/*, docs/* <small class="dim" style="margin-left: 8px;">작업 브랜치</small></div>
+            </div>
+          </div>
+
+          <div>
+            <h3>코드 관리 프로세스</h3>
+            <div class="card-sm mb-1">
+              <h3 style="color: var(--text); margin-bottom: 8px; font-size: 1rem;">Conventional Commits</h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
+                <code>feat(causality): DEV-12 ...</code><br>
+                <code>fix(player): DEV-15 ...</code>
+              </p>
+            </div>
+            <div class="card-sm mb-1">
+              <h3 style="color: var(--text); margin-bottom: 8px; font-size: 1rem;">PR 기반 코드 리뷰</h3>
+              <ul class="clean-list">
+                <li>base = <code>develop</code>, Linear 이슈 ID 연동</li>
+                <li>셀프 리뷰 체크리스트 필수</li>
+              </ul>
+            </div>
+            <div class="card-sm">
+              <h3 style="color: var(--text); margin-bottom: 8px; font-size: 1rem;">Git LFS</h3>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
+                Unity 에셋 (씬, 프리팹, 텍스처) 대용량 파일 관리
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Slide 11: Future & Close ========== -->
+    <section class="slide" data-slide="11">
+      <div class="slide-inner" style="text-align: center;">
+        <h2 style="text-align: center;">향후 계획</h2>
+        <h3 style="text-align: center;">프로토타입 플레이테스트 →
+          <span class="badge badge-teal">GO</span>
+          <span class="badge badge-cyan">ITERATE</span>
+          <span class="badge badge-rose">PIVOT</span>
+          판정
+        </h3>
+
+        <div class="plan-cards mt-2">
+          <div class="plan-card">
+            <div class="plan-icon">🎮</div>
+            <h3>콘텐츠 확장</h3>
+            <p>추가 스테이지<br>새로운 퍼즐 메커니즘</p>
+          </div>
+          <div class="plan-card">
+            <div class="plan-icon">🎨</div>
+            <h3>아트 폴리싱</h3>
+            <p>캐릭터 스프라이트<br>환경 비주얼 고도화</p>
+          </div>
+          <div class="plan-card">
+            <div class="plan-icon">🔊</div>
+            <h3>사운드 통합</h3>
+            <p>BGM, SFX<br>환경 사운드</p>
+          </div>
+          <div class="plan-card">
+            <div class="plan-icon">⚡</div>
+            <h3>성능 최적화</h3>
+            <p>네트워크 안정화<br>60 FPS 보장</p>
+          </div>
+        </div>
+
+        <p class="mt-2">
+          <small class="muted">배포 목표: <strong style="color: var(--text);">Steam</strong> 또는 <strong
+              style="color: var(--text);">itch.io</strong> · 최종 빌드 2026.11</small>
+        </p>
+
+        <div class="closing-cta mt-2">🎮&nbsp;&nbsp;데모 시연</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- Slide Counter -->
+  <div class="slide-counter" id="slideCounter"></div>
+
+  <script>
+    (function () {
+      const slides = document.querySelectorAll('.slide');
+      const total = slides.length;
+      let current = 0;
+
+      const progressBar = document.getElementById('progressBar');
+      const slideCounter = document.getElementById('slideCounter');
+
+      function updateSlide() {
+        slides.forEach((s, i) => {
+          s.classList.toggle('active', i === current);
+        });
+        progressBar.style.width = ((current + 1) / total * 100) + '%';
+        slideCounter.textContent = (current + 1) + ' / ' + total;
+      }
+
+      function next() {
+        if (current < total - 1) { current++; updateSlide(); }
+      }
+
+      function prev() {
+        if (current > 0) { current--; updateSlide(); }
+      }
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault(); next();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault(); prev();
+        } else if (e.key === 'Home') {
+          e.preventDefault(); current = 0; updateSlide();
+        } else if (e.key === 'End') {
+          e.preventDefault(); current = total - 1; updateSlide();
+        }
+      });
+
+      // Touch support
+      let touchStartX = 0;
+      document.addEventListener('touchstart', function (e) {
+        touchStartX = e.changedTouches[0].screenX;
+      });
+      document.addEventListener('touchend', function (e) {
+        const dx = e.changedTouches[0].screenX - touchStartX;
+        if (dx < -50) next();
+        else if (dx > 50) prev();
+      });
+
+      updateSlide();
+    })();
+  </script>
+</body>
+
+</html>
